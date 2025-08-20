@@ -1,4 +1,3 @@
-// SPECIAL: update method below to match repo/prefix
 package main
 
 import (
@@ -11,6 +10,8 @@ import (
 	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
 )
 
+// This program will walk through the repo's examples/templates and process them into examples.
+// While doing so, it will swap template variables as set in the map of string in the call to Execute.
 func main() {
 
 	prefix := configprefix.Prefix
@@ -80,7 +81,7 @@ func main() {
 			}
 			defer f.Close()
 
-			err = tmpl.Execute(f, map[string]string{"Prefix": prefix, "ProviderSource": "tfbrew/aap"}) // SPECIAL: update to match THIS repo's name & provider prefix
+			err = tmpl.Execute(f, map[string]string{"Prefix": prefix, "ProviderSource": "tfbrew/" + configprefix.Prefix}) // SPECIAL: update to match THIS repo's name & provider prefix
 			if err != nil {
 				fmt.Println("Error executing template:", err)
 				return err

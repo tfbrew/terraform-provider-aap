@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
 )
 
 var _ resource.Resource = &UserResource{}
@@ -96,12 +96,7 @@ func (r UserResource) ValidateConfig(ctx context.Context, req resource.ValidateC
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	// Disallow is_system_auditor for >AAP2.5
-	platform, ok := os.LookupEnv("TOWER_PLATFORM")
-	if !ok {
-		return
-	}
-
-	if platform == "awx" || platform == "aap2.4" || data.IsSystemAuditor == basetypes.NewBoolValue(false) || data.IsSystemAuditor.IsNull() {
+	if configprefix.Prefix == "awx" || data.IsSystemAuditor == basetypes.NewBoolValue(false) || data.IsSystemAuditor.IsNull() {
 		return
 	} else {
 		resp.Diagnostics.AddAttributeError(

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
 )
 
 var _ resource.Resource = &OrganizationResource{}
@@ -78,13 +78,7 @@ func (r OrganizationResource) ValidateConfig(ctx context.Context, req resource.V
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	// Disallow default_environment for >AAP2.5
-	platform, ok := os.LookupEnv("TOWER_PLATFORM")
-	if !ok {
-		return
-	}
-
-	if platform == "awx" || platform == "aap2.4" || data.DefaultEnv.IsNull() {
-	} else {
+	if configprefix.Prefix != "awx" && !data.DefaultEnv.IsNull() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("default_environment"),
 			"Invalid Attribute Configuration",
@@ -93,9 +87,8 @@ func (r OrganizationResource) ValidateConfig(ctx context.Context, req resource.V
 		return
 	}
 
-	if platform == "awx" || platform == "aap2.4" || data.MaxHosts.IsNull() || data.MaxHosts.ValueInt32() == 0 {
-		return
-	} else {
+	// Disallow max_hosts for >AAP2.5 unless it's awx or unset/zero
+	if configprefix.Prefix != "awx" && !data.MaxHosts.IsNull() && data.MaxHosts.ValueInt32() != 0 {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("max_hosts"),
 			"Invalid Attribute Configuration",
@@ -103,6 +96,7 @@ func (r OrganizationResource) ValidateConfig(ctx context.Context, req resource.V
 		)
 		return
 	}
+
 }
 
 func (r *OrganizationResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -167,7 +161,7 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 	}
 	data.Aap25GatewayId = types.Int32Value(int32(id))
 
-	if r.client.platform == "aap2.5" {
+	if configprefix.Prefix == "aap" {
 
 		// overwrite returnedData with Get against org's /controller/ endpoint
 
@@ -244,7 +238,7 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	// if aap2.5 get the /gateway/ id and set the related field
-	if r.client.platform == "aap2.5" {
+	if configprefix.Prefix == "aap" {
 
 		url := fmt.Sprintf("organizations/?name=%s", responseData.Name)
 		responseBodyData, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "gateway")
@@ -325,7 +319,7 @@ func (r *OrganizationResource) Update(ctx context.Context, req resource.UpdateRe
 	var id int
 	var err error
 
-	if r.client.platform == "aap2.5" {
+	if configprefix.Prefix == "aap" {
 		id = int(data.Aap25GatewayId.ValueInt32())
 	} else {
 		id, err = strconv.Atoi(data.Id.ValueString())
@@ -376,7 +370,7 @@ func (r *OrganizationResource) Delete(ctx context.Context, req resource.DeleteRe
 	var id int
 	var err error
 
-	if r.client.platform == "aap2.5" {
+	if configprefix.Prefix == "aap" {
 		id = int(data.Aap25GatewayId.ValueInt32())
 	} else {
 		id, err = strconv.Atoi(data.Id.ValueString())

@@ -1,4 +1,4 @@
-# SPECIAL: Hardcoded provider prefix required in this file
+# SPECIAL:Add build flag tags
 
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
@@ -16,7 +16,7 @@ builds:
   mod_timestamp: '{{ .CommitTimestamp }}'
   flags:
     - -trimpath
-    - -tags=repoAAP # SPECIAL
+    - -tags={{ env.REPO_BUILD_TAG_VALUE }} # SPECIAL set in .github/workflows/release.yml
   ldflags:
     - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
   goos:

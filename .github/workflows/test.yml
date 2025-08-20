@@ -1,5 +1,3 @@
-# SPECIAL: This file must be hand altered to match if it runs for AWX, AAP, or both
-
 # Terraform Provider testing workflow.
 name: Tests
 
@@ -85,6 +83,5 @@ jobs:
           TF_ACC: "1"
           TOWER_HOST: ${{ secrets.AAP_25_HOST }}
           TOWER_OAUTH_TOKEN: ${{ secrets.AAP_25_OAUTH_TOKEN }}
-          TOWER_PLATFORM: "aap2.5"
         run: go test -v -cover -tags=${{ vars.BUILD_TAG }} -timeout 20m ./internal/provider/
         timeout-minutes: 20

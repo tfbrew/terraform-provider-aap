@@ -15,7 +15,6 @@
         "env": {
             "TOWER_OAUTH_TOKEN": "{env:TOWER_OAUTH_TOKEN}",
             "TOWER_HOST": "{env:TOWER_HOST",
-            "TOWER_PLATFORM": "{env:TOWER_PLATFORM}"
         },
         "buildFlags": ["-tags=repoAAP"],
         "args": ["-debug"]

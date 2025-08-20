@@ -9,13 +9,14 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
 )
 
 type providerClient struct {
 	client               *http.Client
 	endpoint             string
 	auth                 string
-	platform             string
 	urlPrefix            string
 	apiRetryCount        int32
 	apiRetryDelaySeconds int32
@@ -196,7 +197,7 @@ func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url
 // In AAP, most api endpoint live in /controller/. But, sometimes they specifyc gateway endpoint instead.
 func (c *providerClient) buildAPIUrl(resourceUrl, aap25_api_endpoint_hint string) (url string) {
 
-	if aap25_api_endpoint_hint == "gateway" && c.platform == "aap2.5" {
+	if aap25_api_endpoint_hint == "gateway" && configprefix.Prefix == "aap" {
 		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
 	} else {
 		url = c.endpoint + c.urlPrefix + resourceUrl

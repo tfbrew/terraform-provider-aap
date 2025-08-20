@@ -2,7 +2,6 @@ package provider
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -15,7 +14,7 @@ import (
 )
 
 func TestAccUserDataSource(t *testing.T) {
-	if os.Getenv("TOWER_PLATFORM") == "awx" || os.Getenv("TOWER_PLATFORM") == "aap2.4" {
+	if configprefix.Prefix == "awx" {
 		resource1 := UserAPIModel{
 			Username:    "test-user-" + acctest.RandString(5),
 			FirstName:   "test-firstname",

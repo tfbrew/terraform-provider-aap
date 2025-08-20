@@ -1,5 +1,3 @@
-// SPECIAL: Hardcoded provider prefix required in this file
-
 package main
 
 import (
@@ -7,6 +5,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
 	"github.com/tfbrew/terraform-provider-aap/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -28,7 +27,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/tfbrew/aap",
+		Address: "registry.terraform.io/tfbrew/" + configprefix.Prefix,
 		Debug:   debug,
 	}
 

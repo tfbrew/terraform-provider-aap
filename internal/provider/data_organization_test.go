@@ -2,7 +2,6 @@ package provider
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -15,7 +14,7 @@ import (
 )
 
 func TestAccOrganizationDataSource(t *testing.T) {
-	if os.Getenv("TOWER_PLATFORM") == "awx" || os.Getenv("TOWER_PLATFORM") == "aap2.4" {
+	if configprefix.Prefix == "awx" {
 		resource1 := OrganizationAPIModel{
 			Name:        "test-organization-" + acctest.RandString(5),
 			Description: "test description 1",
