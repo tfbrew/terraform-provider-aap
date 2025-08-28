@@ -16,7 +16,7 @@ builds:
   mod_timestamp: '{{ .CommitTimestamp }}'
   flags:
     - -trimpath
-    - -tags={{ env.REPO_BUILD_TAG_VALUE }} # SPECIAL set in .github/workflows/release.yml
+    - -tags=${REPO_BUILD_TAG_VALUE} # SPECIAL set in .github/workflows/release.yml
   ldflags:
     - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
   goos:
