@@ -1,5 +1,7 @@
 # SPECIAL:Add build flag tags
 
+# TO TEST FROM TERMINAL: REPO_BUILD_TAG_VALUE=repoAWX goreleaser release --snapshot --clean
+
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
 version: 2
@@ -16,7 +18,8 @@ builds:
   mod_timestamp: '{{ .CommitTimestamp }}'
   flags:
     - -trimpath
-    - -tags=${REPO_BUILD_TAG_VALUE} # SPECIAL set in .github/workflows/release.yml
+  tags:
+    - "{{ .Env.REPO_BUILD_TAG_VALUE }}"  # SPECIAL REP_BUILD_TAG_VALUE is set in .github/workflows/release.yml
   ldflags:
     - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
   goos:
@@ -34,7 +37,7 @@ builds:
       goarch: '386'
   binary: '{{ .ProjectName }}_v{{ .Version }}'
 archives:
-- format: zip
+- formats: ['zip']
   name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 checksum:
   extra_files:
