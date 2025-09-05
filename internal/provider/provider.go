@@ -64,15 +64,15 @@ func (p *theProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 				Optional:    true,
 			},
 			"token": schema.StringAttribute{
-				Description: "Automation controller access token (instead of username/password). You can also set this using the TOWER_OAUTH_TOKEN environment variable.",
+				Description: "Automation controller access token (instead of username/password). You can also set this using the AAP_OAUTH_TOKEN environment variable.",
 				Optional:    true,
 			},
 			"username": schema.StringAttribute{
-				Description: "Automation controller username (instead of token). You can also set this using the TOWER_USERNAME environment variable.",
+				Description: "Automation controller username (instead of token). You can also set this using the AAP_USERNAME environment variable.",
 				Optional:    true,
 			},
 			"password": schema.StringAttribute{
-				Description: "Automation controller password (instead of token). You can also set this using the TOWER_PASSWORD environment variable.",
+				Description: "Automation controller password (instead of token). You can also set this using the AAP_PASSWORD environment variable.",
 				Optional:    true,
 			},
 			"api_retry": schema.SingleNestedAttribute{
@@ -131,6 +131,8 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 
 	if !data.Endpoint.IsNull() {
 		endpoint = data.Endpoint.ValueString()
+	} else if aapEnv, exists := os.LookupEnv("AAP_HOST"); exists {
+		endpoint = aapEnv
 	} else {
 		endpoint = os.Getenv("TOWER_HOST")
 	}
@@ -139,7 +141,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		resp.Diagnostics.AddError(
 			"Missing API Endpoint Configuration",
 			"While configuring the provider, the API endpoint hostname was not found in "+
-				"the TOWER_HOST environment variable or provider "+
+				"the AAP_HOST environment variable or provider "+
 				"configuration block endpoint attribute.",
 		)
 		// Not returning early allows the logic to collect all errors.
@@ -152,9 +154,19 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		}
 	}
 
-	envToken, tokenExists := os.LookupEnv("TOWER_OAUTH_TOKEN")
-	envUsername, userExists := os.LookupEnv("TOWER_USERNAME")
-	envPassword, passwordExists := os.LookupEnv("TOWER_PASSWORD")
+	// Prefer AAP_ env vars, fallback to TOWER_ if not set
+	envToken, tokenExists := os.LookupEnv("AAP_OAUTH_TOKEN")
+	if !tokenExists {
+		envToken, tokenExists = os.LookupEnv("TOWER_OAUTH_TOKEN")
+	}
+	envUsername, userExists := os.LookupEnv("AAP_USERNAME")
+	if !userExists {
+		envUsername, userExists = os.LookupEnv("TOWER_USERNAME")
+	}
+	envPassword, passwordExists := os.LookupEnv("AAP_PASSWORD")
+	if !passwordExists {
+		envPassword, passwordExists = os.LookupEnv("TOWER_PASSWORD")
+	}
 
 	// Get token if password/username not set
 	if data.Token.IsNull() && data.Username.IsNull() && data.Password.IsNull() && tokenExists {
@@ -212,7 +224,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	}
 
 	if data.APIretry.IsNull() {
-		envAPIRRetryCount, envAPIRetryCountExists := os.LookupEnv("TOWER_API_RETRY_COUNT")
+		envAPIRetryCount, envAPIRetryCountExists := os.LookupEnv("TOWER_API_RETRY_COUNT")
 		envAPIRetryDelaySeconds, envAPIRetryDelaySecondsExists := os.LookupEnv("TOWER_API_RETRY_DELAY_SECONDS")
 
 		if envAPIRetryCountExists != envAPIRetryDelaySecondsExists {
@@ -222,11 +234,11 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 			)
 			return
 		} else if envAPIRetryCountExists && envAPIRetryDelaySecondsExists {
-			retryCountInt, err := strconv.Atoi(envAPIRRetryCount)
+			retryCountInt, err := strconv.Atoi(envAPIRetryCount)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Provider Configuration Error",
-					fmt.Sprintf("TOWER_API_RETRY_COUNT must be an integer, got: %s", envAPIRRetryCount),
+					fmt.Sprintf("TOWER_API_RETRY_COUNT must be an integer, got: %s", envAPIRetryCount),
 				)
 				return
 			}
