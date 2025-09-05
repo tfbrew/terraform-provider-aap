@@ -7,19 +7,169 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"strings"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
 )
 
-func TestAccCredentialResource(t *testing.T) {
+// This tests that the input object contains only string or boolean types.
+// The provided "average_cpu" being a float64 should cause an error.
+func TestAccCredentialResource_inputObjTyping(t *testing.T) {
+
+	simulatedApiValues := CredentialAPIModel{
+		Name: "test-input-typing-" + acctest.RandString(5),
+		Inputs: map[string]any{
+			"host":        "quay.io",
+			"is_active":   true,
+			"average_cpu": 2.5,
+		},
+	}
+
+	t.Parallel()
+
+	resource.Test(t, resource.TestCase{
+
+		PreCheck: func() { testAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{{
+			Config:      testAccCredentialInputObjTypingConfig(simulatedApiValues),
+			ExpectError: regexp.MustCompile(`inputs key 'average_cpu' has an unexpected type`),
+		}},
+	})
+
+}
+
+// This is a test that an input of type object with string and boolean values is accepted.
+func TestAccCredentialResource_inputObjbasic(t *testing.T) {
+
+	simulatedApiValues := CredentialAPIModel{
+		Name: "test-input-typing-" + acctest.RandString(5),
+		Inputs: map[string]any{
+			"username":  acctest.RandString(5),
+			"authorize": true,
+			"password":  "origpass" + acctest.RandString(10),
+		},
+	}
+	updatedPassword := "newpass" + acctest.RandString(10)
+	updatePassword := func() {
+		simulatedApiValues.Inputs["password"] = updatedPassword
+	}
+
+	simulatedImportApiValues := CredentialAPIModel{
+		Name: "test-input-typing-" + acctest.RandString(5),
+		Inputs: map[string]any{
+			"username":  acctest.RandString(5),
+			"authorize": true,
+			"password":  "importpass" + acctest.RandString(10),
+		},
+	}
+	t.Parallel()
+
+	resource.Test(t, resource.TestCase{
+
+		PreCheck: func() { testAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{{
+			Config: testAccCredentialInputObjTypingBasic(simulatedApiValues),
+			// ExpectError: regexp.MustCompile(`inputs key 'average_cpu' has an unexpected type`),
+			// Check that the resource is created successfully
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(
+					fmt.Sprintf("%s_credential.test-input-typing", configprefix.Prefix),
+					"inputs.username",
+					simulatedApiValues.Inputs["username"].(string),
+				),
+				resource.TestCheckResourceAttr(
+					fmt.Sprintf("%s_credential.test-input-typing", configprefix.Prefix),
+					"inputs.authorize",
+					"true",
+				),
+				resource.TestCheckResourceAttr(
+					fmt.Sprintf("%s_credential.test-input-typing", configprefix.Prefix),
+					"inputs.password",
+					simulatedApiValues.Inputs["password"].(string),
+				),
+				resource.TestCheckResourceAttr(
+					fmt.Sprintf("%s_credential.test-input-typing", configprefix.Prefix),
+					"name",
+					simulatedApiValues.Name,
+				),
+			),
+		},
+			{
+				PreConfig: updatePassword,
+				Config:    testAccCredentialInputObjTypingBasic(simulatedApiValues),
+				// ExpectError: regexp.MustCompile(`inputs key 'average_cpu' has an unexpected type`),
+				// Check that the resource is created successfully
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						fmt.Sprintf("%s_credential.test-input-typing", configprefix.Prefix),
+						"inputs.username",
+						simulatedApiValues.Inputs["username"].(string),
+					),
+					resource.TestCheckResourceAttr(
+						fmt.Sprintf("%s_credential.test-input-typing", configprefix.Prefix),
+						"inputs.authorize",
+						"true",
+					),
+					resource.TestCheckResourceAttr(
+						fmt.Sprintf("%s_credential.test-input-typing", configprefix.Prefix),
+						"inputs.password",
+						simulatedApiValues.Inputs["password"].(string),
+					),
+					resource.TestCheckResourceAttr(
+						fmt.Sprintf("%s_credential.test-input-typing", configprefix.Prefix),
+						"name",
+						simulatedApiValues.Name,
+					),
+				),
+			},
+			{
+				Config: testAccCredentialInputObjTypingBasicImport(simulatedImportApiValues)},
+			{
+				ImportState:       true,
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateVerify: true,
+				ResourceName:      fmt.Sprintf("%s_credential.test-input-import", configprefix.Prefix),
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					// The resource ID is the ID of the created credential
+					rs, ok := s.RootModule().Resources[fmt.Sprintf("%s_credential.test-input-import", configprefix.Prefix)]
+					if !ok {
+						return "", fmt.Errorf("not found: %s_credential.test-input-import", configprefix.Prefix)
+					}
+
+					id := rs.Primary.ID
+					if id == "" {
+						return "", fmt.Errorf("no ID is set")
+					}
+					return fmt.Sprintf("%s,password,%s", id, simulatedImportApiValues.Inputs["password"]), nil
+				},
+			},
+		},
+	})
+
+}
+
+func TestAccCredentialResource_basic(t *testing.T) {
+
+	t.Parallel()
+
+	// Note: The private key generation here is just for testing purposes.
+	// In a real scenario, you would use a valid private key.
 	// Generate a real ECDSA private key (P256 curve)
 	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -42,46 +192,61 @@ func TestAccCredentialResource(t *testing.T) {
 	pemBytes := pem.EncodeToMemory(pemBlock)
 
 	// Encode the private key in OpenSSH format
-	opensshKey := strings.ReplaceAll(string(pemBytes), "\n", "\\n")
+	opensshKey := string(pemBytes)
 
 	resourceName := "test-credential-container-registry-" + acctest.RandString(5)
 	resource1 := CredentialAPIModel{
 		Name:        "test-credential-machine-" + acctest.RandString(5),
 		Description: "test description 1",
-		Inputs:      "{\"become_method\":\"sudo\",\"become_password\":\"ASK\",\"password\":\"test1234\",\"username\":\"testuser\"}",
+		Inputs: map[string]any{
+			"become_method":   "sudo",
+			"become_password": "ASK",
+			"password":        "test1234",
+			"username":        "testuser",
+		},
 	}
-	resource1inputs, ok := resource1.Inputs.(string)
-	if !ok {
-		return
-	}
+
+	resource1inputs := mustMarshal(resource1.Inputs)
+
 	resource2 := CredentialAPIModel{
 		Name:        "test-credential-source-control-" + acctest.RandString(5),
 		Description: "test description 2",
-		Inputs:      "{\"ssh_key_data\":\"" + opensshKey + "\",\"username\":\"testuser\"}",
+		Inputs: map[string]any{
+			"ssh_key_data": opensshKey,
+			"username":     "testuser",
+		},
 	}
-	resource2inputs, ok := resource2.Inputs.(string)
-	if !ok {
-		return
-	}
+
+	resource2inputs := mustMarshal(resource2.Inputs)
+
 	resource3 := CredentialAPIModel{
 		Name:        resourceName,
 		Description: "test description 3",
-		Inputs:      "{\"host\":\"quay.io\",\"password\":\"test1234\",\"username\":\"test\",\"verify_ssl\":true}",
+		Inputs: map[string]any{
+			"host":       "quay.io",
+			"password":   "test1234",
+			"username":   "test",
+			"verify_ssl": true,
+		},
 	}
-	resource3inputs, ok := resource3.Inputs.(string)
-	if !ok {
-		return
-	}
+
+	resource3inputs := mustMarshal(resource3.Inputs)
+
 	resource4 := CredentialAPIModel{
 		Name:        resourceName,
 		Description: "test description 4",
-		Inputs:      "{\"host\":\"quay.io\",\"password\":\"new4567\",\"username\":\"test2\",\"verify_ssl\":false}",
+		Inputs: map[string]any{
+			"host":       "quay.io",
+			"password":   "new4567",
+			"username":   "test2",
+			"verify_ssl": false,
+		},
 	}
-	resource4inputs, ok := resource4.Inputs.(string)
-	if !ok {
-		return
-	}
+
+	resource4inputs := mustMarshal(resource4.Inputs)
+
 	resource.Test(t, resource.TestCase{
+
 		PreCheck: func() { testAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
@@ -194,7 +359,7 @@ resource "%[1]s_credential" "test-machine" {
   credential_type = data.%[1]s_credential_type.test-machine.id
   inputs = jsonencode(%[5]s)
 }
-  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs)
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, mustMarshal(resource.Inputs))
 }
 
 func testAccCredential2Config(resource CredentialAPIModel) string {
@@ -213,7 +378,7 @@ resource "%[1]s_credential" "test-source-control" {
   credential_type = data.%[1]s_credential_type.test-source-control.id
 	inputs = jsonencode(%[5]s)
 }
-  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs)
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, mustMarshal(resource.Inputs))
 }
 
 func testAccCredential3Config(resource CredentialAPIModel) string {
@@ -232,5 +397,68 @@ resource "%[1]s_credential" "test-container-registry" {
   credential_type = data.%[1]s_credential_type.test-container-registry.id
   inputs = jsonencode(%[5]s)
 }
-  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs)
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, mustMarshal(resource.Inputs))
+}
+
+func testAccCredentialInputObjTypingConfig(resource CredentialAPIModel) string {
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-input-typing" {
+  name        = "%[2]s"
+}
+data "%[1]s_credential_type" "test-input-typing" {
+  name = "Machine"
+  kind = "ssh"
+}
+resource "%[1]s_credential" "test-input-typing" {
+  name            = "%[3]s"
+  organization    = %[1]s_organization.test-input-typing.id
+  credential_type = data.%[1]s_credential_type.test-input-typing.id
+  inputs = {
+	     	host = "%[4]s"
+		    is_active = %[5]t
+		    average_cpu =%[6]f
+            }
+}`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Inputs["host"].(string), resource.Inputs["is_active"].(bool), resource.Inputs["average_cpu"].(float64))
+}
+
+func testAccCredentialInputObjTypingBasic(resource CredentialAPIModel) string {
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-input-typing" {
+  name        = "%[2]s"
+}
+data "%[1]s_credential_type" "test-input-typing" {
+  name = "Network"
+  kind = "net"
+}
+resource "%[1]s_credential" "test-input-typing" {
+  name            = "%[3]s"
+  organization    = %[1]s_organization.test-input-typing.id
+  credential_type = data.%[1]s_credential_type.test-input-typing.id
+  inputs = {
+	     	username = "%[4]s"
+		    authorize = %[5]t
+			password = "%[6]s"	
+            }
+}`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Inputs["username"].(string), resource.Inputs["authorize"].(bool), resource.Inputs["password"].(string))
+}
+
+func testAccCredentialInputObjTypingBasicImport(resource CredentialAPIModel) string {
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-input-import" {
+  name        = "%[2]s"
+}
+data "%[1]s_credential_type" "test-input-import" {
+  name = "Network"
+  kind = "net"
+}
+resource "%[1]s_credential" "test-input-import" {
+  name            = "%[3]s"
+  organization    = %[1]s_organization.test-input-import.id
+  credential_type = data.%[1]s_credential_type.test-input-import.id
+  inputs = {
+	     	username = "%[4]s"
+		    authorize = %[5]t
+			password = "%[6]s"	
+            }
+}`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Inputs["username"].(string), resource.Inputs["authorize"].(bool), resource.Inputs["password"].(string))
 }

@@ -1,28 +1,31 @@
 # SPECIAL: Hardcoded provider prefix required in this file
-REPO_BUILD_TAG_VAL = repoAAP
+REPO_BUILD_TAG_VAL=repoAAP
+GOFLAGS=-tags=$(REPO_BUILD_TAG_VAL)
+export GOFLAGS
+export GOEXPERIMENT=jsonv2
 
 default: fmt lint install generate
 
 build:
-	go build -v -tags=$(REPO_BUILD_TAG_VAL) ./...
+	go build -v ./...
 
 install: build
-	go install -v -tags=$(REPO_BUILD_TAG_VAL) ./...
+	go install -v ./...
 
 lint:
 	golangci-lint run --build-tags=$(REPO_BUILD_TAG_VAL)
 
 generate:
-	GOFLAGS="-tags=$(REPO_BUILD_TAG_VAL)" go run generate-examples/main.go
-	(cd tools && GOFLAGS="-tags=$(REPO_BUILD_TAG_VAL)" go generate ./...)
+	go run generate-examples/main.go
+	(cd tools && go generate ./...)
 
 fmt:
 	gofmt -s -w -e .
 
 test:
-	go test -v -cover -timeout=120s -parallel=10 -tags=$(REPO_BUILD_TAG_VAL) ./internal/provider
+	go test -v -cover -timeout=120s -parallel=10 ./internal/provider
 
 testacc:
-	TF_ACC=1 go test -tags=$(REPO_BUILD_TAG_VAL) -v -cover ./internal/provider
+	TF_ACC=1 go test -v -cover ./internal/provider
 
 .PHONY: fmt lint test testacc build install generate

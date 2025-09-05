@@ -15,10 +15,16 @@ import (
 )
 
 func TestAccCredentialDataSource(t *testing.T) {
+
 	resource1 := CredentialAPIModel{
 		Name:        "test-credential-" + acctest.RandString(5),
 		Description: "test description",
-		Inputs:      "{\"become_method\":\"sudo\",\"become_password\":\"ASK\",\"password\":\"test1234\",\"username\":\"tester\"}",
+		Inputs: map[string]any{
+			"become_method":   "sudo",
+			"become_password": "ASK",
+			"password":        "test1234",
+			"username":        "tester",
+		},
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
@@ -72,5 +78,5 @@ resource "%[1]s_credential" "test" {
 data "%[1]s_credential" "test" {
   id = %[1]s_credential.test.id
 }
-  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs)
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, mustMarshal(resource.Inputs))
 }

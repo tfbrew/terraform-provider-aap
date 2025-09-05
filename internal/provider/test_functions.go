@@ -149,3 +149,12 @@ func importStateJobTemplateID(resourceName string) resource.ImportStateIdFunc {
 		return jobTemplateID, nil
 	}
 }
+
+// panic if can't convert to string
+func mustMarshal(v any) string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(fmt.Sprintf("marshal failed: %v", err))
+	}
+	return string(b)
+}

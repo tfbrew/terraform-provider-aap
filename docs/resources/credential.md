@@ -102,7 +102,7 @@ resource "aap_credential" "example-container-registry" {
 ### Optional
 
 - `description` (String) Credential description.
-- `inputs` (String, Sensitive) Credential inputs using `jsonencode()`. Specify alphabetically.
+- `inputs` (Dynamic, Sensitive) This field can take inputs in two forms. The first is by providing an object. If importing, it expects your input value to be an object. See above for examples of both types. The older, second method is to specify a string by using using `jsonencode() to encode similar data as as string in state.`. Specify alphabetically when using the second method.
 - `organization` (Number) ID of organization which owns this credential. One and only one of `organization`, `team`, or `user` must be set.
 - `team` (Number) ID of team which owns this credential. One and only one of `organization`, `team`, or `user` must be set.
 - `user` (Number) ID of user which owns this credential. One and only one of `organization`, `team`, or `user` must be set.
@@ -121,4 +121,17 @@ Import is supported using the following syntax:
 # The first plan/apply after import will result in a modification to the inputs so that the state can be updated.
 
 terraform import aap_credential.example 5
+
+# If you have an inputs_with_import field defined with secrets, you need to specify them here as comma-separated field name and secret-value pairs.
+# The string at the end of this example command below would correlate to:
+#   resource "aap_credential" "example_with_input" {
+#      id = 5   
+#      inputs_with_import = {
+#         password = "12345"
+#         token = "token,a1b2c3-d4e5"
+#         non-secret = "do not include in import cli command"
+#      }
+#   }
+
+terraform import aap_credential.example_with_input "5,password,12345,token,a1b2c3-d4e5"
 ```
