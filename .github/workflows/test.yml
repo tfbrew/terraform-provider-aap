@@ -81,7 +81,7 @@ jobs:
       - run: go mod download
       - env:
           TF_ACC: "1"
-          TOWER_HOST: ${{ secrets.AAP_25_HOST }}
-          TOWER_OAUTH_TOKEN: ${{ secrets.AAP_25_OAUTH_TOKEN }}
+          AAP_HOST: ${{ secrets.AAP_25_HOST }}
+          AAP_OAUTH_TOKEN: ${{ secrets.AAP_25_OAUTH_TOKEN }}
         run: go test -v -cover -tags=${{ vars.BUILD_TAG }} -timeout 20m ./internal/provider/
         timeout-minutes: 20

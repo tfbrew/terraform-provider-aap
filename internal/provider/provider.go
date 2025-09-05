@@ -64,15 +64,15 @@ func (p *theProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 				Optional:    true,
 			},
 			"token": schema.StringAttribute{
-				Description: "Automation controller access token (instead of username/password). You can also set this using the TOWER_OAUTH_TOKEN environment variable.",
+				Description: "Automation controller access token (instead of username/password). You can also set this using the AAP_OAUTH_TOKEN environment variable.",
 				Optional:    true,
 			},
 			"username": schema.StringAttribute{
-				Description: "Automation controller username (instead of token). You can also set this using the TOWER_USERNAME environment variable.",
+				Description: "Automation controller username (instead of token). You can also set this using the AAP_USERNAME environment variable.",
 				Optional:    true,
 			},
 			"password": schema.StringAttribute{
-				Description: "Automation controller password (instead of token). You can also set this using the TOWER_PASSWORD environment variable.",
+				Description: "Automation controller password (instead of token). You can also set this using the AAP_PASSWORD environment variable.",
 				Optional:    true,
 			},
 			"api_retry": schema.SingleNestedAttribute{
@@ -80,14 +80,14 @@ func (p *theProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 				Optional:    true,
 				Attributes: map[string]schema.Attribute{
 					"api_retry_count": schema.Int32Attribute{
-						Description: "The number of times a GET/read API request should be reattempted should it not succeed on the first try. Can be useful when the number of Terraform objects in your plan creates many API calls and causes the AWX/AAP platform to bog down. Valid values are integers between 1 and 5. You can also set this using the TOWER_API_RETRY_COUNT environment variable.",
+						Description: "The number of times a GET/read API request should be reattempted should it not succeed on the first try. Can be useful when the number of Terraform objects in your plan creates many API calls and causes the AWX/AAP platform to bog down. Valid values are integers between 1 and 5. You can also set this using the AAP_API_RETRY_COUNT environment variable.",
 						Required:    true,
 						Validators: []validator.Int32{
 							int32validator.Between(1, 5),
 						},
 					},
 					"api_retry_delay_seconds": schema.Int32Attribute{
-						Description: "The number of seconds this provider should wait before making a retry attempt. The value must be an integer value of 1 or greater. You can also set this using the TOWER_API_RETRY_DELAY_SECONDS environment variable.",
+						Description: "The number of seconds this provider should wait before making a retry attempt. The value must be an integer value of 1 or greater. You can also set this using the AAP_API_RETRY_DELAY_SECONDS environment variable.",
 						Required:    true,
 						Validators: []validator.Int32{
 							int32validator.AtLeast(1),
@@ -131,6 +131,8 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 
 	if !data.Endpoint.IsNull() {
 		endpoint = data.Endpoint.ValueString()
+	} else if aapEnv, exists := os.LookupEnv("AAP_HOST"); exists {
+		endpoint = aapEnv
 	} else {
 		endpoint = os.Getenv("TOWER_HOST")
 	}
@@ -139,7 +141,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		resp.Diagnostics.AddError(
 			"Missing API Endpoint Configuration",
 			"While configuring the provider, the API endpoint hostname was not found in "+
-				"the TOWER_HOST environment variable or provider "+
+				"the AAP_HOST environment variable or provider "+
 				"configuration block endpoint attribute.",
 		)
 		// Not returning early allows the logic to collect all errors.
@@ -152,9 +154,19 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		}
 	}
 
-	envToken, tokenExists := os.LookupEnv("TOWER_OAUTH_TOKEN")
-	envUsername, userExists := os.LookupEnv("TOWER_USERNAME")
-	envPassword, passwordExists := os.LookupEnv("TOWER_PASSWORD")
+	// Prefer AAP_ env vars, fallback to TOWER_ if not set
+	envToken, tokenExists := os.LookupEnv("AAP_OAUTH_TOKEN")
+	if !tokenExists {
+		envToken, tokenExists = os.LookupEnv("TOWER_OAUTH_TOKEN")
+	}
+	envUsername, userExists := os.LookupEnv("AAP_USERNAME")
+	if !userExists {
+		envUsername, userExists = os.LookupEnv("TOWER_USERNAME")
+	}
+	envPassword, passwordExists := os.LookupEnv("AAP_PASSWORD")
+	if !passwordExists {
+		envPassword, passwordExists = os.LookupEnv("TOWER_PASSWORD")
+	}
 
 	// Get token if password/username not set
 	if data.Token.IsNull() && data.Username.IsNull() && data.Password.IsNull() && tokenExists {
@@ -181,7 +193,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if (token != "" && (username != "" || password != "")) || (token == "" && (username == "" || password == "")) {
 		resp.Diagnostics.AddError(
 			"Provider Configuration Error",
-			"Specify a token (TOWER_OAUTH_TOKEN) OR username/password (TOWER_USERNAME/TOWER_PASSWORD).")
+			"Specify a token (AAP_OAUTH_TOKEN) OR username/password (AAP_USERNAME/AAP_PASSWORD).")
 		return
 	}
 
@@ -212,21 +224,21 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	}
 
 	if data.APIretry.IsNull() {
-		envAPIRRetryCount, envAPIRetryCountExists := os.LookupEnv("TOWER_API_RETRY_COUNT")
-		envAPIRetryDelaySeconds, envAPIRetryDelaySecondsExists := os.LookupEnv("TOWER_API_RETRY_DELAY_SECONDS")
+		envAPIRetryCount, envAPIRetryCountExists := os.LookupEnv("AAP_API_RETRY_COUNT")
+		envAPIRetryDelaySeconds, envAPIRetryDelaySecondsExists := os.LookupEnv("AAP_API_RETRY_DELAY_SECONDS")
 
 		if envAPIRetryCountExists != envAPIRetryDelaySecondsExists {
 			resp.Diagnostics.AddError(
 				"Provider Configuration Error",
-				"Both TOWER_API_RETRY_COUNT and TOWER_API_RETRY_DELAY_SECONDS environment variables must be set together.",
+				"Both AAP_API_RETRY_COUNT and AAP_API_RETRY_DELAY_SECONDS environment variables must be set together.",
 			)
 			return
 		} else if envAPIRetryCountExists && envAPIRetryDelaySecondsExists {
-			retryCountInt, err := strconv.Atoi(envAPIRRetryCount)
+			retryCountInt, err := strconv.Atoi(envAPIRetryCount)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Provider Configuration Error",
-					fmt.Sprintf("TOWER_API_RETRY_COUNT must be an integer, got: %s", envAPIRRetryCount),
+					fmt.Sprintf("AAP_API_RETRY_COUNT must be an integer, got: %s", envAPIRetryCount),
 				)
 				return
 			}
@@ -234,7 +246,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Provider Configuration Error",
-					fmt.Sprintf("TOWER_API_RETRY_DELAY_SECONDS must be an integer, got: %s", envAPIRetryDelaySeconds),
+					fmt.Sprintf("AAP_API_RETRY_DELAY_SECONDS must be an integer, got: %s", envAPIRetryDelaySeconds),
 				)
 				return
 			}
