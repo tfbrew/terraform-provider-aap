@@ -4,23 +4,26 @@
     //  NO SECRETS - this is specific to your VS Code workspace anyway - and is tracked in git. 
     "version": "0.2.0",
     "configurations": [
-{
-    //  NO SECRETS - this is specific to your VS Code workspace anyway - and is tracked in git. 
+        {
+            //  NO SECRETS - this is specific to your VS Code workspace anyway - and is tracked in git. 
+            "name": "AAP25",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}",
+            "env": {
+                "AAP_OAUTH_TOKEN": "${env:AAP_OAUTH_TOKEN}",
+                "AAP_HOST": "${env:AAP_HOST}",
+                "GOEXPERIMENT": "jsonv2"
+            },
+            "buildFlags": [
+                "-tags=repoAAP"
+            ],
+            "args": [
+                "-debug"
+            ],
 
-        "name": "AAP25",
-        "type": "go",
-        "request": "launch",
-        "mode": "debug",
-        "program": "${workspaceFolder}",
-        "env": {
-            "TOWER_OAUTH_TOKEN": "{env:TOWER_OAUTH_TOKEN}",
-            "TOWER_HOST": "{env:TOWER_HOST",
-        },
-        "buildFlags": ["-tags=repoAAP"],
-        "args": ["-debug"]
-    }
-
-    //  NO SECRETS - this is specific to your VS Code workspace anyway - and is tracked in git. 
-
+        }
+        //  NO SECRETS - this is specific to your VS Code workspace anyway - and is tracked in git. 
     ]
 }

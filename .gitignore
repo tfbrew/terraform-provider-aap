@@ -36,3 +36,5 @@ website/vendor
 gitlog.txt
 .ansible/.lock
 
+# Environment variable files
+.env

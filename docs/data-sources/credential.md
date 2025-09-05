@@ -30,6 +30,7 @@ data "aap_credential" "example" {
 - `credential_type` (Number) ID of the credential type.
 - `description` (String) Credential description.
 - `inputs` (String) Credential inputs.
+- `inputs_as_object` (Dynamic) Credential inputs as object. This is the same data as `inputs` but in object format.
 - `kind` (String) Credential kind.
 - `name` (String) Credential name.
 - `organization` (Number) ID of organization which owns this credential. One and only one of `organization`, `team`, or `user` must be set.
