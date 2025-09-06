@@ -77,94 +77,94 @@ func TestAccWkflwJobTemplJobNodeAlwaysResource(t *testing.T) {
 }
 
 func testAccWkflwJobTemplJobNodeAlwaysResource1Config() string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
-resource "awx_inventory" "test" {
-  name         = "%s"
-  organization = awx_organization.test.id
+resource "%[1]s_inventory" "test" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test.id
 }
-resource "awx_project" "test" {
-  name         		= "%s"
-  organization 		= awx_organization.test.id
+resource "%[1]s_project" "test" {
+  name         		= "%[2]s"
+  organization 		= %[1]s_organization.test.id
   scm_type     		= "git"
   scm_url      		= "git@github.com:user/repo.git"
   allow_override 	= true
 }
-resource "awx_job_template" "test" {
-  name      				= "%s"
+resource "%[1]s_job_template" "test" {
+  name      				= "%[2]s"
   ask_inventory_on_launch 	= true
-  project   				= awx_project.test.id
+  project   				= %[1]s_project.test.id
   playbook  				= "test.yml"
 }
-resource "awx_workflow_job_template" "test" {
-  name                     = "%s"
-  inventory                = awx_inventory.test.id
-  organization             = awx_organization.test.id
+resource "%[1]s_workflow_job_template" "test" {
+  name                     = "%[2]s"
+  inventory                = %[1]s_inventory.test.id
+  organization             = %[1]s_organization.test.id
 }
-resource "awx_workflow_job_template_job_node" "test1" {
-  unified_job_template     	= awx_job_template.test.id
-  workflow_job_template_id 	= awx_workflow_job_template.test.id
-  inventory 				= awx_inventory.test.id
+resource "%[1]s_workflow_job_template_job_node" "test1" {
+  unified_job_template     	= %[1]s_job_template.test.id
+  workflow_job_template_id 	= %[1]s_workflow_job_template.test.id
+  inventory 				= %[1]s_inventory.test.id
 }
-resource "awx_workflow_job_template_job_node" "test2" {
-  unified_job_template     	= awx_job_template.test.id
-  workflow_job_template_id 	= awx_workflow_job_template.test.id
-  inventory 				= awx_inventory.test.id
+resource "%[1]s_workflow_job_template_job_node" "test2" {
+  unified_job_template     	= %[1]s_job_template.test.id
+  workflow_job_template_id 	= %[1]s_workflow_job_template.test.id
+  inventory 				= %[1]s_inventory.test.id
 }
-resource "awx_workflow_job_template_node_always" "test" {
-  id              = awx_workflow_job_template_job_node.test1.id
-  always_ids = [awx_workflow_job_template_job_node.test2.id]
+resource "%[1]s_workflow_job_template_node_always" "test" {
+  id              = %[1]s_workflow_job_template_job_node.test1.id
+  always_ids = [%[1]s_workflow_job_template_job_node.test2.id]
 }
-  `, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5)))
+  `, configprefix.Prefix, acctest.RandString(5))
 }
 
 func testAccWkflwJobTemplJobNodeAlwaysResource2Config() string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
-resource "awx_inventory" "test" {
-  name         = "%s"
-  organization = awx_organization.test.id
+resource "%[1]s_inventory" "test" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test.id
 }
-resource "awx_project" "test" {
-  name         		= "%s"
-  organization 		= awx_organization.test.id
+resource "%[1]s_project" "test" {
+  name         		= "%[2]s"
+  organization 		= %[1]s_organization.test.id
   scm_type     		= "git"
   scm_url      		= "git@github.com:user/repo.git"
   allow_override 	= true
 }
-resource "awx_job_template" "test" {
-  name      = "%s"
-  inventory = awx_inventory.test.id
-  project   = awx_project.test.id
+resource "%[1]s_job_template" "test" {
+  name      = "%[2]s"
+  inventory = %[1]s_inventory.test.id
+  project   = %[1]s_project.test.id
   playbook  = "test.yml"
 }
-resource "awx_workflow_job_template" "test" {
-  name                     = "%s"
-  inventory                = awx_inventory.test.id
-  organization             = awx_organization.test.id
+resource "%[1]s_workflow_job_template" "test" {
+  name                     = "%[2]s"
+  inventory                = %[1]s_inventory.test.id
+  organization             = %[1]s_organization.test.id
 }
-resource "awx_workflow_job_template_job_node" "test3" {
-  unified_job_template     	= awx_job_template.test.id
-  workflow_job_template_id 	= awx_workflow_job_template.test.id
-  inventory 				= awx_inventory.test.id
+resource "%[1]s_workflow_job_template_job_node" "test3" {
+  unified_job_template     	= %[1]s_job_template.test.id
+  workflow_job_template_id 	= %[1]s_workflow_job_template.test.id
+  inventory 				= %[1]s_inventory.test.id
 }
-resource "awx_workflow_job_template_job_node" "test4" {
-  unified_job_template     	= awx_job_template.test.id
-  workflow_job_template_id 	= awx_workflow_job_template.test.id
-  inventory 				= awx_inventory.test.id
+resource "%[1]s_workflow_job_template_job_node" "test4" {
+  unified_job_template     	= %[1]s_job_template.test.id
+  workflow_job_template_id 	= %[1]s_workflow_job_template.test.id
+  inventory 				= %[1]s_inventory.test.id
 }
-resource "awx_workflow_job_template_job_node" "test5" {
-  unified_job_template     	= awx_job_template.test.id
-  workflow_job_template_id 	= awx_workflow_job_template.test.id
-  inventory 				= awx_inventory.test.id
+resource "%[1]s_workflow_job_template_job_node" "test5" {
+  unified_job_template     	= %[1]s_job_template.test.id
+  workflow_job_template_id 	= %[1]s_workflow_job_template.test.id
+  inventory 				= %[1]s_inventory.test.id
 }
-resource "awx_workflow_job_template_node_always" "test" {
-  id              = awx_workflow_job_template_job_node.test3.id
-  always_ids = [awx_workflow_job_template_job_node.test4.id, awx_workflow_job_template_job_node.test5.id]
+resource "%[1]s_workflow_job_template_node_always" "test" {
+  id              = %[1]s_workflow_job_template_job_node.test3.id
+  always_ids = [%[1]s_workflow_job_template_job_node.test4.id, %[1]s_workflow_job_template_job_node.test5.id]
 }
-  `, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5)))
+  `, configprefix.Prefix, acctest.RandString(5))
 }

@@ -58,25 +58,25 @@ func TestAccHostDataSource(t *testing.T) {
 }
 
 func testAccHostDataSourceConfig(resource HostAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "aap_organization" "example" {
-  name        = "test-organization-%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "example" {
+  name        = "test-organization-%[2]s"
   description = "test"
 }
-resource "aap_inventory" "example" {
-  name         = "test-inventory-%s"
+resource "%[1]s_inventory" "example" {
+  name         = "test-inventory-%[2]s"
   description  = "test"
-  organization = aap_organization.example.id
+  organization = %[1]s_organization.example.id
 }
-resource "aap_host" "test" {
-  name        = "%s"
-  description = "%s"
-  inventory   = aap_inventory.example.id
-  variables   = jsonencode(%s)
-  enabled 	  = %v
+resource "%[1]s_host" "test" {
+  name        = "%[3]s"
+  description = "%[4]s"
+  inventory   = %[1]s_inventory.example.id
+  variables   = jsonencode(%[5]s)
+  enabled 	  = %[6]v
 }
-data "aap_host" "test" {
-  id = aap_host.test.id
+data "%[1]s_host" "test" {
+  id = %[1]s_host.test.id
 }
-`, acctest.RandString(5), acctest.RandString(5), resource.Name, resource.Description, resource.Variables, resource.Enabled))
+`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables, resource.Enabled)
 }

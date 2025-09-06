@@ -142,53 +142,53 @@ func TestAccOrganizationDataSource(t *testing.T) {
 }
 
 func testAccOrganizationDataSourceIdConfig1(resource OrganizationAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-id" {
-  name        			= "%s"
-  description 			= "%s"
-  default_environment 	= %d
-  max_hosts				= %d
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-id" {
+  name        			= "%[2]s"
+  description 			= "%[3]s"
+  default_environment 	= %[4]d
+  max_hosts				= %[5]d
 }
-data "awx_organization" "test-id" {
-  id = awx_organization.test-id.id
+data "%[1]s_organization" "test-id" {
+  id = %[1]s_organization.test-id.id
 }
-`, resource.Name, resource.Description, resource.DefaultEnv, resource.MaxHosts))
+`, configprefix.Prefix, resource.Name, resource.Description, resource.DefaultEnv, resource.MaxHosts)
 }
 
 func testAccOrganizationDataSourceIdConfig2(resource OrganizationAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-id" {
-  name        			= "%s"
-  description 			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-id" {
+  name        			= "%[2]s"
+  description 			= "%[3]s"
 }
-data "awx_organization" "test-id" {
-  id = awx_organization.test-id.id
+data "%[1]s_organization" "test-id" {
+  id = %[1]s_organization.test-id.id
 }
-`, resource.Name, resource.Description))
+`, configprefix.Prefix, resource.Name, resource.Description)
 }
 
 func testAccOrganizationDataSourceNameConfig1(resource OrganizationAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-name" {
-  name        			= "%s"
-  description 			= "%s"
-  default_environment 	= %d
-  max_hosts				= %d
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-name" {
+  name        			= "%[2]s"
+  description 			= "%[3]s"
+  default_environment 	= %[4]d
+  max_hosts				= %[5]d
 }
-data "awx_organization" "test-name" {
-  name = awx_organization.test-name.name
+data "%[1]s_organization" "test-name" {
+  name = %[1]s_organization.test-name.name
 }
-`, resource.Name, resource.Description, resource.DefaultEnv, resource.MaxHosts))
+`, configprefix.Prefix, resource.Name, resource.Description, resource.DefaultEnv, resource.MaxHosts)
 }
 
 func testAccOrganizationDataSourceNameConfig2(resource OrganizationAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-name" {
-  name        			= "%s"
-  description 			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-name" {
+  name        			= "%[2]s"
+  description 			= "%[3]s"
 }
-data "awx_organization" "test-name" {
-  name = awx_organization.test-name.name
+data "%[1]s_organization" "test-name" {
+  name = %[1]s_organization.test-name.name
 }
-`, resource.Name, resource.Description))
+`, configprefix.Prefix, resource.Name, resource.Description)
 }

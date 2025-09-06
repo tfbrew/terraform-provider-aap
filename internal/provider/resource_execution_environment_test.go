@@ -103,42 +103,42 @@ func TestAccExecutionEnvironmentResource(t *testing.T) {
 }
 
 func testAccExecutionEnvironmentResource1Config(resource ExecutionEnvironmentAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_execution_environment" "test" {
-  name        	= "%s"
-  description 	= "%s"
-  image   		= "%s"
-  pull 			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_execution_environment" "test" {
+  name        	= "%[2]s"
+  description 	= "%[3]s"
+  image   		= "%[4]s"
+  pull 			= "%[5]s"
 }
-  `, resource.Name, resource.Description, resource.Image, resource.Pull))
+  `, configprefix.Prefix, resource.Name, resource.Description, resource.Image, resource.Pull)
 }
 
 func testAccExecutionEnvironmentResource2Config(resource ExecutionEnvironmentAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-data "awx_credential_type" "test" {
+	return fmt.Sprintf(`
+data "%[1]s_credential_type" "test" {
   name = "Container Registry"
   kind = "registry"
 }
-resource "awx_organization" "test" {
-  name        = "%s"
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
-resource "awx_credential" "test" {
-  name            = "%s"
-  organization    = awx_organization.test.id
-  credential_type = data.awx_credential_type.test.id
+resource "%[1]s_credential" "test" {
+  name            = "%[2]s"
+  organization    = %[1]s_organization.test.id
+  credential_type = data.%[1]s_credential_type.test.id
   inputs = jsonencode({
 	"host" : "quay.io",
 	"username" : "test",
-	"password" : "%s",
+	"password" : "%[2]s",
 	"verify_ssl" : true
   })
 }
-resource "awx_execution_environment" "test" {
-  name        	= "%s"
-  description 	= "%s"
-  image   		= "%s"
-  pull 			= "%s"
-  credential	= awx_credential.test.id
+resource "%[1]s_execution_environment" "test" {
+  name        	= "%[3]s"
+  description 	= "%[4]s"
+  image   		= "%[5]s"
+  pull 			= "%[6]s"
+  credential	= %[1]s_credential.test.id
 }
-  `, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), resource.Name, resource.Description, resource.Image, resource.Pull))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Image, resource.Pull)
 }

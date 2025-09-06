@@ -144,32 +144,32 @@ func TestAccInstanceGroupResource(t *testing.T) {
 }
 
 func testAccInstanceGroup1Config(resource InstanceGroupAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_instance_group" "test-instance" {
-  name                       = "%s"
-  policy_instance_percentage = %d
+	return fmt.Sprintf(`
+resource "%[1]s_instance_group" "test-instance" {
+  name                       = "%[2]s"
+  policy_instance_percentage = %[3]d
 }
-`, resource.Name, resource.PolicyInstancePercentage))
+`, configprefix.Prefix, resource.Name, resource.PolicyInstancePercentage)
 }
 
 func testAccInstanceGroup2Config(resource InstanceGroupAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_instance_group" "test-instance" {
-  name                       = "%s"
-  max_concurrent_jobs		 = %d
-  max_forks					 = %d
-  policy_instance_minimum	 = %d
-  policy_instance_percentage = %d
+	return fmt.Sprintf(`
+resource "%[1]s_instance_group" "test-instance" {
+  name                       = "%[2]s"
+  max_concurrent_jobs		 = %[3]d
+  max_forks					 = %[4]d
+  policy_instance_minimum	 = %[5]d
+  policy_instance_percentage = %[6]d
 }
-`, resource.Name, resource.MaxConcurrentJobs, resource.MaxForks, resource.PolicyInstanceMinimum, resource.PolicyInstancePercentage))
+`, configprefix.Prefix, resource.Name, resource.MaxConcurrentJobs, resource.MaxForks, resource.PolicyInstanceMinimum, resource.PolicyInstancePercentage)
 }
 
 func testAccContainerGroupConfig(resource InstanceGroupAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_instance_group" "test-container" {
-  name       = "%s"
-  is_container_group = %v
-  pod_spec_override = jsonencode(%s)
+	return fmt.Sprintf(`
+resource "%[1]s_instance_group" "test-container" {
+  name       = "%[2]s"
+  is_container_group = %[3]v
+  pod_spec_override = jsonencode(%[4]s)
 }
-`, resource.Name, resource.IsContainerGroup, resource.PodSpecOverride))
+`, configprefix.Prefix, resource.Name, resource.IsContainerGroup, resource.PodSpecOverride)
 }

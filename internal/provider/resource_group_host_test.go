@@ -83,26 +83,26 @@ func TestAccGroupHostResource(t *testing.T) {
 }
 
 func testAccGrpHstOrgInv() string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "example" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "example" {
+  name        = "%[2]s"
   description = "example"
 }
 
-resource "awx_inventory" "example" {
-  name         = "%s"
+resource "%[1]s_inventory" "example" {
+  name         = "%[2]s"
   description  = "example"
-  organization = awx_organization.example.id
+  organization = %[1]s_organization.example.id
 }	
-	`, acctest.RandString(5), acctest.RandString(5)))
+	`, configprefix.Prefix, acctest.RandString(5))
 }
 
 func testAccGrpHst1stPass() string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_group" "group-example" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_group" "group-example" {
+  name        = "%[2]s"
   description = "Example with jsonencoded variables."
-  inventory   = awx_inventory.example.id
+  inventory   = %[1]s_inventory.example.id
   variables = jsonencode(
     {
       foo = "bar"
@@ -111,55 +111,55 @@ resource "awx_group" "group-example" {
   )
 }
 
-resource "awx_host" "host-1" {
-  name = "%s"
-  inventory = awx_inventory.example.id
+resource "%[1]s_host" "host-1" {
+  name = "%[2]s-1"
+  inventory = %[1]s_inventory.example.id
 }
 
-resource "awx_host" "host-2" {
-  name = "%s"
-  inventory = awx_inventory.example.id
+resource "%[1]s_host" "host-2" {
+  name = "%[2]s-2"
+  inventory = %[1]s_inventory.example.id
 }
 
-resource "awx_group_host" "grp-host-link" {
-  group_id = awx_group.group-example.id
-  host_id = awx_host.host-1.id
+resource "%[1]s_group_host" "grp-host-link" {
+  group_id = %[1]s_group.group-example.id
+  host_id = %[1]s_host.host-1.id
 }
 
-resource "awx_group_host" "grp-host-link-2" {
-  group_id = awx_group.group-example.id
-  host_id = awx_host.host-2.id
+resource "%[1]s_group_host" "grp-host-link-2" {
+  group_id = %[1]s_group.group-example.id
+  host_id = %[1]s_host.host-2.id
 }
 
-	`, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5)))
+	`, configprefix.Prefix, acctest.RandString(5))
 }
 
 func testAccGrpHst1stPassGrp2() string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_group" "group-example-2" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_group" "group-example-2" {
+  name        = "%[2]s"
   description = "A second group example."
-  inventory   = awx_inventory.example.id
+  inventory   = %[1]s_inventory.example.id
 }
 
-resource "awx_group_host" "grp2-host-link" {
-  group_id = awx_group.group-example-2.id
-  host_id = awx_host.host-2.id
+resource "%[1]s_group_host" "grp2-host-link" {
+  group_id = %[1]s_group.group-example-2.id
+  host_id = %[1]s_host.host-2.id
 }	
-	`, acctest.RandString(5)))
+	`, configprefix.Prefix, acctest.RandString(5))
 }
 
 func testAccGrpHst2ndPassGrp2() string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_group" "group-example-2" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_group" "group-example-2" {
+  name        = "%[2]s"
   description = "A second group example."
-  inventory   = awx_inventory.example.id
+  inventory   = %[1]s_inventory.example.id
 }
 
-resource "awx_group_host" "grp2-host-link" {
-  group_id = awx_group.group-example-2.id
-  host_id = awx_host.host-1.id
+resource "%[1]s_group_host" "grp2-host-link" {
+  group_id = %[1]s_group.group-example-2.id
+  host_id = %[1]s_host.host-1.id
 }	
-	`, acctest.RandString(5)))
+	`, configprefix.Prefix, acctest.RandString(5))
 }

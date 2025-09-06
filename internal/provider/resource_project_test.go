@@ -240,52 +240,52 @@ func TestAccProjectResource(t *testing.T) {
 }
 
 func testAccProjectResourceConfig(resource ProjectAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        			= "%[2]s"
 }
-resource "awx_project" "test" {
-  name         			= "%s"
-  description  			= "%s"
-  scm_type     			= "%s"
-  scm_url      			= "%s"
-  organization 			= awx_organization.test.id
-  scm_update_on_launch 	= %v
-  timeout				= %d
+resource "%[1]s_project" "test" {
+  name         			= "%[3]s"
+  description  			= "%[4]s"
+  scm_type     			= "%[5]s"
+  scm_url      			= "%[6]s"
+  organization 			= %[1]s_organization.test.id
+  scm_update_on_launch 	= %[7]v
+  timeout				= %[8]d
 }
-  `, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.ScmUpdOnLaunch, resource.Timeout))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.ScmUpdOnLaunch, resource.Timeout)
 }
 
 func testAccProjectResource3Config(resource ProjectAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-svn" {
-  name        			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-svn" {
+  name        			= "%[2]s"
 }
-resource "awx_project" "test-svn" {
-  name         			= "%s"
-  description  			= "%s"
-  scm_type     			= "%s"
-  scm_url      			= "%s"
-  organization 			= awx_organization.test-svn.id
-  scm_update_on_launch 	= %v
-  timeout				= %d
+resource "%[1]s_project" "test-svn" {
+  name         			= "%[3]s"
+  description  			= "%[4]s"
+  scm_type     			= "%[5]s"
+  scm_url      			= "%[6]s"
+  organization 			= %[1]s_organization.test-svn.id
+  scm_update_on_launch 	= %[7]v
+  timeout				= %[8]d
 }
-  `, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.ScmUpdOnLaunch, resource.Timeout))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.ScmUpdOnLaunch, resource.Timeout)
 }
 
 func testAccProjectResource4Config(resource ProjectAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-archive" {
-  name        			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-archive" {
+  name        			= "%[2]s"
 }
-resource "awx_project" "test-archive" {
-  name         			= "%s"
-  description  			= "%s"
-  scm_type     			= "%s"
-  scm_url      			= "%s"
-  organization 			= awx_organization.test-archive.id
-  scm_update_on_launch 	= %v
-  timeout				= %d
+resource "%[1]s_project" "test-archive" {
+  name         			= "%[3]s"
+  description  			= "%[4]s"
+  scm_type     			= "%[5]s"
+  scm_url      			= "%[6]s"
+  organization 			= %[1]s_organization.test-archive.id
+  scm_update_on_launch 	= %[7]v
+  timeout				= %[8]d
 }
-  `, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.ScmUpdOnLaunch, resource.Timeout))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.ScmUpdOnLaunch, resource.Timeout)
 }

@@ -152,21 +152,21 @@ func TestAccOrganizationResource(t *testing.T) {
 }
 
 func testAccOrganizationResourceConfig1(resource OrganizationAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        			= "%s"
-  description 			= "%s"
-  default_environment 	= %d
-  max_hosts				= %d
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        			= "%[2]s"
+  description 			= "%[3]s"
+  default_environment 	= %[4]d
+  max_hosts				= %[5]d
 }
-  `, resource.Name, resource.Description, resource.DefaultEnv, resource.MaxHosts))
+  `, configprefix.Prefix, resource.Name, resource.Description, resource.DefaultEnv, resource.MaxHosts)
 }
 
 func testAccOrganizationResourceConfig2(resource OrganizationAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        			= "%s"
-  description 			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        			= "%[2]s"
+  description 			= "%[3]s"
 }
-  `, resource.Name, resource.Description))
+  `, configprefix.Prefix, resource.Name, resource.Description)
 }

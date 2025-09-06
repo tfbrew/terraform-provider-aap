@@ -56,35 +56,35 @@ func TestAccJobTemplateLabel_basic(t *testing.T) {
 }
 
 func testAccJobTemplateLabel1Config(jobTemplateName string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
 
-resource "awx_project" "test" {
-	name         = "%s"
-	organization = awx_organization.test.id
+resource "%[1]s_project" "test" {
+	name         = "%[2]s"
+	organization = %[1]s_organization.test.id
 	allow_override = true
 	scm_type = "git"
 	scm_url = "https://github.com/fakerepo"
 }	
 
-resource "awx_job_template" "test" {
-	name = "%s"
+resource "%[1]s_job_template" "test" {
+	name = "%[3]s"
 	playbook = "hello_world.yml"
 	ask_inventory_on_launch = true
-	project = awx_project.test.id
+	project = %[1]s_project.test.id
 }
 
-resource "awx_label" "test_label_1" {
+resource "%[1]s_label" "test_label_1" {
 	name = "testlabel1"
-	organization = awx_organization.test.id
+	organization = %[1]s_organization.test.id
 }
 
-resource "awx_job_template_label" "test" {
-	job_template_id = awx_job_template.test.id
-	label_ids = [awx_label.test_label_1.id]
+resource "%[1]s_job_template_label" "test" {
+	job_template_id = %[1]s_job_template.test.id
+	label_ids = [%[1]s_label.test_label_1.id]
 }
 
-  `, acctest.RandString(5), acctest.RandString(5), jobTemplateName))
+  `, configprefix.Prefix, acctest.RandString(5), jobTemplateName)
 }

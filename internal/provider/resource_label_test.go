@@ -52,14 +52,14 @@ func TestAccLabel_basic(t *testing.T) {
 }
 
 func labelTestCaseSetup(org, name string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "testorg" {
-	name = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "testorg" {
+	name = "%[2]s"
 }
 
-resource "awx_label" "test" {
-	name = "%s"
-	organization = awx_organization.testorg.id
+resource "%[1]s_label" "test" {
+	name = "%[3]s"
+	organization = %[1]s_organization.testorg.id
 }
-`, org, name))
+`, configprefix.Prefix, org, name)
 }

@@ -73,48 +73,48 @@ func TestAccGroupDataSource(t *testing.T) {
 }
 
 func testAccGroupDataSourceConfig(resource GroupAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "example" {
-  name        = "test-organization-%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "example" {
+  name        = "test-organization-%[2]s"
   description = "test"
 }
-resource "awx_inventory" "example" {
-  name         = "test-inventory-%s"
+resource "%[1]s_inventory" "example" {
+  name         = "test-inventory-%[2]s"
   description  = "test"
-  organization = awx_organization.example.id
+  organization = %[1]s_organization.example.id
 }
-resource "awx_group" "test" {
-  name        = "%s"
-  description = "%s"
-  inventory   = awx_inventory.example.id
-  variables   = jsonencode(%s)
+resource "%[1]s_group" "test" {
+  name        = "%[3]s"
+  description = "%[4]s"
+  inventory   = %[1]s_inventory.example.id
+  variables   = jsonencode(%[5]s)
 }
-data "awx_group" "test" {
-  id = awx_group.test.id
+data "%[1]s_group" "test" {
+  id = %[1]s_group.test.id
 }
-`, acctest.RandString(5), acctest.RandString(5), resource.Name, resource.Description, resource.Variables))
+`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables)
 }
 
 func testAccGroupDataSourceConfigByName(resource GroupAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "example" {
-  name        = "test-organization-%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "example" {
+  name        = "test-organization-%[2]s"
   description = "test"
 }
-resource "awx_inventory" "example" {
-  name         = "test-inventory-%s"
+resource "%[1]s_inventory" "example" {
+  name         = "test-inventory-%[2]s"
   description  = "test"
-  organization = awx_organization.example.id
+  organization = %[1]s_organization.example.id
 }
-resource "awx_group" "test" {
-  name        = "%s"
-  description = "%s"
-  inventory   = awx_inventory.example.id
-  variables   = jsonencode(%s)
+resource "%[1]s_group" "test" {
+  name        = "%[3]s"
+  description = "%[4]s"
+  inventory   = %[1]s_inventory.example.id
+  variables   = jsonencode(%[5]s)
 }
-data "awx_group" "by_name" {
-  name      = awx_group.test.name
-  inventory = awx_inventory.example.id
+data "%[1]s_group" "by_name" {
+  name      = %[1]s_group.test.name
+  inventory = %[1]s_inventory.example.id
 }
-`, acctest.RandString(5), acctest.RandString(5), resource.Name, resource.Description, resource.Variables))
+`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables)
 }

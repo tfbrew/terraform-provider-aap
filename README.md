@@ -13,9 +13,8 @@ This repo has modified the GNUmake file inherited from the Terraform scaffold re
 
 ## Code sharing
 
-This code is used for three different providers:
+This code is used for two different providers:
 
-- The original one: tfbrew/aap. This one supports awx, aap2.4, and aap2.5
 - tfbrew/aap: Supports aap2.5 and greater.
 - tfbrew/awx: Supports awx and aap2.4.
 
@@ -37,20 +36,18 @@ Search all files in this repository for the phrase `SPECIAL` to find files that 
 
 When writing acceptance test, you often have to write Terraform HCL code. Make sure to write your embedded HCL such that it will use the configprefix.Prefix to prefix the resource ID properly.
 
-If you are creating functions to generate HCL, you can wrap the returned string in a function called **configprefix.ReplaceText()** to automatically convert the instances of `awx_` or `aap_` strings into the one matching your build tag.
-
 For example:
 
 ```go
-return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_credential_type" "test-name" {
-  name         = "%s"
-  description  = "%s"
+return fmt.Sprintf(`
+resource "%[1]s_credential_type" "test-name" {
+  name         = "%[2]s"
+  description  = "%[2]s"
 }
-data "awx_credential_type" "test-name" {
-  name = awx_credential_type.test-name.name
-  kind = awx_credential_type.test-name.kind
+data "%[1]s_credential_type" "test-name" {
+  name = %[1]s_credential_type.test-name.name
+  kind = %[1]s_credential_type.test-name.kind
 }
-  `, resource.Name, resource.Description))
+  `,configprefix.Prefix, resource.Name, resource.Description)
 }
 ```

@@ -57,103 +57,103 @@ func TestAccJobTemplateCredentialResource(t *testing.T) {
 }
 
 func testAccJobTemplateCredentialResource1Config() string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
-resource "awx_inventory" "test" {
-  name         = "%s"
-  organization = awx_organization.test.id
+resource "%[1]s_inventory" "test" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test.id
 }
-resource "awx_project" "test" {
-  name         		= "%s"
-  organization 		= awx_organization.test.id
+resource "%[1]s_project" "test" {
+  name         		= "%[2]s"
+  organization 		= %[1]s_organization.test.id
   scm_type     		= "git"
   scm_url      		= "git@github.com:user/repo.git"
   allow_override 	= true
 }
-data "awx_credential_type" "test" {
+data "%[1]s_credential_type" "test" {
   name = "Machine"
   kind = "ssh"
 }
-resource "awx_credential" "test" {
-  name            = "%s"
-  description	  = "%s"
-  organization    = awx_organization.test.id
-  credential_type = data.awx_credential_type.test.id
+resource "%[1]s_credential" "test" {
+  name            = "%[2]s"
+  description	  = "%[2]s"
+  organization    = %[1]s_organization.test.id
+  credential_type = data.%[1]s_credential_type.test.id
   inputs = jsonencode({
-    "password" : "%s",
-    "username" : "%s"
+    "password" : "%[2]s",
+    "username" : "%[2]s"
   })
 }
-resource "awx_job_template" "test" {
-  name        = "%s"
+resource "%[1]s_job_template" "test" {
+  name        = "%[2]s"
   job_type    = "run"
-  inventory   = awx_inventory.test.id
-  project     = awx_project.test.id
-  playbook    = "%s"
+  inventory   = %[1]s_inventory.test.id
+  project     = %[1]s_project.test.id
+  playbook    = "%[2]s"
 }
-resource "awx_job_template_credential" "test" {
-  credential_ids  = [ awx_credential.test.id ]
-  job_template_id = awx_job_template.test.id
+resource "%[1]s_job_template_credential" "test" {
+  credential_ids  = [ %[1]s_credential.test.id ]
+  job_template_id = %[1]s_job_template.test.id
 }
-  `, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5)))
+  `, configprefix.Prefix, acctest.RandString(5))
 }
 
 func testAccJobTemplateCredentialResource2Config() string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
-resource "awx_inventory" "test" {
-  name         = "%s"
-  organization = awx_organization.test.id
+resource "%[1]s_inventory" "test" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test.id
 }
-resource "awx_project" "test" {
-  name         		= "%s"
-  organization 		= awx_organization.test.id
+resource "%[1]s_project" "test" {
+  name         		= "%[2]s"
+  organization 		= %[1]s_organization.test.id
   scm_type     		= "git"
   scm_url      		= "git@github.com:user/repo.git"
   allow_override 	= true
 }
-data "awx_credential_type" "test1" {
+data "%[1]s_credential_type" "test1" {
   name = "Machine"
   kind = "ssh"
 }
-resource "awx_credential" "test1" {
-  name            = "%s"
-  description	  = "%s"
-  organization    = awx_organization.test.id
-  credential_type = data.awx_credential_type.test1.id
+resource "%[1]s_credential" "test1" {
+  name            = "%[2]s"
+  description	  = "%[2]s"
+  organization    = %[1]s_organization.test.id
+  credential_type = data.%[1]s_credential_type.test1.id
   inputs = jsonencode({
-    "password" : "%s",
-    "username" : "%s"
+    "password" : "%[2]s",
+    "username" : "%[2]s"
   })
 }
-data "awx_credential_type" "test2" {
+data "%[1]s_credential_type" "test2" {
   name = "Amazon Web Services"
   kind = "cloud"
 }
-resource "awx_credential" "test2" {
-  name            = "%s"
-  description	  = "%s"
-  organization    = awx_organization.test.id
-  credential_type = data.awx_credential_type.test2.id
+resource "%[1]s_credential" "test2" {
+  name            = "%[2]s"
+  description	  = "%[2]s"
+  organization    = %[1]s_organization.test.id
+  credential_type = data.%[1]s_credential_type.test2.id
   inputs = jsonencode({
-    "password" : "%s",
-    "username" : "%s"
+    "password" : "%[2]s",
+    "username" : "%[2]s"
   })
 }
-resource "awx_job_template" "test" {
-  name        = "%s"
+resource "%[1]s_job_template" "test" {
+  name        = "%[2]s"
   job_type    = "run"
-  inventory   = awx_inventory.test.id
-  project     = awx_project.test.id
-  playbook    = "%s"
+  inventory   = %[1]s_inventory.test.id
+  project     = %[1]s_project.test.id
+  playbook    = "%[2]s"
 }
-resource "awx_job_template_credential" "test" {
-  credential_ids  = [ awx_credential.test1.id, awx_credential.test2.id ]
-  job_template_id = awx_job_template.test.id
+resource "%[1]s_job_template_credential" "test" {
+  credential_ids  = [ %[1]s_credential.test1.id, %[1]s_credential.test2.id ]
+  job_template_id = %[1]s_job_template.test.id
 }
-  `, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5)))
+  `, configprefix.Prefix, acctest.RandString(5))
 }

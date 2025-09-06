@@ -91,36 +91,36 @@ func TestAccInventorySourceDataSource(t *testing.T) {
 }
 
 func testAccInventorySourceDataSourceConfig(resource InventorySourceAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
 
-resource "awx_project" "test" {
-  name         = "%s"
-  organization = awx_organization.test.id
+resource "%[1]s_project" "test" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test.id
   scm_type     = "git"
   scm_url      = "git@github.com:user/repo.git"
 }
 
-resource "awx_inventory" "test" {
-  name         = "%s"
-  organization = awx_organization.test.id
+resource "%[1]s_inventory" "test" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test.id
 }
 
-resource "awx_inventory_source" "test" {
-  name             = "%s"
-  description	   = "%s"
-  inventory        = awx_inventory.test.id
-  source           = "%s"
-  source_project   = awx_project.test.id
-  source_path      = "%s"
-  overwrite        = %v
-  overwrite_vars   = %v
-  update_on_launch = %v
+resource "%[1]s_inventory_source" "test" {
+  name             = "%[3]s"
+  description	   = "%[4]s"
+  inventory        = %[1]s_inventory.test.id
+  source           = "%[5]s"
+  source_project   = %[1]s_project.test.id
+  source_path      = "%[6]s"
+  overwrite        = %[7]v
+  overwrite_vars   = %[8]v
+  update_on_launch = %[9]v
 }
-data "awx_inventory_source" "test" {
-  id = awx_inventory_source.test.id
+data "%[1]s_inventory_source" "test" {
+  id = %[1]s_inventory_source.test.id
 }
-`, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), resource.Name, resource.Description, resource.Source, resource.SourcePath, resource.Overwrite, resource.OverwriteVars, resource.UpdateOnLaunch))
+`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Source, resource.SourcePath, resource.Overwrite, resource.OverwriteVars, resource.UpdateOnLaunch)
 }

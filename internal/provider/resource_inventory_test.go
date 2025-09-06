@@ -161,31 +161,31 @@ func TestAccInventoryResource(t *testing.T) {
 }
 
 func testAccInventoryResource1Config(resource InventoryAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        			= "%[2]s"
 }
-resource "awx_inventory" "test" {
-  name         = "%s"
-  description  = "%s"
-  organization = awx_organization.test.id
-  variables    = jsonencode(%s)
+resource "%[1]s_inventory" "test" {
+  name         = "%[3]s"
+  description  = "%[4]s"
+  organization = %[1]s_organization.test.id
+  variables    = jsonencode(%[5]s)
 }
-  `, acctest.RandString(5), resource.Name, resource.Description, resource.Variables))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables)
 }
 
 func testAccInventoryResource3Config(resource InventoryAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test3" {
-  name        			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test3" {
+  name        			= "%[2]s"
 }
-resource "awx_inventory" "test3" {
-  name         	= "%s"
-  description  	= "%s"
-  organization 	= awx_organization.test3.id
-  variables    	= jsonencode(%s)
-  kind			= "%s"
-  host_filter	= "%s"
+resource "%[1]s_inventory" "test3" {
+  name         	= "%[3]s"
+  description  	= "%[4]s"
+  organization 	= %[1]s_organization.test3.id
+  variables    	= jsonencode(%[5]s)
+  kind			= "%[6]s"
+  host_filter	= "%[7]s"
 }
-  `, acctest.RandString(5), resource.Name, resource.Description, resource.Variables, resource.Kind, resource.HostFilter))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables, resource.Kind, resource.HostFilter)
 }

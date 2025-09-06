@@ -113,67 +113,67 @@ func TestAccGroupResource(t *testing.T) {
 }
 
 func testAccSecondInvResourceConfig(resource InventoryAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-	resource "awx_organization" "new-inv-test-org" {
-		name = "test-organizatio-%s"
+	return fmt.Sprintf(`
+	resource "%[1]s_organization" "new-inv-test-org" {
+		name = "test-organizatio-%[2]s"
 	}
-	resource "awx_inventory" "new-inventory" {
-		name = "%s"
-		organization = awx_organization.new-inv-test-org.id
+	resource "%[1]s_inventory" "new-inventory" {
+		name = "%[3]s"
+		organization = %[1]s_organization.new-inv-test-org.id
 	}
-		`, acctest.RandString(5), resource.Name))
+		`, configprefix.Prefix, acctest.RandString(5), resource.Name)
 }
 
 // touches same group created by testAccGroupResource2Config(), but just changes the inventory value,
 //
 //	doing this to verify that the replace functionality works when updating this.
 func testAccInvPlanRecreateConfig(resource GroupAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_group" "test2" {
-  name        = "%s"
-  description = "%s"
-  inventory   = awx_inventory.new-inventory.id
-  variables   = jsonencode(%s)
+	return fmt.Sprintf(`
+resource "%[1]s_group" "test2" {
+  name        = "%[2]s"
+  description = "%[3]s"
+  inventory   = %[1]s_inventory.new-inventory.id
+  variables   = jsonencode(%[4]s)
 }
-  `, resource.Name, resource.Description, resource.Variables))
+  `, configprefix.Prefix, resource.Name, resource.Description, resource.Variables)
 }
 
 func testAccGroupResourceConfig(resource GroupAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "test-organization-%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "test-organization-%[2]s"
   description = "test"
 }
-resource "awx_inventory" "test" {
-  name         = "test-inventory-%s"
+resource "%[1]s_inventory" "test" {
+  name         = "test-inventory-%[2]s"
   description  = "test"
-  organization = awx_organization.test.id
+  organization = %[1]s_organization.test.id
 }
-resource "awx_group" "test" {
-  name        = "%s"
-  description = "%s"
-  inventory   = awx_inventory.test.id
-  variables   = jsonencode(%s)
+resource "%[1]s_group" "test" {
+  name        = "%[3]s"
+  description = "%[4]s"
+  inventory   = %[1]s_inventory.test.id
+  variables   = jsonencode(%[5]s)
 }
-  `, acctest.RandString(5), acctest.RandString(5), resource.Name, resource.Description, resource.Variables))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables)
 }
 
 func testAccGroupResource2Config(resource GroupAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test2" {
-  name        = "test-organization-%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test2" {
+  name        = "test-organization-%[2]s"
   description = "test"
 }
-resource "awx_inventory" "test2" {
-  name         = "test-inventory-%s"
+resource "%[1]s_inventory" "test2" {
+  name         = "test-inventory-%[2]s"
   description  = "test"
-  organization = awx_organization.test2.id
+  organization = %[1]s_organization.test2.id
 }
-resource "awx_group" "test2" {
-  name        = "%s"
-  description = "%s"
-  inventory   = awx_inventory.test2.id
-  variables   = jsonencode(%s)
+resource "%[1]s_group" "test2" {
+  name        = "%[3]s"
+  description = "%[4]s"
+  inventory   = %[1]s_inventory.test2.id
+  variables   = jsonencode(%[5]s)
 }
-  `, acctest.RandString(5), acctest.RandString(5), resource.Name, resource.Description, resource.Variables))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables)
 }

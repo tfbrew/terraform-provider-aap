@@ -117,39 +117,39 @@ func TestAccProjectDataSource(t *testing.T) {
 }
 
 func testAccProjectDataSourceIDConfig(resource ProjectAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-id" {
-  name        			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-id" {
+  name        			= "%[2]s"
 }
-resource "awx_project" "test-id" {
-  name         	= "%s"
-  description  	= "%s"
-  scm_type     	= "%s"
-  scm_url      	= "%s"
-  organization 	= awx_organization.test-id.id
-  timeout		= %d
+resource "%[1]s_project" "test-id" {
+  name         	= "%[3]s"
+  description  	= "%[4]s"
+  scm_type     	= "%[5]s"
+  scm_url      	= "%[6]s"
+  organization 	= %[1]s_organization.test-id.id
+  timeout		= %[7]d
 }
-data "awx_project" "test-id" {
-  id = awx_project.test-id.id
+data "%[1]s_project" "test-id" {
+  id = %[1]s_project.test-id.id
 }
-`, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.Timeout))
+`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.Timeout)
 }
 
 func testAccProjectDataSourceNameConfig(resource ProjectAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-name" {
-  name        			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-name" {
+  name        			= "%[2]s"
 }
-resource "awx_project" "test-name" {
-  name         	= "%s"
-  description  	= "%s"
-  scm_type     	= "%s"
-  scm_url      	= "%s"
-  organization 	= awx_organization.test-name.id
-  timeout		= %d
+resource "%[1]s_project" "test-name" {
+  name         	= "%[3]s"
+  description  	= "%[4]s"
+  scm_type     	= "%[5]s"
+  scm_url      	= "%[6]s"
+  organization 	= %[1]s_organization.test-name.id
+  timeout		= %[7]d
 }
-data "awx_project" "test-name" {
-  name = awx_project.test-name.name
+data "%[1]s_project" "test-name" {
+  name = %[1]s_project.test-name.name
 }
-`, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.Timeout))
+`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.Timeout)
 }
