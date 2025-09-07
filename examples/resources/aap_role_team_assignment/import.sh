@@ -1,0 +1,1 @@
+terraform import aap_role_team_assignment.example 1

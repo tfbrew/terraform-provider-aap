@@ -1,0 +1,19 @@
+resource "{{.Prefix}}_organization" "example" {
+  name        			= "Example Organization"
+}
+resource "{{.Prefix}}_role_definition" "example" {
+  name         = "Example Role Definition"
+  description  = "Example role definition"
+  content_type = "shared.organization"
+  permissions   = ["shared.member_organization", "shared.view_organization"]
+}
+resource "{{.Prefix}}_team" "example" {
+  name        = "Example Team"
+  organization = {{.Prefix}}_organization.example.id
+  description = "Example team description"
+}
+resource "{{.Prefix}}_role_user_assignment" "test" {
+  object_id       = {{.Prefix}}_organization.example.id
+  role_definition = {{.Prefix}}_role_definition.example.id
+  user            = {{.Prefix}}_user.example.id
+}

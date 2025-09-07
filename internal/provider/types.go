@@ -444,6 +444,50 @@ type ProjectAPIModel struct {
 	Timeout            int    `json:"timeout"`
 }
 
+type RoleDefinitionModel struct {
+	Id          types.String   `tfsdk:"id"`
+	Name        types.String   `tfsdk:"name"`
+	Description types.String   `tfsdk:"description"`
+	ContentType types.String   `tfsdk:"content_type"`
+	Permissions []types.String `tfsdk:"permissions"`
+}
+
+type RoleDefinitionAPIModel struct {
+	Id          int      `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description,omitempty"`
+	ContentType string   `json:"content_type"`
+	Permissions []string `json:"permissions"`
+}
+
+type RoleUserAssignmentModel struct {
+	Id             types.String `tfsdk:"id"`
+	ObjectId       types.String `tfsdk:"object_id"`
+	RoleDefinition types.Int32  `tfsdk:"role_definition"`
+	User           types.Int32  `tfsdk:"user"`
+}
+
+type RoleUserAssignmentAPIModel struct {
+	Id             int    `json:"id"`
+	ObjectId       string `json:"object_id"`
+	RoleDefinition int    `json:"role_definition"`
+	User           int    `json:"user"`
+}
+
+type RoleTeamAssignmentModel struct {
+	Id             types.String `tfsdk:"id"`
+	ObjectId       types.String `tfsdk:"object_id"`
+	RoleDefinition types.Int32  `tfsdk:"role_definition"`
+	Team           types.Int32  `tfsdk:"team"`
+}
+
+type RoleTeamAssignmentAPIModel struct {
+	Id             int    `json:"id"`
+	ObjectId       string `json:"object_id"`
+	RoleDefinition int    `json:"role_definition"`
+	Team           int    `json:"team"`
+}
+
 type ScheduleModel struct {
 	Id                 types.String `tfsdk:"id"`
 	Name               types.String `tfsdk:"name"`
