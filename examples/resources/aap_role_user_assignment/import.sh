@@ -1,0 +1,1 @@
+terraform import aap_role_user_assignment.example 1
