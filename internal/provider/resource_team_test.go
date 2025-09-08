@@ -80,15 +80,15 @@ func TestAccTeamResource(t *testing.T) {
 }
 
 func testAccTeamResourceConfig(teamName, teamDesc string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name = "%[2]s"
 }
 
-resource "awx_team" "test" {
-  name         = "%s"
-  organization = awx_organization.test.aap25_gateway_id
-  description  = "%s"
+resource "%[1]s_team" "test" {
+  name         = "%[3]s"
+  organization = %[1]s_organization.test.aap25_gateway_id
+  description  = "%[4]s"
 }
-`, acctest.RandString(5), teamName, teamDesc))
+`, configprefix.Prefix, acctest.RandString(5), teamName, teamDesc)
 }

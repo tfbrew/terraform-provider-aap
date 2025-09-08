@@ -77,37 +77,37 @@ func TestAccTeamDataSource(t *testing.T) {
 }
 
 func testAccTeamDataSourceIdConfig(teamName, teamDesc, orgName string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name = "%[2]s"
 }
 
-resource "awx_team" "test" {
-  name         = "%s"
-  organization = awx_organization.test.aap25_gateway_id
-  description  = "%s"
+resource "%[1]s_team" "test" {
+  name         = "%[3]s"
+  organization = %[1]s_organization.test.aap25_gateway_id
+  description  = "%[4]s"
 }
 
-data "awx_team" "test-id" {
-  id = awx_team.test.id
+data "%[1]s_team" "test-id" {
+  id = %[1]s_team.test.id
 }
-`, orgName, teamName, teamDesc))
+`, configprefix.Prefix, orgName, teamName, teamDesc)
 }
 
 func testAccTeamDataSourceNameConfig(teamName, teamDesc, orgName string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name = "%[2]s"
 }
 
-resource "awx_team" "test" {
-  name         = "%s"
-  organization = awx_organization.test.aap25_gateway_id
-  description  = "%s"
+resource "%[1]s_team" "test" {
+  name         = "%[3]s"
+  organization = %[1]s_organization.test.aap25_gateway_id
+  description  = "%[4]s"
 }
 
-data "awx_team" "test-name" {
-  name = awx_team.test.name
+data "%[1]s_team" "test-name" {
+  name = %[1]s_team.test.name
 }
-`, orgName, teamName, teamDesc))
+`, configprefix.Prefix, orgName, teamName, teamDesc)
 }

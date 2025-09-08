@@ -194,26 +194,26 @@ func TestAccCredentialInputSourcesResource(t *testing.T) {
 } // end func TestAccCredentialInputSourcesResource
 
 func testAccCredInputSrcStep1Config(orgName, srcCredName, tgtCredName, secretKey string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "example" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "example" {
+  name        = "%[2]s"
   description = "example"
 }
 
-data "awx_credential_type" "hashi_vault_secret_lookup" {
+data "%[1]s_credential_type" "hashi_vault_secret_lookup" {
     name = "HashiCorp Vault Secret Lookup"
     kind = "external"
 }
 
-data "awx_credential_type" "source_control" {
+data "%[1]s_credential_type" "source_control" {
     name = "Source Control"
     kind = "scm"
 }
 
-resource "awx_credential" "example_hashi_source_cred" {
-  credential_type = data.awx_credential_type.hashi_vault_secret_lookup.id
-  name            = "%s"
-  organization    = awx_organization.example.id
+resource "%[1]s_credential" "example_hashi_source_cred" {
+  credential_type = data.%[1]s_credential_type.hashi_vault_secret_lookup.id
+  name            = "%[3]s"
+  organization    = %[1]s_organization.example.id
   inputs = jsonencode({
         "api_version": "v2",
         "cacert": "",
@@ -226,13 +226,13 @@ resource "awx_credential" "example_hashi_source_cred" {
         "username": ""})
 }
 
-resource "awx_credential" "example_hashi_target_cred" {
-  credential_type = data.awx_credential_type.source_control.id
-  name            = "%s"
-  organization    = awx_organization.example.id
+resource "%[1]s_credential" "example_hashi_target_cred" {
+  credential_type = data.%[1]s_credential_type.source_control.id
+  name            = "%[4]s"
+  organization    = %[1]s_organization.example.id
 }
 
-resource "awx_credential_input_sources" "example_hashi_cred_input_src" {
+resource "%[1]s_credential_input_sources" "example_hashi_cred_input_src" {
     description = "Testing create"
     input_field_name = "ssh_key_data"
     metadata = {
@@ -242,21 +242,21 @@ resource "awx_credential_input_sources" "example_hashi_cred_input_src" {
         "secret_backend": ""
         "secret_version": ""
     }
-    target_credential = awx_credential.example_hashi_target_cred.id
-    source_credential = awx_credential.example_hashi_source_cred.id
+    target_credential = %[1]s_credential.example_hashi_target_cred.id
+    source_credential = %[1]s_credential.example_hashi_source_cred.id
 }
 
-resource "awx_credential_input_sources" "example_hashi_cred_input_src_2" {
+resource "%[1]s_credential_input_sources" "example_hashi_cred_input_src_2" {
     description = "Testing create2"
     input_field_name = "username"
     metadata = {
         "auth_path": ""
         "secret_key": "acce-ansible-2"
-        "secret_path": "%s"
+        "secret_path": "%[5]s"
         "secret_backend": ""
         "secret_version": ""
     }
-    target_credential = awx_credential.example_hashi_target_cred.id
-    source_credential = awx_credential.example_hashi_source_cred.id
-}`, orgName, srcCredName, tgtCredName, secretKey))
+    target_credential = %[1]s_credential.example_hashi_target_cred.id
+    source_credential = %[1]s_credential.example_hashi_source_cred.id
+}`, configprefix.Prefix, orgName, srcCredName, tgtCredName, secretKey)
 }

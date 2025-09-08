@@ -97,26 +97,26 @@ func TestAccInstanceGroupDataSource(t *testing.T) {
 }
 
 func testAccInstanceGroupDataSource1Config(resource InstanceGroupAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_instance_group" "test-instance" {
-  name                       = "%s"
-  policy_instance_percentage = %d
+	return fmt.Sprintf(`
+resource "%[1]s_instance_group" "test-instance" {
+  name                       = "%[2]s"
+  policy_instance_percentage = %[3]d
 }
-data "awx_instance_group" "test-instance" {
-  id = awx_instance_group.test-instance.id
+data "%[1]s_instance_group" "test-instance" {
+  id = %[1]s_instance_group.test-instance.id
 }
-`, resource.Name, resource.PolicyInstancePercentage))
+`, configprefix.Prefix, resource.Name, resource.PolicyInstancePercentage)
 }
 
 func testAccInstanceGroupDataSource2Config(resource InstanceGroupAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_instance_group" "test-container" {
-  name       = "%s"
-  is_container_group = %v
-  pod_spec_override = jsonencode(%s)
+	return fmt.Sprintf(`
+resource "%[1]s_instance_group" "test-container" {
+  name       = "%[2]s"
+  is_container_group = %[3]v
+  pod_spec_override = jsonencode(%[4]s)
 }
-data "awx_instance_group" "test-container" {
-  id = awx_instance_group.test-container.id
+data "%[1]s_instance_group" "test-container" {
+  id = %[1]s_instance_group.test-container.id
 }
-`, resource.Name, resource.IsContainerGroup, resource.PodSpecOverride))
+`, configprefix.Prefix, resource.Name, resource.IsContainerGroup, resource.PodSpecOverride)
 }

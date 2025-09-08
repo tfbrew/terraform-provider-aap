@@ -107,13 +107,13 @@ func TestAccScheduleResource(t *testing.T) {
 }
 
 func testAccScheduleResourceConfig(resource ScheduleAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_schedule" "test" {
-  name        			= "%s"
-  description 			= "%s"
-  rrule       			= "%s"
-  unified_job_template 	= %d
-  enabled     			= %t
+	return fmt.Sprintf(`
+resource "%[1]s_schedule" "test" {
+  name        			= "%[2]s"
+  description 			= "%[3]s"
+  rrule       			= "%[4]s"
+  unified_job_template 	= %[5]d
+  enabled     			= %[6]t
 }
-  `, resource.Name, resource.Description, resource.Rrule, resource.UnifiedJobTemplate, resource.Enabled))
+  `, configprefix.Prefix, resource.Name, resource.Description, resource.Rrule, resource.UnifiedJobTemplate, resource.Enabled)
 }

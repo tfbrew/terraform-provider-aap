@@ -54,23 +54,23 @@ func TestAccCredentialDataSource(t *testing.T) {
 }
 
 func testAccCredentialDataSourceConfig(resource CredentialAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
-data "awx_credential_type" "test" {
+data "%[1]s_credential_type" "test" {
   name = "Machine"
   kind = "ssh"
 }
-resource "awx_credential" "test" {
-  name            = "%s"
-  description	  = "%s"
-  organization    = awx_organization.test.id
-  credential_type = data.awx_credential_type.test.id
-  inputs = jsonencode(%s)
+resource "%[1]s_credential" "test" {
+  name            = "%[3]s"
+  description	  = "%[4]s"
+  organization    = %[1]s_organization.test.id
+  credential_type = data.%[1]s_credential_type.test.id
+  inputs = jsonencode(%[5]s)
 }
-data "awx_credential" "test" {
-  id = awx_credential.test.id
+data "%[1]s_credential" "test" {
+  id = %[1]s_credential.test.id
 }
-  `, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs)
 }

@@ -179,58 +179,58 @@ func TestAccCredentialResource(t *testing.T) {
 }
 
 func testAccCredential1Config(resource CredentialAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-machine" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-machine" {
+  name        = "%[2]s"
 }
-data "awx_credential_type" "test-machine" {
+data "%[1]s_credential_type" "test-machine" {
   name = "Machine"
   kind = "ssh"
 }
-resource "awx_credential" "test-machine" {
-  name            = "%s"
-  description	  = "%s"
-  organization    = awx_organization.test-machine.id
-  credential_type = data.awx_credential_type.test-machine.id
-  inputs = jsonencode(%s)
+resource "%[1]s_credential" "test-machine" {
+  name            = "%[3]s"
+  description	  = "%[4]s"
+  organization    = %[1]s_organization.test-machine.id
+  credential_type = data.%[1]s_credential_type.test-machine.id
+  inputs = jsonencode(%[5]s)
 }
-  `, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs)
 }
 
 func testAccCredential2Config(resource CredentialAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-source-control" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-source-control" {
+  name        = "%[2]s"
 }
-  data "awx_credential_type" "test-source-control" {
+  data "%[1]s_credential_type" "test-source-control" {
 	name = "Source Control"
 	kind = "scm"
   }
-resource "awx_credential" "test-source-control" {
-  name            = "%s"
-  description	  = "%s"
-  organization    = awx_organization.test-source-control.id
-  credential_type = data.awx_credential_type.test-source-control.id
-	inputs = jsonencode(%s)
+resource "%[1]s_credential" "test-source-control" {
+  name            = "%[3]s"
+  description	  = "%[4]s"
+  organization    = %[1]s_organization.test-source-control.id
+  credential_type = data.%[1]s_credential_type.test-source-control.id
+	inputs = jsonencode(%[5]s)
 }
-  `, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs)
 }
 
 func testAccCredential3Config(resource CredentialAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-container-registry" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-container-registry" {
+  name        = "%[2]s"
 }
-data "awx_credential_type" "test-container-registry" {
+data "%[1]s_credential_type" "test-container-registry" {
   name = "Container Registry"
   kind = "registry"
 }
-resource "awx_credential" "test-container-registry" {
-  name            = "%s"
-  description	  = "%s"
-  organization    = awx_organization.test-container-registry.id
-  credential_type = data.awx_credential_type.test-container-registry.id
-  inputs = jsonencode(%s)
+resource "%[1]s_credential" "test-container-registry" {
+  name            = "%[3]s"
+  description	  = "%[4]s"
+  organization    = %[1]s_organization.test-container-registry.id
+  credential_type = data.%[1]s_credential_type.test-container-registry.id
+  inputs = jsonencode(%[5]s)
 }
-  `, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Inputs)
 }

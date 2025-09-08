@@ -77,35 +77,35 @@ func TestAccJobTemplNotifSuccessResource(t *testing.T) {
 }
 
 func testAccJobTemplNotifSuccess1ResourceConfig() string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
 
-resource "awx_inventory" "test" {
-  name         = "%s"
-  organization = awx_organization.test.id
+resource "%[1]s_inventory" "test" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test.id
 }
 
-resource "awx_project" "test" {
-  name         		= "%s"
-  organization 		= awx_organization.test.id
+resource "%[1]s_project" "test" {
+  name         		= "%[2]s"
+  organization 		= %[1]s_organization.test.id
   scm_type     		= "git"
   scm_url      		= "git@github.com:user/repo.git"
   allow_override 	= true
 }
 
-resource "awx_job_template" "test" {
-  name        = "%s"
+resource "%[1]s_job_template" "test" {
+  name        = "%[2]s"
   job_type    = "run"
-  inventory   = awx_inventory.test.id
-  project     = awx_project.test.id
+  inventory   = %[1]s_inventory.test.id
+  project     = %[1]s_project.test.id
   playbook    = "test.yml"
 }
-resource "awx_notification_template" "test1" {
-  name              = "%s"
+resource "%[1]s_notification_template" "test1" {
+  name              = "%[2]s"
   notification_type = "slack"
-  organization      = awx_organization.test.id
+  organization      = %[1]s_organization.test.id
   notification_configuration = jsonencode({
     channels  = ["#channel1", "#channel1"]
     hex_color = ""
@@ -144,43 +144,43 @@ resource "awx_notification_template" "test1" {
     }
   })
 }
-resource "awx_job_template_notification_template_success" "test" {
-  job_template_id    = awx_job_template.test.id
-  notif_template_ids = [awx_notification_template.test1.id]
+resource "%[1]s_job_template_notification_template_success" "test" {
+  job_template_id    = %[1]s_job_template.test.id
+  notif_template_ids = [%[1]s_notification_template.test1.id]
 }
-  `, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5)))
+  `, configprefix.Prefix, acctest.RandString(5))
 }
 
 func testAccJobTemplNotifSuccess2ResourceConfig() string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
 
-resource "awx_inventory" "test" {
-  name         = "%s"
-  organization = awx_organization.test.id
+resource "%[1]s_inventory" "test" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test.id
 }
 
-resource "awx_project" "test" {
-  name         		= "%s"
-  organization 		= awx_organization.test.id
+resource "%[1]s_project" "test" {
+  name         		= "%[2]s"
+  organization 		= %[1]s_organization.test.id
   scm_type     		= "git"
   scm_url      		= "git@github.com:user/repo.git"
   allow_override 	= true
 }
 
-resource "awx_job_template" "test" {
-  name        = "%s"
+resource "%[1]s_job_template" "test" {
+  name        = "%[2]s"
   job_type    = "run"
-  inventory   = awx_inventory.test.id
-  project     = awx_project.test.id
+  inventory   = %[1]s_inventory.test.id
+  project     = %[1]s_project.test.id
   playbook    = "test.yml"
 }
-resource "awx_notification_template" "test2" {
-  name              = "%s"
+resource "%[1]s_notification_template" "test2" {
+  name              = "%[2]s-2"
   notification_type = "slack"
-  organization      = awx_organization.test.id
+  organization      = %[1]s_organization.test.id
   notification_configuration = jsonencode({
     channels  = ["#channel1", "#channel1"]
     hex_color = ""
@@ -219,10 +219,10 @@ resource "awx_notification_template" "test2" {
     }
   })
 }
-resource "awx_notification_template" "test3" {
-  name              = "%s"
+resource "%[1]s_notification_template" "test3" {
+  name              = "%[2]s-3"
   notification_type = "slack"
-  organization      = awx_organization.test.id
+  organization      = %[1]s_organization.test.id
   notification_configuration = jsonencode({
     channels  = ["#channel1", "#channel1"]
     hex_color = ""
@@ -261,9 +261,9 @@ resource "awx_notification_template" "test3" {
     }
   })
 }
-resource "awx_job_template_notification_template_success" "test" {
-  job_template_id    = awx_job_template.test.id
-  notif_template_ids = [awx_notification_template.test2.id, awx_notification_template.test3.id]
+resource "%[1]s_job_template_notification_template_success" "test" {
+  job_template_id    = %[1]s_job_template.test.id
+  notif_template_ids = [%[1]s_notification_template.test2.id, %[1]s_notification_template.test3.id]
 }
-  `, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5)))
+  `, configprefix.Prefix, acctest.RandString(5))
 }

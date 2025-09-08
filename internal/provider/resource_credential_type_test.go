@@ -81,10 +81,10 @@ func TestAccCredentialTypeResource(t *testing.T) {
 }
 
 func testAccCredentialTypeConfig(resource CredentialTypeAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_credential_type" "test" {
-  name         = "%s"
-  description  = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_credential_type" "test" {
+  name         = "%[2]s"
+  description  = "%[3]s"
 }
-  `, resource.Name, resource.Description))
+  `, configprefix.Prefix, resource.Name, resource.Description)
 }

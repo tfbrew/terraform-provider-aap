@@ -78,26 +78,26 @@ func TestAccCredentialTypeDataSource(t *testing.T) {
 }
 
 func testAccCredentialTypeDataSourceIDConfig(resource CredentialTypeAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_credential_type" "test-id" {
-  name         = "%s"
-  description  = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_credential_type" "test-id" {
+  name         = "%[2]s"
+  description  = "%[3]s"
 }
-data "awx_credential_type" "test-id" {
-  id = awx_credential_type.test-id.id
+data "%[1]s_credential_type" "test-id" {
+  id = %[1]s_credential_type.test-id.id
 }
-  `, resource.Name, resource.Description))
+  `, configprefix.Prefix, resource.Name, resource.Description)
 }
 
 func testAccCredentialTypeDataSourceNameConfig(resource CredentialTypeAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_credential_type" "test-name" {
-  name         = "%s"
-  description  = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_credential_type" "test-name" {
+  name         = "%[2]s"
+  description  = "%[3]s"
 }
-data "awx_credential_type" "test-name" {
-  name = awx_credential_type.test-name.name
-  kind = awx_credential_type.test-name.kind
+data "%[1]s_credential_type" "test-name" {
+  name = %[1]s_credential_type.test-name.name
+  kind = %[1]s_credential_type.test-name.kind
 }
-  `, resource.Name, resource.Description))
+  `, configprefix.Prefix, resource.Name, resource.Description)
 }

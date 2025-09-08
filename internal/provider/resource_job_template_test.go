@@ -122,31 +122,31 @@ func TestAccJobTemplateResource(t *testing.T) {
 }
 
 func testAccJobTemplateResourceConfig(resource JobTemplateAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
 
-resource "awx_inventory" "test" {
-  name         = "%s"
-  organization = awx_organization.test.id
+resource "%[1]s_inventory" "test" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test.id
 }
 
-resource "awx_project" "test" {
-  name         		= "%s"
-  organization 		= awx_organization.test.id
+resource "%[1]s_project" "test" {
+  name         		= "%[2]s"
+  organization 		= %[1]s_organization.test.id
   scm_type     		= "git"
   scm_url      		= "git@github.com:user/repo.git"
   allow_override 	= true
 }
 
-resource "awx_job_template" "test" {
-  name        = "%s"
-  description = "%s"
-  job_type    = "%s"
-  inventory   = awx_inventory.test.id
-  project     = awx_project.test.id
-  playbook    = "%s"
+resource "%[1]s_job_template" "test" {
+  name        = "%[3]s"
+  description = "%[4]s"
+  job_type    = "%[5]s"
+  inventory   = %[1]s_inventory.test.id
+  project     = %[1]s_project.test.id
+  playbook    = "%[6]s"
 }
-  `, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), resource.Name, resource.Description, resource.JobType, resource.Playbook))
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.JobType, resource.Playbook)
 }

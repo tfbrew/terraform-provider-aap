@@ -419,52 +419,52 @@ func TestAccUserResource(t *testing.T) {
 }
 
 func testAccUserResource1Config(resource UserAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_user" "test" {
-  username      = "%s"
-  first_name 	= "%s"
-  last_name 	= "%s"
-  email			= "%s"
-  password 		= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_user" "test" {
+  username      = "%[2]s"
+  first_name 	= "%[3]s"
+  last_name 	= "%[4]s"
+  email			= "%[5]s"
+  password 		= "%[6]s"
 }
-  `, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password))
+  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password)
 }
 
 func testAccUserResource2Config(resource UserAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_user" "test" {
-  username      = "%s"
-  first_name 	= "%s"
-  last_name 	= "%s"
-  email			= "%s"
-  password 		= "%s"
-  is_superuser  = %v
+	return fmt.Sprintf(`
+resource "%[1]s_user" "test" {
+  username      = "%[2]s"
+  first_name 	= "%[3]s"
+  last_name 	= "%[4]s"
+  email			= "%[5]s"
+  password 		= "%[6]s"
+  is_superuser  = %[7]v
 }
-  `, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser))
+  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser)
 }
 
 func testAccUserResource3Config(resource UserAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_user" "test-3" {
-  username      = "%s"
-  first_name 	= "%s"
-  last_name 	= "%s"
-  email			= "%s"
-  password 		= "%s"
-  is_superuser  = %v
+	return fmt.Sprintf(`
+resource "%[1]s_user" "test-3" {
+  username      = "%[2]s"
+  first_name 	= "%[3]s"
+  last_name 	= "%[4]s"
+  email			= "%[5]s"
+  password 		= "%[6]s"
+  is_superuser  = %[7]v
 }
-  `, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser))
+  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser)
 }
 
 func testAccUserResource4Config(resource UserAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_user" "test-4" {
-  username      	= "%s"
-  first_name 		= "%s"
-  last_name 		= "%s"
-  email				= "%s"
-  password 			= "%s"
-  is_system_auditor = %v
+	return fmt.Sprintf(`
+resource "%[1]s_user" "test-4" {
+  username      	= "%[2]s"
+  first_name 		= "%[3]s"
+  last_name 		= "%[4]s"
+  email				= "%[5]s"
+  password 			= "%[6]s"
+  is_system_auditor = %[7]v
 }
-  `, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSystemAuditor))
+  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSystemAuditor)
 }

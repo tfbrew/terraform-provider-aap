@@ -162,47 +162,47 @@ func TestAccNotificationTemplateResource(t *testing.T) {
 }
 
 func testAccNotifTmplWebhookResource1Config(objectName, notifConfig string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "example" { 
-	name = "%s" 
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "example" { 
+	name = "%[2]s" 
 	description = "testing example" 
 }
 
-resource "awx_notification_template" "example-webhook-type" {
-	name              = "%s"
+resource "%[1]s_notification_template" "example-webhook-type" {
+	name              = "%[3]s"
 	notification_type = "webhook"
-	organization      = awx_organization.example.id
-	notification_configuration = jsonencode(%s)
-  }`, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), objectName, notifConfig))
+	organization      = %[1]s_organization.example.id
+	notification_configuration = jsonencode(%[4]s)
+  }`, configprefix.Prefix, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), objectName, notifConfig)
 }
 
 func testAccNotifTmplSlackResource2Config(objectName, notifConfig string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "example" { 
-	name = "%s" 
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "example" { 
+	name = "%[2]s" 
 	description = "testing example" 
 }
 
-resource "awx_notification_template" "example-slack-type" {
-	name              = "%s"
+resource "%[1]s_notification_template" "example-slack-type" {
+	name              = "%[3]s"
 	notification_type = "slack"
-	organization      = awx_organization.example.id
-  notification_configuration = jsonencode(%s)
-  }`, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), objectName, notifConfig))
+	organization      = %[1]s_organization.example.id
+  notification_configuration = jsonencode(%[4]s)
+  }`, configprefix.Prefix, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), objectName, notifConfig)
 }
 
 func testAccNotifTmplSlackWithMessagesResourceConfig(objectName, notifConfig string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "example" { 
-	name = "%s" 
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "example" { 
+	name = "%[2]s" 
 	description = "testing example" 
 }
 
-resource "awx_notification_template" "example-slack-and-message" {
-	name              = "%s"
+resource "%[1]s_notification_template" "example-slack-and-message" {
+	name              = "%[3]s"
 	notification_type = "slack"
-	organization      = awx_organization.example.id
-  notification_configuration = jsonencode(%s)
+	organization      = %[1]s_organization.example.id
+  notification_configuration = jsonencode(%[4]s)
   messages = jsonencode({
 	  error = {
 		body    = ""
@@ -235,5 +235,5 @@ resource "awx_notification_template" "example-slack-and-message" {
 		}
 	  }
 	})
-  }`, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), objectName, notifConfig))
+  }`, configprefix.Prefix, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), objectName, notifConfig)
 }

@@ -203,33 +203,33 @@ func TestAccUserDataSource(t *testing.T) {
 }
 
 func testAccUserDataSourceIdConfig(resource UserAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_user" "test-id" {
-  username      = "%s"
-  first_name 	= "%s"
-  last_name 	= "%s"
-  email			= "%s"
-  password 		= "%s"
-  is_superuser  = %v
+	return fmt.Sprintf(`
+resource "%[1]s_user" "test-id" {
+  username      = "%[2]s"
+  first_name 	= "%[3]s"
+  last_name 	= "%[4]s"
+  email			= "%[5]s"
+  password 		= "%[6]s"
+  is_superuser  = %[7]v
 }
-data "awx_user" "test-id" {
-  id = awx_user.test-id.id
+data "%[1]s_user" "test-id" {
+  id = %[1]s_user.test-id.id
 }
-`, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser))
+`, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser)
 }
 
 func testAccUserDataSourceNameConfig(resource UserAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_user" "test-name" {
-  username      	= "%s"
-  first_name 		= "%s"
-  last_name 		= "%s"
-  email				= "%s"
-  password 			= "%s"
-  is_system_auditor = %v
+	return fmt.Sprintf(`
+resource "%[1]s_user" "test-name" {
+  username      	= "%[2]s"
+  first_name 		= "%[3]s"
+  last_name 		= "%[4]s"
+  email				= "%[5]s"
+  password 			= "%[6]s"
+  is_system_auditor = %[7]v
 }
-data "awx_user" "test-name" {
-  username = awx_user.test-name.username
+data "%[1]s_user" "test-name" {
+  username = %[1]s_user.test-name.username
 }
-`, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSystemAuditor))
+`, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSystemAuditor)
 }

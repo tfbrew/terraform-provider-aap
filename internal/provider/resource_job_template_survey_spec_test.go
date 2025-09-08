@@ -104,30 +104,30 @@ func TestAccJobTemplateSurveySpec_basic(t *testing.T) {
 }
 
 func specTestCaseSetup(template_name string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-	name = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+	name = "%[2]s"
 }
 
-resource "awx_project" "test" {
-	name = "%s"
-	organization = awx_organization.test.id
+resource "%[1]s_project" "test" {
+	name = "%[3]s"
+	organization = %[1]s_organization.test.id
 	allow_override = true
 	scm_type = "git"
 	scm_url = "fake"
 }
 
-resource "awx_job_template" "example" {
+resource "%[1]s_job_template" "example" {
   job_type  = "run"
-  name      = "%s"
+  name      = "%[4]s"
   ask_inventory_on_launch = true
-  project   = awx_project.test.id
+  project   = %[1]s_project.test.id
   playbook  = "hello_world.yml"
 }
 
-resource "awx_job_template_survey_spec" "example" {
+resource "%[1]s_job_template_survey_spec" "example" {
   description = "example description"
-  id          = awx_job_template.example.id
+  id          = %[1]s_job_template.example.id
   name        = ""
   spec = [
     {
@@ -164,5 +164,5 @@ resource "awx_job_template_survey_spec" "example" {
     },
   ]
 }
-`, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), template_name))
+`, configprefix.Prefix, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), template_name)
 }

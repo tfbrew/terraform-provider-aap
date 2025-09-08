@@ -90,67 +90,67 @@ func TestAccJobTemplateDataSource(t *testing.T) {
 }
 
 func testAccJobTemplateDataSource1Config(resource JobTemplateAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-id" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-id" {
+  name        = "%[2]s"
 }
 
-resource "awx_inventory" "test-id" {
-  name         = "%s"
-  organization = awx_organization.test-id.id
+resource "%[1]s_inventory" "test-id" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test-id.id
 }
 
-resource "awx_project" "test-id" {
-  name         		= "%s"
-  organization 		= awx_organization.test-id.id
+resource "%[1]s_project" "test-id" {
+  name         		= "%[2]s"
+  organization 		= %[1]s_organization.test-id.id
   scm_type     		= "git"
   scm_url      		= "git@github.com:user/repo.git"
   allow_override 	= true
 }
 
-resource "awx_job_template" "test-id" {
-  name        = "%s"
-  description = "%s"
-  job_type    = "%s"
-  inventory   = awx_inventory.test-id.id
-  project     = awx_project.test-id.id
-  playbook    = "%s"
+resource "%[1]s_job_template" "test-id" {
+  name        = "%[3]s"
+  description = "%[4]s"
+  job_type    = "%[5]s"
+  inventory   = %[1]s_inventory.test-id.id
+  project     = %[1]s_project.test-id.id
+  playbook    = "%[6]s"
 }
-data "awx_job_template" "test-id" {
-  id = awx_job_template.test-id.id
+data "%[1]s_job_template" "test-id" {
+  id = %[1]s_job_template.test-id.id
 }
-`, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), resource.Name, resource.Description, resource.JobType, resource.Playbook))
+`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.JobType, resource.Playbook)
 }
 
 func testAccJobTemplateDataSource2Config(resource JobTemplateAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test-name" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-name" {
+  name        = "%[2]s"
 }
 
-resource "awx_inventory" "test-name" {
-  name         = "%s"
-  organization = awx_organization.test-name.id
+resource "%[1]s_inventory" "test-name" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test-name.id
 }
 
-resource "awx_project" "test-name" {
-  name         		= "%s"
-  organization 		= awx_organization.test-name.id
+resource "%[1]s_project" "test-name" {
+  name         		= "%[2]s"
+  organization 		= %[1]s_organization.test-name.id
   scm_type     		= "git"
   scm_url      		= "git@github.com:user/repo.git"
   allow_override 	= true
 }
 
-resource "awx_job_template" "test-name" {
-  name        = "%s"
-  description = "%s"
-  job_type    = "%s"
-  inventory   = awx_inventory.test-name.id
-  project     = awx_project.test-name.id
-  playbook    = "%s"
+resource "%[1]s_job_template" "test-name" {
+  name        = "%[3]s"
+  description = "%[4]s"
+  job_type    = "%[5]s"
+  inventory   = %[1]s_inventory.test-name.id
+  project     = %[1]s_project.test-name.id
+  playbook    = "%[6]s"
 }
-data "awx_job_template" "test-name" {
-  id = awx_job_template.test-name.id
+data "%[1]s_job_template" "test-name" {
+  id = %[1]s_job_template.test-name.id
 }
-`, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), resource.Name, resource.Description, resource.JobType, resource.Playbook))
+`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.JobType, resource.Playbook)
 }

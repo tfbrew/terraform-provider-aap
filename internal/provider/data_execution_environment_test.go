@@ -84,18 +84,18 @@ func TestAccExecutionEnvironmentDataSource(t *testing.T) {
 }
 
 func testAccExecutionEnvironmentDataSourceConfig(resource ExecutionEnvironmentAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_execution_environment" "test" {
-  name        	= "%s"
-  description 	= "%s"
-  image   		= "%s"
-  pull 			= "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_execution_environment" "test" {
+  name        	= "%[2]s"
+  description 	= "%[3]s"
+  image   		= "%[4]s"
+  pull 			= "%[5]s"
 }
-data "awx_execution_environment" "test-id" {
-  id = awx_execution_environment.test.id
+data "%[1]s_execution_environment" "test-id" {
+  id = %[1]s_execution_environment.test.id
 }
-data "awx_execution_environment" "test-name" {
-  name = awx_execution_environment.test.name
+data "%[1]s_execution_environment" "test-name" {
+  name = %[1]s_execution_environment.test.name
 }
-`, resource.Name, resource.Description, resource.Image, resource.Pull))
+`, configprefix.Prefix, resource.Name, resource.Description, resource.Image, resource.Pull)
 }

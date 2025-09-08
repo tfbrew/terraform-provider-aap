@@ -71,44 +71,44 @@ func TestAccWkflwJobTemplApprovalNodeResource(t *testing.T) {
 }
 
 func testAccWkflwJobTemplApprvlNodeResource1Config(nodeName string) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
-resource "awx_organization" "test" {
-  name        = "%s"
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "%[2]s"
 }
-resource "awx_inventory" "test" {
-  name         = "%s"
-  organization = awx_organization.test.id
+resource "%[1]s_inventory" "test" {
+  name         = "%[2]s"
+  organization = %[1]s_organization.test.id
 }
-resource "awx_project" "test" {
-  name         		= "%s"
-  organization 		= awx_organization.test.id
+resource "%[1]s_project" "test" {
+  name         		= "%[2]s"
+  organization 		= %[1]s_organization.test.id
   scm_type     		= "git"
   scm_url      		= "git@github.com:user/repo.git"
   allow_override 	= true
 }
-resource "awx_job_template" "test" {
-  name      				= "%s"
+resource "%[1]s_job_template" "test" {
+  name      				= "%[2]s"
   ask_inventory_on_launch 	= true
-  project   				= awx_project.test.id
+  project   				= %[1]s_project.test.id
   playbook  				= "test.yml"
 }
-resource "awx_workflow_job_template" "test" {
-  name                     = "%s"
-  inventory                = awx_inventory.test.id
-  organization             = awx_organization.test.id
+resource "%[1]s_workflow_job_template" "test" {
+  name                     = "%[2]s"
+  inventory                = %[1]s_inventory.test.id
+  organization             = %[1]s_organization.test.id
 }
 
-resource "awx_workflow_job_template_approval_node" "test" {
-  workflow_job_template_id 	= awx_workflow_job_template.test.id
-  name = "%s"
+resource "%[1]s_workflow_job_template_approval_node" "test" {
+  workflow_job_template_id 	= %[1]s_workflow_job_template.test.id
+  name = "%[3]s"
   description = "a description for testing"
   timeout = 360
 }
 
-resource "awx_workflow_job_template_approval_node" "test_timeoutdefault" {
-  workflow_job_template_id 	= awx_workflow_job_template.test.id
-  name = "%s"
+resource "%[1]s_workflow_job_template_approval_node" "test_timeoutdefault" {
+  workflow_job_template_id 	= %[1]s_workflow_job_template.test.id
+  name = "%[4]s"
   description = "a description for testing"
 }
-  `, acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), acctest.RandString(5), nodeName, nodeName+"1"))
+  `, configprefix.Prefix, acctest.RandString(5), nodeName, nodeName+"1")
 }
