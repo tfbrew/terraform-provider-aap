@@ -119,11 +119,16 @@ func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Default:     booldefault.StaticBool(false),
 				Computed:    true,
 			},
+			"scm_update_cache_timeout": schema.Int32Attribute{
+				Description: "Time in seconds to consider a project to be current. During job runs and callbacks the task system will evaluate the timestamp of the latest project update. If it is older than Cache Timeout, it is not considered current, and a new project update will be performed.",
+				Optional:    true,
+				Default:     int32default.StaticInt32(0),
+				Computed:    true,
+			},
 			"scm_url": schema.StringAttribute{
 				Description: "Example URLs for Remote Archive Source Control include: `https://github.com/username/project/archive/v0.0.1.tar.gz` `https://github.com/username/project/archive/v0.0.2.zip`",
 				Optional:    true,
-				//				Default:     stringdefault.StaticString("https://example.org"),
-				Computed: true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -282,6 +287,15 @@ func (r ProjectResource) ValidateConfig(ctx context.Context, req resource.Valida
 			)
 		}
 	}
+
+	// scm_update_cache_timeout
+	if !data.ScmUpdOnLaunch.ValueBool() && data.ScmUpdateCacheTimeout.ValueInt32() != 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("scm_update_cache_timeout"),
+			"Attribute Configuration Error",
+			"scm_update_cache_timeout should not be set without scm_update_on_launch enabled",
+		)
+	}
 }
 
 func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -323,6 +337,7 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	bodyData.Timeout = int(data.Timeout.ValueInt32())
+	bodyData.ScmUpdateCacheTimeout = int(data.ScmUpdateCacheTimeout.ValueInt32())
 
 	if !(data.Description.IsNull()) {
 		bodyData.Description = data.Description.ValueString()
@@ -441,6 +456,7 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scm_delete_on_update"), responseData.ScmDelOnUpdate)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scm_track_submodules"), responseData.ScmTrackSubmodules)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scm_update_on_launch"), responseData.ScmUpdOnLaunch)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scm_update_cache_timeout"), responseData.ScmUpdateCacheTimeout)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("timeout"), responseData.Timeout)...)
 
 	if !data.Description.IsNull() || responseData.Description != "" {
@@ -522,6 +538,7 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	bodyData.Timeout = int(data.Timeout.ValueInt32())
+	bodyData.ScmUpdateCacheTimeout = int(data.ScmUpdateCacheTimeout.ValueInt32())
 
 	if !(data.Description.IsNull()) {
 		bodyData.Description = data.Description.ValueString()
