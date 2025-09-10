@@ -93,6 +93,10 @@ func (d *ProjectDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 				Description: "Perform an update to the local repository before launching a job with this project.",
 				Computed:    true,
 			},
+			"scm_update_cache_timeout": schema.Int32Attribute{
+				Description: "Time in seconds to consider a project to be current. During job runs and callbacks the task system will evaluate the timestamp of the latest project update. If it is older than Cache Timeout, it is not considered current, and a new project update will be performed.",
+				Computed:    true,
+			},
 			"scm_url": schema.StringAttribute{
 				Description: "Example URLs for Remote Archive Source Control include: `https://github.com/username/project/archive/v0.0.1.tar.gz` `https://github.com/username/project/archive/v0.0.2.zip`",
 				Computed:    true,
@@ -204,6 +208,7 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	data.Organization = types.Int32Value(int32(responseData.Organization))
 	data.ScmType = types.StringValue(responseData.ScmType)
 	data.Timeout = types.Int32Value(int32(responseData.Timeout))
+	data.ScmUpdateCacheTimeout = types.Int32Value(int32(responseData.ScmUpdateCacheTimeout))
 
 	if responseData.Description != "" {
 		data.Description = types.StringValue(responseData.Description)

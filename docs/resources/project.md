@@ -79,6 +79,7 @@ resource "aap_project" "example-insights" {
 - `scm_delete_on_update` (Boolean) Delete the local repository in its entirety prior to performing an update. Depending on the size of the repository this may significantly increase the amount of time required to complete an update.
 - `scm_refspec` (String) The refspec to use for the SCM resource.
 - `scm_track_submodules` (Boolean) Track submodules latest commit on specified branch.
+- `scm_update_cache_timeout` (Number) Time in seconds to consider a project to be current. During job runs and callbacks the task system will evaluate the timestamp of the latest project update. If it is older than Cache Timeout, it is not considered current, and a new project update will be performed.
 - `scm_update_on_launch` (Boolean) Perform an update to the local repository before launching a job with this project.
 - `scm_url` (String) Example URLs for Remote Archive Source Control include: `https://github.com/username/project/archive/v0.0.1.tar.gz` `https://github.com/username/project/archive/v0.0.2.zip`
 - `timeout` (Number) The amount of time (in seconds) to run before the SCM Update is canceled. A value of 0 means no timeout.

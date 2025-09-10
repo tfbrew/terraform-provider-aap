@@ -46,13 +46,14 @@ func TestAccProjectResource(t *testing.T) {
 	}
 
 	project4 := ProjectAPIModel{
-		Name:           "test-project-" + acctest.RandString(5),
-		Description:    "archive project",
-		ScmType:        "archive",
-		ScmUrl:         "https://github.com/user/repo",
-		Organization:   1,
-		ScmUpdOnLaunch: true,
-		Timeout:        1,
+		Name:                  "test-project-" + acctest.RandString(5),
+		Description:           "archive project",
+		ScmType:               "archive",
+		ScmUrl:                "https://github.com/user/repo",
+		Organization:          1,
+		ScmUpdOnLaunch:        true,
+		ScmUpdateCacheTimeout: 60,
+		Timeout:               1,
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -279,13 +280,14 @@ resource "%[1]s_organization" "test-archive" {
   name        			= "%[2]s"
 }
 resource "%[1]s_project" "test-archive" {
-  name         			= "%[3]s"
-  description  			= "%[4]s"
-  scm_type     			= "%[5]s"
-  scm_url      			= "%[6]s"
-  organization 			= %[1]s_organization.test-archive.id
-  scm_update_on_launch 	= %[7]v
-  timeout				= %[8]d
+  name         			   = "%[3]s"
+  description  			   = "%[4]s"
+  scm_type     			   = "%[5]s"
+  scm_url      			   = "%[6]s"
+  organization 			   = %[1]s_organization.test-archive.id
+  scm_update_on_launch 	   = %[7]v
+  scm_update_cache_timeout = %[8]d
+  timeout				   = %[9]d
 }
-  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.ScmUpdOnLaunch, resource.Timeout)
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.ScmType, resource.ScmUrl, resource.ScmUpdOnLaunch, resource.ScmUpdateCacheTimeout, resource.Timeout)
 }

@@ -74,7 +74,7 @@ func TestAccRoleDefinitionDataSource(t *testing.T) {
 }
 
 func testAccRoleDefinitionDataSourceConfig(resource RoleDefinitionAPIModel) string {
-	return configprefix.ReplaceText(fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "%[1]s_role_definition" "test" {
   name         = "%[2]s"
   description  = "%[3]s"
@@ -89,5 +89,5 @@ data "%[1]s_role_definition" "test-id" {
 data "%[1]s_role_definition" "test-name" {
   name = %[1]s_role_definition.test.name
 }
-`, configprefix.Prefix, resource.Name, resource.Description, resource.ContentType, resource.Permissions[0], resource.Permissions[1]))
+`, configprefix.Prefix, resource.Name, resource.Description, resource.ContentType, resource.Permissions[0], resource.Permissions[1])
 }
