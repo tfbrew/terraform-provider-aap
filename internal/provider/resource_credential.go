@@ -72,7 +72,7 @@ The only changes to the inputs field that will be sent are when the terraform co
 				Required:    true,
 			},
 			"inputs": schema.DynamicAttribute{
-				Description: "This field can take inputs in two forms. The first is by providing an object. If importing, it expects your input value to be an object. See above for examples of both types. The older, second method is to specify a string by using using `jsonencode() to encode similar data as as string in state.`. Specify alphabetically when using the second method.",
+				Description: "This field can take inputs in two forms: an object or a JSON-encoded string. When importing this resource type, you must specify the inputs as an object. See above for examples of both types. The older, second method is to specify a string by using using `jsonencode()` to encode similar data as as string in state. Specify alphabetically when using the second method.",
 				Optional:    true,
 				Sensitive:   true,
 			},
@@ -277,7 +277,7 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	// Handle inputs attribute.
 	// This is dymanic and we document that they should provide a String or an Object for this attribute.
-	// Inputs will only be string or boolean, fyi: https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.5/html/using_automation_decisions/eda-credential-types
+	// Inputs themselves will only be string or boolean, fyi: https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.5/html/using_automation_decisions/eda-credential-types
 
 	// we haven't imported it & not set in state previously
 	if data.Inputs.IsUnderlyingValueNull() && responseData.Inputs != nil && len(responseData.Inputs) > 0 {

@@ -9,10 +9,18 @@ resource "{{.Prefix}}_inventory" "example" {
   organization = {{.Prefix}}_organization.example.id
 }
 
+resource "{{.Prefix}}_project" "example" {
+  name         = "example"
+  description  = "example"
+  organization = {{.Prefix}}_organization.example.id
+  scm_type     = "git"
+  scm_url      = "<SCM_URL>"
+}
+
 resource "{{.Prefix}}_job_template" "example" {
   job_type  = "run"
   name      = "test"
   inventory = {{.Prefix}}_inventory.example.id
-  project   = {{.Prefix}}_organization.example.id
+  project   = {{.Prefix}}_project.example.id
   playbook  = "test.yml"
 }

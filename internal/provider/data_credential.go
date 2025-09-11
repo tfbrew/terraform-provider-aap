@@ -168,7 +168,7 @@ func (d *CredentialDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	var dynValue basetypes.DynamicValue
-	resp.Diagnostics.Append(credentialInputApiToDynamicObject(&responseData.Inputs, &dynValue)...)
+	resp.Diagnostics.Append(credentialInputApiToDynamicObject(responseData.Inputs, &dynValue)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

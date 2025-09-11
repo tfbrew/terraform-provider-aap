@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-func credentialInputApiToDynamicObject(apiInputs *map[string]any, dynValue *basetypes.DynamicValue) diag.Diagnostics {
-	inputs := *apiInputs
+func credentialInputApiToDynamicObject(apiInputs map[string]any, dynValue *basetypes.DynamicValue) diag.Diagnostics {
+	inputs := apiInputs
 	inputsValues := make(map[string]attr.Value)
 	inputsAttrTypes := make(map[string]attr.Type)
 
@@ -48,7 +48,7 @@ func credentialInputApiToDynamicObject(apiInputs *map[string]any, dynValue *base
 
 func setInputfromResponeData(ctx context.Context, resp *resource.ReadResponse, responseData *CredentialAPIModel) diag.Diagnostics {
 	var dynValue basetypes.DynamicValue
-	diags := credentialInputApiToDynamicObject(&responseData.Inputs, &dynValue)
+	diags := credentialInputApiToDynamicObject(responseData.Inputs, &dynValue)
 	if diags.HasError() {
 		return diags
 	}
