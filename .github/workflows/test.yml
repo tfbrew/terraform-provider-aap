@@ -22,6 +22,8 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      BUILD_TAG: ${{ vars.BUILD_TAG }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
@@ -30,6 +32,7 @@ jobs:
           cache: false
       - run: go mod download
       - run: echo "BUILD_TAG is ${{ vars.BUILD_TAG }}"
+      - run: echo "BUILD_TAG is $BUILD_TAG"
       - run: go build -tags=${{ vars.BUILD_TAG }} -v .
       - name: Run linters
         uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8.0.0
