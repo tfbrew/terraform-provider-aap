@@ -65,7 +65,7 @@ func (d *CredentialDataSource) Schema(ctx context.Context, req datasource.Schema
 				Computed:    true,
 			},
 			"inputs": schema.StringAttribute{
-				Description: "Credential inputs.",
+				Description: "Credential inputs. This is a JSON string representing a dictionary of inputs.",
 				Computed:    true,
 			},
 			"inputs_as_object": schema.DynamicAttribute{
