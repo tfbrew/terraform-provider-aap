@@ -102,7 +102,7 @@ resource "aap_credential" "example-container-registry" {
 ### Optional
 
 - `description` (String) Credential description.
-- `inputs` (String, Sensitive) Credential inputs using `jsonencode()`. Specify alphabetically.
+- `inputs` (Dynamic, Sensitive) This field can take inputs in two forms: an object or a JSON-encoded string. When importing this resource type, you must specify the inputs as an object. See above for examples of both types. The older, second method is to specify a string by using using `jsonencode()` to encode similar data as as string in state. Specify alphabetically when using the second method.
 - `organization` (Number) ID of organization which owns this credential. One and only one of `organization`, `team`, or `user` must be set.
 - `team` (Number) ID of team which owns this credential. One and only one of `organization`, `team`, or `user` must be set.
 - `user` (Number) ID of user which owns this credential. One and only one of `organization`, `team`, or `user` must be set.
@@ -117,8 +117,22 @@ resource "aap_credential" "example-container-registry" {
 Import is supported using the following syntax:
 
 ```shell
-# The inputs field contains values that are not returned by the automation controller API and thus not available in state.
-# The first plan/apply after import will result in a modification to the inputs so that the state can be updated.
-
+# The example below is for a simple import that can be used when you do not have an inputs attribute block defined with secrets.
 terraform import aap_credential.example 5
+
+# If you have an inputs attribute object block defined with secrets, you need to specify them in the import command ID.
+# The example below shows the pattern for the import command when you have an inputs attribute block defined with secrets in your .tf file.
+# The ID field for the import command is the resources's ID followed by a comma-separated list of key/value pairs.
+# Non-secret inputs do not need to be included in the import command
+# The string at the end of this example command below would correlate to the following resource definition:
+#   resource "aap_credential" "example_with_input" {
+#      id = 5   
+#      inputs = {
+#         password = "12345"
+#         token = "a1b2c3-d4e5-example"
+#         non-secret = "do not include in import cli command"
+#      }
+#   }
+
+terraform import aap_credential.example_with_input "5,password,12345,token,a1b2c3-d4e5-example"
 ```

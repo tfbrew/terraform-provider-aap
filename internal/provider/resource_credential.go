@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -68,8 +71,8 @@ The only changes to the inputs field that will be sent are when the terraform co
 				Description: "ID of the credential type.",
 				Required:    true,
 			},
-			"inputs": schema.StringAttribute{
-				Description: "Credential inputs using `jsonencode()`. Specify alphabetically.",
+			"inputs": schema.DynamicAttribute{
+				Description: "This field can take inputs in two forms: an object or a JSON-encoded string. When importing this resource type, you must specify the inputs as an object. See above for examples of both types. The older, second method is to specify a string by using using `jsonencode()` to encode similar data as as string in state. Specify alphabetically when using the second method.",
 				Optional:    true,
 				Sensitive:   true,
 			},
@@ -136,15 +139,39 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	if !(data.User.IsNull()) {
 		bodyData.User = int(data.User.ValueInt32())
 	}
+	data.Inputs.IsNull()
+	if !data.Inputs.IsUnderlyingValueNull() && !data.Inputs.IsNull() {
+		inputsDataMap := make(map[string]any)
 
-	inputsDataMap := new(map[string]any)
+		switch val := data.Inputs.UnderlyingValue().(type) {
+		case types.String:
+			err := json.Unmarshal([]byte(val.ValueString()), &inputsDataMap)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Unable to unmarshal map to json",
+					fmt.Sprintf("Unable to process inputs: %+v. ", data.Inputs))
+				return
+			}
+		case types.Object:
 
-	if !data.Inputs.IsNull() {
-		err := json.Unmarshal([]byte(data.Inputs.ValueString()), &inputsDataMap)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to unmarshal map to json",
-				fmt.Sprintf("Unable to process inputs: %+v. ", data.Inputs))
+			for key, v := range val.Attributes() {
+				switch v := v.(type) {
+				case types.String:
+					// if the value is a string, we can use it as is
+					inputsDataMap[key] = v.ValueString()
+				case types.Bool:
+					// if the value is a bool, we can use it as is
+					inputsDataMap[key] = v.ValueBool()
+				default:
+					resp.Diagnostics.AddError(
+						"inputs value specified is invalid type",
+						fmt.Sprintf("inputs key '%s' has an unexpected type: %T", key, v),
+					)
+					return
+				}
+			}
+		default:
+			resp.Diagnostics.AddError("Inputs type invalid", "The inputs should be a types.String or types.Object.")
 			return
 		}
 
@@ -248,14 +275,85 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 		}
 	}
 
-	// Always use current state of inputs to set
-	var stateInputs types.String
-	diags := req.State.GetAttribute(ctx, path.Root("inputs"), &stateInputs)
-	if diags.HasError() {
-		return
+	// Handle inputs attribute.
+	// This is dymanic and we document that they should provide a String or an Object for this attribute.
+	// Inputs themselves will only be string or boolean, fyi: https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.5/html/using_automation_decisions/eda-credential-types
+
+	// we haven't imported it & not set in state previously
+	if data.Inputs.IsUnderlyingValueNull() && responseData.Inputs != nil && len(responseData.Inputs) > 0 {
+		resp.Diagnostics.Append(setInputfromResponeData(ctx, resp, &responseData)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("inputs"), stateInputs)...)
+	// we have imported something or state has values prevously; so,
+	//    we need to try and get our value to match API regardless of order & $encrypted$ values
+
+	if !data.Inputs.IsUnderlyingValueNull() && !data.Inputs.IsNull() {
+
+		inputsValue := data.Inputs.UnderlyingValue()
+
+		// convert state to map[string]any
+		currInputsState := make(map[string]any)
+
+		switch val := inputsValue.(type) {
+		case types.Object:
+			for key, v := range val.Attributes() {
+				switch v := v.(type) {
+				case types.String:
+					// if the value is a string, we can use it as is
+					currInputsState[key] = v.ValueString()
+				case types.Bool:
+					// if the value is a bool, we can use it as is
+					currInputsState[key] = v.ValueBool()
+				default:
+					resp.Diagnostics.AddError(
+						"inputs value specified is invalid type",
+						fmt.Sprintf("inputs key '%s' has an unexpected type: %T", key, v),
+					)
+					return
+				}
+			}
+
+			replaceEncryptedApiValues(&currInputsState, &responseData)
+			resp.Diagnostics.Append(setInputfromResponeData(ctx, resp, &responseData)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		case types.String:
+			if err := json.Unmarshal([]byte(val.ValueString()), &currInputsState); err != nil {
+				resp.Diagnostics.AddError(
+					"Unable to unmarshal inputs from string",
+					fmt.Sprintf("Error: %v", err),
+				)
+				return
+			}
+
+			replaceEncryptedApiValues(&currInputsState, &responseData)
+
+			if !reflect.DeepEqual(currInputsState, responseData.Inputs) {
+				// if they are not equal, we need to update state to match API - otherwise leave state as is
+				inputsBytes, err := json.Marshal(responseData.Inputs)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						"Unable to marshal inputs to string",
+						fmt.Sprintf("Error: %v", err),
+					)
+					return
+				}
+				stateInputs := types.DynamicValue(types.StringValue(string(inputsBytes)))
+				resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("inputs"), stateInputs)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			}
+
+		default:
+			resp.Diagnostics.AddError("inputs value specified is invalid type", "inputs must be an object or string type.")
+			return
+		}
+	}
 
 }
 
@@ -293,16 +391,42 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		bodyData.User = int(data.User.ValueInt32())
 	}
 
-	inputsDataMap := new(map[string]any)
-	err = json.Unmarshal([]byte(data.Inputs.ValueString()), &inputsDataMap)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to unmarshal map to json",
-			fmt.Sprintf("Unable to process inputs: %+v. ", data.Inputs))
-		return
-	}
+	if !data.Inputs.IsUnderlyingValueNull() {
+		inputsDataMap := make(map[string]any)
 
-	bodyData.Inputs = inputsDataMap
+		switch val := data.Inputs.UnderlyingValue().(type) {
+		case types.String:
+			err = json.Unmarshal([]byte(val.ValueString()), &inputsDataMap)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Unable to unmarshal map to json",
+					fmt.Sprintf("Unable to process inputs: %+v. ", data.Inputs))
+				return
+			}
+		case types.Object:
+			for key, v := range val.Attributes() {
+				switch v := v.(type) {
+				case types.String:
+					// if the value is a string, we can use it as is
+					inputsDataMap[key] = v.ValueString()
+				case types.Bool:
+					// if the value is a bool, we can use it as is
+					inputsDataMap[key] = v.ValueBool()
+				default:
+					resp.Diagnostics.AddError(
+						"inputs value specified is invalid type",
+						fmt.Sprintf("inputs key '%s' has an unexpected type: %T", key, v),
+					)
+					return
+				}
+			}
+		default:
+			resp.Diagnostics.AddError("Inputs type invalid", "The inputs should be a types.String or types.Object.")
+			return
+		}
+
+		bodyData.Inputs = inputsDataMap
+	}
 
 	url := fmt.Sprintf("credentials/%d/", id)
 	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPut, url, bodyData, []int{200}, "")
@@ -355,5 +479,47 @@ func (r *CredentialResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *CredentialResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+
+	idUnescaped, _ := strconv.Unquote(`"` + req.ID + `"`)
+
+	idParts := strings.Split(idUnescaped, ",")
+	countParts := len(idParts)
+
+	switch {
+	case countParts == 1:
+		resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+
+	case ((countParts >= 3) && ((countParts-1)%2) == 0): // verify they provided pairs of values beyond the ID
+
+		resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), idParts[0])...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		inputsValues := make(map[string]attr.Value)
+		inputsAttrTypes := make(map[string]attr.Type)
+
+		for i := 1; i < countParts; i += 2 {
+			inputsValues[idParts[i]] = types.StringValue(idParts[i+1])
+			inputsAttrTypes[idParts[i]] = types.StringType
+		}
+
+		objVal, diag := types.ObjectValue(inputsAttrTypes, inputsValues)
+		resp.Diagnostics.Append(diag...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		dynamicVal := types.DynamicValue(objVal)
+
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("inputs"), dynamicVal)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+	default:
+		resp.Diagnostics.AddError("Invalid import id string", "The import string at the end must contain one int id value or that plus comma-separated pairs for string keys with corresponding secrets.")
+
+	}
+
 }

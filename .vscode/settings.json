@@ -1,13 +1,18 @@
     // SPECIAL: This is repo specific and hard-coded AAP vs AWX.
     {
         /// NO SECRETS this is tracked in git - use your global VS Code settings.json.        
-        
         // This is needed so that the linter knows this repo is the repoAAP. Without this,
         // you will get import errors for internal/configprefix as that code requires a build flag
         "go.buildFlags": [
-            "-tags",
-            "repoAAP"
-        ]
-
+            "-tags=repoAAP"
+        ],
+        "go.toolsEnvVars": {
+            "GOEXPERIMENT": "jsonv2"
+        },
+        "go.testTimeout": "5m",
+        "go.testEnvVars": {
+            "GOEXPERIMENT": "jsonv2",
+        },
+        "go.testEnvFile": "${workspaceFolder}/.env" // expects AAP_HOST and AAP_OAUTH_TOKEN
         /// NO SECRETS this is tracked in git - use your global VS Code settings.json.
     }

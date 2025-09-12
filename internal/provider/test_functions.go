@@ -149,3 +149,36 @@ func importStateJobTemplateID(resourceName string) resource.ImportStateIdFunc {
 		return jobTemplateID, nil
 	}
 }
+
+// panic if can't convert to string.
+func mustMarshal(v any) string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(fmt.Sprintf("marshal failed: %v", err))
+	}
+	return string(b)
+}
+
+func mustString(v any) string {
+	s, ok := v.(string)
+	if !ok {
+		panic("value is not a string")
+	}
+	return s
+}
+
+func mustFloat64(v any) float64 {
+	s, ok := v.(float64)
+	if !ok {
+		panic("value is not a float64")
+	}
+	return s
+}
+
+func mustBool(v any) bool {
+	s, ok := v.(bool)
+	if !ok {
+		panic("value is not a bool")
+	}
+	return s
+}

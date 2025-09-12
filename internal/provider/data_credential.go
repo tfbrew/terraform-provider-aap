@@ -9,7 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var _ datasource.DataSource = &CredentialDataSource{}
@@ -63,7 +65,11 @@ func (d *CredentialDataSource) Schema(ctx context.Context, req datasource.Schema
 				Computed:    true,
 			},
 			"inputs": schema.StringAttribute{
-				Description: "Credential inputs.",
+				Description: "Credential inputs. This is a JSON string representing a dictionary of inputs.",
+				Computed:    true,
+			},
+			"inputs_as_object": schema.DynamicAttribute{
+				Description: "Credential inputs as object. This is the same data as `inputs` but in object format.",
 				Computed:    true,
 			},
 		},
@@ -89,7 +95,7 @@ func (d *CredentialDataSource) Configure(ctx context.Context, req datasource.Con
 }
 
 func (d *CredentialDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CredentialModel
+	var data CredentialDataModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -160,4 +166,12 @@ func (d *CredentialDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.Inputs = types.StringValue(jsonString)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	var dynValue basetypes.DynamicValue
+	resp.Diagnostics.Append(credentialInputApiToDynamicObject(responseData.Inputs, &dynValue)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("inputs_as_object"), &dynValue)...)
 }
