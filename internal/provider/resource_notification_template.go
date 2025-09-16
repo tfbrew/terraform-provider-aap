@@ -416,7 +416,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 							)
 						}
 					}
-					messages.Error = MessageValue{Body: msg_body, Message: msg_message}
+					messages.Started = MessageValue{Body: msg_body, Message: msg_message}
 				} else {
 					resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
 						"Unexpected error in resource_notification_templates with. started msg is not the right type",
@@ -445,7 +445,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 							)
 						}
 					}
-					messages.Error = MessageValue{Body: msg_body, Message: msg_message}
+					messages.Success = MessageValue{Body: msg_body, Message: msg_message}
 
 				} else {
 					resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
