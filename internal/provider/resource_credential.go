@@ -34,8 +34,85 @@ func (r *CredentialResource) Metadata(ctx context.Context, req resource.Metadata
 	resp.TypeName = req.ProviderTypeName + "_credential"
 }
 
+func (r *CredentialResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	return map[int64]resource.StateUpgrader{
+		// State upgrade implementation from 0 (prior state version) to 1 (Schema.Version)
+		0: {
+			PriorSchema: &schema.Schema{Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					Description: "Credential ID.",
+					Computed:    true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
+					},
+				},
+				"name": schema.StringAttribute{
+					Description: "Credential name.",
+					Required:    true,
+				},
+				"description": schema.StringAttribute{
+					Description: "Credential description.",
+					Optional:    true,
+				},
+				"organization": schema.Int32Attribute{
+					Description: "ID of organization which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
+					Optional:    true,
+				},
+				"team": schema.Int32Attribute{
+					Description: "ID of team which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
+					Optional:    true,
+				},
+				"user": schema.Int32Attribute{
+					Description: "ID of user which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
+					Optional:    true,
+				},
+				"credential_type": schema.Int32Attribute{
+					Description: "ID of the credential type.",
+					Required:    true,
+				},
+				"inputs": schema.StringAttribute{
+					Description: "This field can take inputs in two forms: an object or a JSON-encoded string. When importing this resource type, you must specify the inputs as an object. See above for examples of both types. The older, second method is to specify a string by using using `jsonencode()` to encode similar data as as string in state. Specify alphabetically when using the second method.",
+					Optional:    true,
+					Sensitive:   true,
+				},
+				"kind": schema.StringAttribute{
+					Description: "Credential kind.",
+					Computed:    true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
+					},
+				},
+			}},
+			StateUpgrader: func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+				var priorStateData CredentialModelv0
+
+				resp.Diagnostics.Append(req.State.Get(ctx, &priorStateData)...)
+
+				if resp.Diagnostics.HasError() {
+					return
+				}
+
+				upgradedStateData := CredentialModel{
+					Id:             priorStateData.Id,
+					Name:           priorStateData.Name,
+					Description:    priorStateData.Description,
+					Organization:   priorStateData.Organization,
+					Team:           priorStateData.Team,
+					User:           priorStateData.User,
+					CredentialType: priorStateData.CredentialType,
+					Kind:           priorStateData.Kind,
+					Inputs:         types.DynamicValue(priorStateData.Inputs),
+				}
+
+				resp.Diagnostics.Append(resp.State.Set(ctx, upgradedStateData)...)
+			},
+		},
+	}
+}
+
 func (r *CredentialResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Version: 1, // Update this when schema changes are made that require state migration.
 		Description: `Manage an Automation Controller credential. 
 NOTE: The automation controller API does not return encrypted secrets so changes made in the controller of the inputs field will be ignored. 
 The only changes to the inputs field that will be sent are when the terraform code does not match the terraform state.`,

@@ -449,7 +449,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 
 				} else {
 					resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
-						"Unexpected error in resource_notification_templates with. sucess msg is not the right type",
+						"Unexpected error in resource_notification_templates with. success msg is not the right type",
 					)
 					return
 				}

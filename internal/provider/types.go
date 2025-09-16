@@ -49,6 +49,18 @@ type CredentialModel struct {
 	Inputs         types.Dynamic `tfsdk:"inputs"`
 }
 
+type CredentialModelv0 struct {
+	Id             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	Description    types.String `tfsdk:"description"`
+	Organization   types.Int32  `tfsdk:"organization"`
+	Team           types.Int32  `tfsdk:"team"`
+	User           types.Int32  `tfsdk:"user"`
+	CredentialType types.Int32  `tfsdk:"credential_type"`
+	Kind           types.String `tfsdk:"kind"`
+	Inputs         types.String `tfsdk:"inputs"`
+}
+
 type CredentialDataModel struct {
 	Id             types.String  `tfsdk:"id"`
 	Name           types.String  `tfsdk:"name"`
