@@ -364,21 +364,29 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 				foundOneMessageVal = true
 			}
 			if k == "error" {
+				var msg_body string
+				var msg_message string
 
 				if errorMsg, ok := v.(map[string]any); ok {
-					if msg_body, ok := errorMsg["body"].(string); ok {
-						if msg_message, ok := errorMsg["message"].(string); ok {
-							messages.Error = MessageValue{Body: msg_body, Message: msg_message}
-						} else {
+					if _, bodyKeyFound := errorMsg["body"]; bodyKeyFound {
+						msg_body, ok = errorMsg["body"].(string)
+						if !ok {
 							resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
+								"Unexpected error in resource_notification_templates with. error msg_body is not the right type",
+							)
+						}
+					}
+
+					if _, messageKeyFound := errorMsg["message"]; messageKeyFound {
+						msg_message, ok = errorMsg["message"].(string)
+						if !ok {
+							resp.Diagnostics.AddError("Unexpescted error in resource_notification_templates",
 								"Unexpected error in resource_notification_templates with. error msg_message is not the right type",
 							)
 						}
-					} else {
-						resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
-							"Unexpected error in resource_notification_templates with. error msg_body is not the right type",
-						)
 					}
+					messages.Error = MessageValue{Body: msg_body, Message: msg_message}
+
 				} else {
 					resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
 						"Unexpected error in resource_notification_templates with. error msg is not the right type",
@@ -388,20 +396,27 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 
 			}
 			if k == "started" {
+				var msg_body string
+				var msg_message string
 				if startMsg, ok := v.(map[string]any); ok {
-					if msg_body, ok := startMsg["body"].(string); ok {
-						if msg_message, ok := startMsg["message"].(string); ok {
-							messages.Started = MessageValue{Body: msg_body, Message: msg_message}
-						} else {
+					if _, bodyKeyFound := startMsg["body"]; bodyKeyFound {
+						msg_body, ok = startMsg["body"].(string)
+						if !ok {
 							resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
+								"Unexpected error in resource_notification_templates with. started msg_body is not the right type",
+							)
+						}
+					}
+
+					if _, messageKeyFound := startMsg["message"]; messageKeyFound {
+						msg_message, ok = startMsg["message"].(string)
+						if !ok {
+							resp.Diagnostics.AddError("Unexpescted error in resource_notification_templates",
 								"Unexpected error in resource_notification_templates with. started msg_message is not the right type",
 							)
 						}
-					} else {
-						resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
-							"Unexpected error in resource_notification_templates with. started msg_body is not the right type",
-						)
 					}
+					messages.Started = MessageValue{Body: msg_body, Message: msg_message}
 				} else {
 					resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
 						"Unexpected error in resource_notification_templates with. started msg is not the right type",
@@ -410,23 +425,31 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 				}
 			}
 			if k == "success" {
+				var msg_body string
+				var msg_message string
 				if successMsg, ok := v.(map[string]any); ok {
-					if msg_body, ok := successMsg["body"].(string); ok {
-						if msg_message, ok := successMsg["message"].(string); ok {
-							messages.Success = MessageValue{Body: msg_body, Message: msg_message}
-						} else {
+					if _, bodyKeyFound := successMsg["body"]; bodyKeyFound {
+						msg_body, ok = successMsg["body"].(string)
+						if !ok {
 							resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
-								"Unexpected error in resource_notification_templates with. started msg_message is not the right type",
+								"Unexpected error in resource_notification_templates with. success msg_body is not the right type",
 							)
 						}
-					} else {
-						resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
-							"Unexpected error in resource_notification_templates with. started msg_body is not the right type",
-						)
 					}
+
+					if _, messageKeyFound := successMsg["message"]; messageKeyFound {
+						msg_message, ok = successMsg["message"].(string)
+						if !ok {
+							resp.Diagnostics.AddError("Unexpescted error in resource_notification_templates",
+								"Unexpected error in resource_notification_templates with. success msg_message is not the right type",
+							)
+						}
+					}
+					messages.Success = MessageValue{Body: msg_body, Message: msg_message}
+
 				} else {
 					resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
-						"Unexpected error in resource_notification_templates with. started msg is not the right type",
+						"Unexpected error in resource_notification_templates with. success msg is not the right type",
 					)
 					return
 				}
@@ -438,19 +461,28 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 					for key, val := range wkaParent {
 
 						if valMsg, ok := val.(map[string]any); ok {
-							if msg_body, ok := valMsg["body"].(string); ok {
-								if msg_message, ok := valMsg["message"].(string); ok {
-									wka[key] = MessageValue{Body: msg_body, Message: msg_message}
-								} else {
+							var msg_body string
+							var msg_message string
+
+							if _, ok = valMsg["body"]; ok {
+								msg_body, ok = valMsg["body"].(string)
+								if !ok {
 									resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
-										"Unexpected error in resource_notification_templates with. val msg_message is not the right type",
+										"Unexpected error in resource_notification_templates with. workflow_approval msg_body is not the right type",
 									)
 								}
-							} else {
-								resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
-									"Unexpected error in resource_notification_templates with. val msg_body is not the right type",
-								)
+
 							}
+							if _, ok = valMsg["message"]; ok {
+								msg_message, ok = valMsg["message"].(string)
+								if !ok {
+									resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
+										"Unexpected error in resource_notification_templates with. workflow_approval msg_message is not the right type",
+									)
+								}
+
+							}
+							wka[key] = MessageValue{Body: msg_body, Message: msg_message}
 						} else {
 							resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
 								"Unexpected error in resource_notification_templates with. val msg is not the right type",
