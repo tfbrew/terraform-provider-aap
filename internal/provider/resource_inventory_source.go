@@ -109,7 +109,7 @@ func (r *InventorySourceResource) Schema(ctx context.Context, req resource.Schem
 			"update_on_launch": schema.BoolAttribute{
 				Description: "Each time a job runs using this inventory, refresh the inventory from the selected source before executing job tasks.",
 				Optional:    true,
-				Default:     booldefault.StaticBool(true),
+				Default:     booldefault.StaticBool(false),
 				Computed:    true,
 			},
 			"source_vars": schema.StringAttribute{
@@ -129,7 +129,7 @@ func (r *InventorySourceResource) Schema(ctx context.Context, req resource.Schem
 			"update_cache_timeout": schema.Int32Attribute{
 				Description: "Time in seconds to consider an inventory sync to be current. During job runs and callbacks the task system will evaluate the timestamp of the latest sync. If it is older than Cache Timeout, it is not considered current, and a new inventory sync will be performed.",
 				Optional:    true,
-				Default:     int32default.StaticInt32(0),
+				Default:     int32default.StaticInt32(30),
 				Computed:    true,
 			},
 			"verbosity": schema.Int32Attribute{
