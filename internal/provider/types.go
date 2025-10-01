@@ -237,6 +237,7 @@ type InventorySourceModel struct {
 	SourceVars           types.String `tfsdk:"source_vars"`
 	SourceProject        types.Int32  `tfsdk:"source_project"`
 	ScmBranch            types.String `tfsdk:"scm_branch"`
+	Limit                types.String `tfsdk:"limit"`
 	UpdateCacheTimeout   types.Int32  `tfsdk:"update_cache_timeout"`
 	UpdateOnLaunch       types.Bool   `tfsdk:"update_on_launch"`
 	Verbosity            types.Int32  `tfsdk:"verbosity"`
@@ -259,6 +260,7 @@ type InventorySourceAPIModel struct {
 	SourceVars           string `json:"source_vars,omitempty"`
 	SourceProject        int    `json:"source_project,omitempty"`
 	ScmBranch            string `json:"scm_branch,omitempty"`
+	Limit                string `json:"limit,omitempty"`
 	UpdateCacheTimeout   int    `json:"update_cache_timeout,omitempty"`
 	UpdateOnLaunch       bool   `json:"update_on_launch,omitempty"`
 	Verbosity            int    `json:"verbosity,omitempty"`

@@ -271,6 +271,9 @@ func (r *InventorySourceResource) Create(ctx context.Context, req resource.Creat
 	if !(data.ScmBranch.IsNull()) {
 		bodyData.ScmBranch = data.ScmBranch.ValueString()
 	}
+	if !(data.Limit.IsNull()) {
+		bodyData.Limit = data.Limit.ValueString()
+	}
 	if !(data.UpdateCacheTimeout.IsNull()) {
 		bodyData.UpdateCacheTimeout = int(data.UpdateCacheTimeout.ValueInt32())
 	}
@@ -427,6 +430,13 @@ func (r *InventorySourceResource) Read(ctx context.Context, req resource.ReadReq
 		}
 	}
 
+	if !data.Limit.IsNull() || responseData.Limit != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("limit"), responseData.Limit)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	if !data.UpdateCacheTimeout.IsNull() || responseData.UpdateCacheTimeout != 0 {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("update_cache_timeout"), responseData.UpdateCacheTimeout)...)
 		if resp.Diagnostics.HasError() {
@@ -502,6 +512,9 @@ func (r *InventorySourceResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !(data.ScmBranch.IsNull()) {
 		bodyData.ScmBranch = data.ScmBranch.ValueString()
+	}
+	if !(data.Limit.IsNull()) {
+		bodyData.Limit = data.Limit.ValueString()
 	}
 	if !(data.UpdateCacheTimeout.IsNull()) {
 		bodyData.UpdateCacheTimeout = int(data.UpdateCacheTimeout.ValueInt32())
