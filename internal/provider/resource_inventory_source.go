@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -97,25 +96,25 @@ func (r *InventorySourceResource) Schema(ctx context.Context, req resource.Schem
 			"overwrite": schema.BoolAttribute{
 				Description: "If checked, any hosts and groups that were previously present on the external source but are now removed will be removed from the inventory. Hosts and groups that were not managed by the inventory source will be promoted to the next manually created group or if there is no manually created group to promote them into, they will be left in the `all` default group for the inventory. When not checked, local child hosts and groups not found on the external source will remain untouched by the inventory update process.",
 				Optional:    true,
-				Default:     booldefault.StaticBool(false),
+				Default:     booldefault.StaticBool(true),
 				Computed:    true,
 			},
 			"overwrite_vars": schema.BoolAttribute{
 				Description: "If checked, all variables for child groups and hosts will be removed and replaced by those found on the external source. When not checked, a merge will be performed, combining local variables with those found on the external source.",
 				Optional:    true,
-				Default:     booldefault.StaticBool(false),
+				Default:     booldefault.StaticBool(true),
 				Computed:    true,
 			},
 			"update_on_launch": schema.BoolAttribute{
 				Description: "Each time a job runs using this inventory, refresh the inventory from the selected source before executing job tasks.",
 				Optional:    true,
-				Default:     booldefault.StaticBool(false),
+				Default:     booldefault.StaticBool(true),
 				Computed:    true,
 			},
 			"source_vars": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("---"),
-				Computed:    true,
+				Optional: true,
+				// Default:     stringdefault.StaticString("---"),
+				// Computed:    true,
 				Description: "Default value is `\"---\"`",
 			},
 			"source_project": schema.Int32Attribute{
@@ -133,8 +132,8 @@ func (r *InventorySourceResource) Schema(ctx context.Context, req resource.Schem
 			"update_cache_timeout": schema.Int32Attribute{
 				Description: "Time in seconds to consider an inventory sync to be current. During job runs and callbacks the task system will evaluate the timestamp of the latest sync. If it is older than Cache Timeout, it is not considered current, and a new inventory sync will be performed.",
 				Optional:    true,
-				Default:     int32default.StaticInt32(30),
-				Computed:    true,
+				// Default:     int32default.StaticInt32(0),
+				// Computed:    true,
 			},
 			"verbosity": schema.Int32Attribute{
 				Description: "Control the level of output Ansible will produce for inventory source update jobs. `0 - Warning`, `1 - Info`, `2 - Debug`",

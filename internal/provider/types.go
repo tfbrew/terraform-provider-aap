@@ -249,21 +249,21 @@ type InventorySourceAPIModel struct {
 	Inventory            int    `json:"inventory"`
 	Source               string `json:"source"`
 	Credential           int    `json:"credential,omitempty"`
-	Description          string `json:"description,omitempty"`
-	ExecutionEnvironment any    `json:"execution_environment"`
-	SourcePath           string `json:"source_path,omitempty"`
-	EnabledValue         string `json:"enabled_value,omitempty"`
-	EnabledVar           string `json:"enabled_var,omitempty"`
-	HostFilter           string `json:"host_filter,omitempty"`
-	OverwriteVars        bool   `json:"overwrite_vars,omitempty"`
-	Overwrite            bool   `json:"overwrite,omitempty"`
-	SourceVars           string `json:"source_vars,omitempty"`
+	Description          string `json:"description"`
+	ExecutionEnvironment any    `json:"execution_environment,omitempty"`
+	SourcePath           string `json:"source_path"`
+	EnabledValue         string `json:"enabled_value"`
+	EnabledVar           string `json:"enabled_var"`
+	HostFilter           string `json:"host_filter"`
+	OverwriteVars        bool   `json:"overwrite_vars"`
+	Overwrite            bool   `json:"overwrite"`
+	SourceVars           string `json:"source_vars"`
 	SourceProject        int    `json:"source_project,omitempty"`
-	ScmBranch            string `json:"scm_branch,omitempty"`
-	Limit                string `json:"limit,omitempty"`
-	UpdateCacheTimeout   int    `json:"update_cache_timeout,omitempty"`
-	UpdateOnLaunch       bool   `json:"update_on_launch,omitempty"`
-	Verbosity            int    `json:"verbosity,omitempty"`
+	ScmBranch            string `json:"scm_branch"`
+	Limit                string `json:"limit"`
+	UpdateCacheTimeout   int    `json:"update_cache_timeout"`
+	UpdateOnLaunch       bool   `json:"update_on_launch"`
+	Verbosity            int    `json:"verbosity"`
 }
 
 type JobTemplateModel struct {
