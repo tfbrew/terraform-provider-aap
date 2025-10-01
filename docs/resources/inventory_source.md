@@ -50,7 +50,7 @@ resource "aap_inventory_source" "github_inventory_source" {
 
 - `inventory` (Number) Inventory ID for the inventory source to be attached to.
 - `name` (String) Inventory Source name.
-- `source` (String) Type of SCM resource. Options: `scm`, `ec2`, `gce`, `azure_rm`, `vmware`, `satellite6`, `openstack`, `rhv`, `controller`, `insights`, `terraform`, `openshift_virtualization`.
+- `source` (String) Options: `file`, `constructed`, `scm`, `ec2`, `gce`, `azure_rm`, `vmware`, `vmware_esxi`, `satellite6`, `openstack`, `rhv`, `controller`, `insights`, `terraform`, `openshift_virtualization`.
 
 ### Optional
 
@@ -60,6 +60,7 @@ resource "aap_inventory_source" "github_inventory_source" {
 - `enabled_var` (String) Retrieve the enabled state from the given dict of host variables. The enabled variable may be specified using dot notation, e.g: 'foo.bar'
 - `execution_environment` (Number) The ID of the execution environment this inventory source.
 - `host_filter` (String) Regular expression where only matching host names will be imported. The filter is applied as a post-processing step after any inventory plugin filters are applied.
+- `limit` (String) Enter host, group or pattern to further limit the hosts in the inventory that will be synced. This is applied after any filtering performed by the inventory plugin and the host_filter field.
 - `overwrite` (Boolean) If checked, any hosts and groups that were previously present on the external source but are now removed will be removed from the inventory. Hosts and groups that were not managed by the inventory source will be promoted to the next manually created group or if there is no manually created group to promote them into, they will be left in the `all` default group for the inventory. When not checked, local child hosts and groups not found on the external source will remain untouched by the inventory update process.
 - `overwrite_vars` (Boolean) If checked, all variables for child groups and hosts will be removed and replaced by those found on the external source. When not checked, a merge will be performed, combining local variables with those found on the external source.
 - `scm_branch` (String) Branch to use on inventory sync. Project default used if blank. Only allowed if project allow_override field is set to true.

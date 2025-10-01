@@ -60,10 +60,10 @@ func (r *InventorySourceResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"source": schema.StringAttribute{
-				Description: "Type of SCM resource. Options: `scm`, `ec2`, `gce`, `azure_rm`, `vmware`, `satellite6`, `openstack`, `rhv`, `controller`, `insights`, `terraform`, `openshift_virtualization`.",
+				Description: "Options: `file`, `constructed`, `scm`, `ec2`, `gce`, `azure_rm`, `vmware`, `vmware_esxi`, `satellite6`, `openstack`, `rhv`, `controller`, `insights`, `terraform`, `openshift_virtualization`.",
 				Required:    true,
 				Validators: []validator.String{
-					stringvalidator.OneOf([]string{"scm", "ec2", "gce", "azure_rm", "vmware", "satellite6", "openstack", "rhv", "controller", "insights", "terraform", "openshift_virtualization"}...),
+					stringvalidator.OneOf([]string{"file", "constructed", "scm", "ec2", "gce", "azure_rm", "vmware", "vmware_esxi", "satellite6", "openstack", "rhv", "controller", "insights", "terraform", "openshift_virtualization"}...),
 				},
 			},
 			"description": schema.StringAttribute{
@@ -125,6 +125,10 @@ func (r *InventorySourceResource) Schema(ctx context.Context, req resource.Schem
 			"scm_branch": schema.StringAttribute{
 				Optional:    true,
 				Description: "Branch to use on inventory sync. Project default used if blank. Only allowed if project allow_override field is set to true.",
+			},
+			"limit": schema.StringAttribute{
+				Optional:    true,
+				Description: "Enter host, group or pattern to further limit the hosts in the inventory that will be synced. This is applied after any filtering performed by the inventory plugin and the host_filter field.",
 			},
 			"update_cache_timeout": schema.Int32Attribute{
 				Description: "Time in seconds to consider an inventory sync to be current. During job runs and callbacks the task system will evaluate the timestamp of the latest sync. If it is older than Cache Timeout, it is not considered current, and a new inventory sync will be performed.",
