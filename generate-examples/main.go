@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
 )

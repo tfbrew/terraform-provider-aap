@@ -1,18 +1,30 @@
 resource "{{.Prefix}}_organization" "example" {
-    name = "example"
-  }
+  name        = "Example Organization"
+  description = "An example organization"
+}
 
-  resource "{{.Prefix}}_inventory" "regular" {
-    name =  "example"
-    organization = {{.Prefix}}_organization.example.id
-  }
-  
-  resource "{{.Prefix}}_constructed_inventory" "constructed" {
-    name = "example"
-    organization = {{.Prefix}}_organization.example.id
-  }
+resource "{{.Prefix}}_inventory" "example" {
+  name         = "Example Inventory"
+  description  = "An example inventory"
+  organization = {{.Prefix}}_organization.example.id
+}
 
-  resource "{{.Prefix}}_inventory_input" "example" {
-    constructed_inventory_id = {{.Prefix}}_constructed_inventory.constructed.id
-    input_inventory_id       = {{.Prefix}}_inventory.regular.id
-  }
+resource "{{.Prefix}}_constructed_inventory" "example" {
+  name         = "Example Constructed Inventory"
+  description  = "An example constructed inventory"
+  organization = {{.Prefix}}_organization.example.id
+  limit        = "dev,&no_mgmt"
+  source_vars  = <<-EOT
+---
+plugin: ansible.builtin.constructed
+strict: true
+groups:
+  dev: az_env_tag == "Development"
+  no_mgmt: not ("mgmt" in inventory_hostname)
+EOT
+}
+
+resource "{{.Prefix}}_inventory_input" "example" {
+  constructed_inventory_id = {{.Prefix}}_constructed_inventory.example.id
+  input_inventory_id       = {{.Prefix}}_inventory.example.id
+}  

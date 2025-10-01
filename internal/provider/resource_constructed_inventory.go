@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -78,8 +80,8 @@ func (r *ConstructedInventoryResource) Schema(ctx context.Context, req resource.
 			"verbosity": schema.Int32Attribute{
 				Description: "The verbosity level for the related auto-created inventory source, special to constructed inventory",
 				Optional:    true,
-				// Default:     int32default.StaticInt32(1),
-				// Computed:    true,
+				Default:     int32default.StaticInt32(0),
+				Computed:    true,
 				Validators: []validator.Int32{
 					int32validator.Between(0, 2),
 				},
@@ -185,7 +187,7 @@ func (r *ConstructedInventoryResource) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	url := fmt.Sprintf("inventories/%d/", id)
+	url := fmt.Sprintf("constructed_inventories/%d/", id)
 	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -245,6 +247,11 @@ func (r *ConstructedInventoryResource) Read(ctx context.Context, req resource.Re
 	}
 
 	if !data.SourceVars.IsNull() || responseData.SourceVars != "" {
+
+		if !strings.HasSuffix(responseData.SourceVars, "\n") {
+			responseData.SourceVars += "\n"
+		}
+
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("source_vars"), responseData.SourceVars)...)
 		if resp.Diagnostics.HasError() {
 			return
