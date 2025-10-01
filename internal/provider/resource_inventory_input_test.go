@@ -179,7 +179,7 @@ func testAccInventoryInputReplaceConfig(orgName, constructedInvName, inputInvNam
 	)
 }
 
-// Verify that the Destroy to recreate is working
+// Verify that the Destroy to recreate is working.
 func TestAccInventoryInputResource_replace(t *testing.T) {
 
 	orgName, constructedInvName, inputInvName := acctest.RandString(5), acctest.RandString(5), acctest.RandString(5)

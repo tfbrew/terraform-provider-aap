@@ -239,7 +239,7 @@ func (r *ConstructedInventoryResource) Read(ctx context.Context, req resource.Re
 		}
 	}
 
-	if !data.PreventInstanceGroupFallback.IsNull() || responseData.PreventInstanceGroupFallback != false {
+	if !data.PreventInstanceGroupFallback.IsNull() || responseData.PreventInstanceGroupFallback {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prevent_instance_group_fallback"), responseData.PreventInstanceGroupFallback)...)
 		if resp.Diagnostics.HasError() {
 			return
