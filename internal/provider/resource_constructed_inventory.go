@@ -143,9 +143,8 @@ func (r *ConstructedInventoryResource) Create(ctx context.Context, req resource.
 	if !(data.Limit.IsNull()) {
 		bodyData.Limit = data.Limit.ValueString()
 	}
-	if !(data.Verbosity.IsNull()) {
-		bodyData.Verbosity = int(data.Verbosity.ValueInt32())
-	}
+
+	bodyData.Verbosity = int(data.Verbosity.ValueInt32())
 
 	url := "constructed_inventories/"
 	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPost, url, bodyData, []int{201}, "")
@@ -272,11 +271,9 @@ func (r *ConstructedInventoryResource) Read(ctx context.Context, req resource.Re
 		}
 	}
 
-	if !data.Verbosity.IsNull() || responseData.Verbosity != 0 {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("verbosity"), responseData.Verbosity)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("verbosity"), responseData.Verbosity)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 }

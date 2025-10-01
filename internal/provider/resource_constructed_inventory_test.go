@@ -86,17 +86,6 @@ func TestAccConstructedInventory_import(t *testing.T) {
 				ResourceName:      fmt.Sprintf("%s_constructed_inventory.test", configprefix.Prefix),
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[fmt.Sprintf("%s_constructed_inventory.test", configprefix.Prefix)]
-					if !ok {
-						return "", fmt.Errorf("constructed inventory not found")
-					}
-					id := rs.Primary.ID
-					if id == "" {
-						return "", fmt.Errorf("constructed inventory has no ID")
-					}
-					return id, nil
-				},
 			},
 		},
 	})
