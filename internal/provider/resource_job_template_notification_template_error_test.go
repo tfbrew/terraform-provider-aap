@@ -148,7 +148,7 @@ resource "%[1]s_job_template_notification_template_error" "test" {
   job_template_id    = %[1]s_job_template.test.id
   notif_template_ids = [%[1]s_notification_template.test1.id]
 }
-  `, configprefix.Prefix, acctest.RandString(5))
+  `, configprefix.Prefix, acctest.RandString(7))
 }
 
 func testAccJobTemplNotifErr2ResourceConfig() string {
