@@ -3,12 +3,12 @@
 page_title: "aap_inventory_input Resource - aap"
 subcategory: ""
 description: |-
-  Associate an existing inventory to a constructed-type inventory Inventory Inputs.
+  Associate an existing inventory to a constructed-type inventory.
 ---
 
 # aap_inventory_input (Resource)
 
-Associate an existing inventory to a constructed-type inventory Inventory Inputs.
+Associate an existing inventory to a constructed-type inventory.
 
 ## Example Usage
 

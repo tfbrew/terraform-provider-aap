@@ -33,7 +33,7 @@ func (r *InventoryInputResource) Metadata(ctx context.Context, req resource.Meta
 
 func (r *InventoryInputResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `Associate an existing inventory to a constructed-type inventory Inventory Inputs.`,
+		Description: `Associate an existing inventory to a constructed-type inventory.`,
 		Attributes: map[string]schema.Attribute{
 			"constructed_inventory_id": schema.StringAttribute{
 				Description: "The ID of the constructed Inventory to which you want to associate the input_inventory_id.",
