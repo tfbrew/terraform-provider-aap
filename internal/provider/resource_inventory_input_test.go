@@ -34,7 +34,7 @@ func TestAccInventoryInputResource_basic(t *testing.T) {
 					statecheck.CompareValuePairs(
 						fmt.Sprintf("%s_inventory_input.test", configprefix.Prefix),
 						tfjsonpath.New("constructed_inventory_id"),
-						fmt.Sprintf("%s_inventory.constructed_test", configprefix.Prefix),
+						fmt.Sprintf("%s_constructed_inventory.constructed_test", configprefix.Prefix),
 						tfjsonpath.New("id"),
 						IdCompare,
 					),
@@ -71,7 +71,7 @@ func TestAccInventoryInputResource_import(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "constructed_inventory_id",
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
 					// Find the resource in the state
-					rs, ok := s.RootModule().Resources[fmt.Sprintf("%s_inventory.constructed_test", configprefix.Prefix)]
+					rs, ok := s.RootModule().Resources[fmt.Sprintf("%s_constructed_inventory.constructed_test", configprefix.Prefix)]
 					if !ok {
 						return "", fmt.Errorf("constructed inventory not found")
 					}
@@ -133,15 +133,13 @@ func testAccInventoryInputConfig(orgName, constructedInvName, inputInvName strin
 			organization = %[1]s_organization.test.id
 		}
 
-		resource "%[1]s_inventory" "constructed_test" {
+		resource "%[1]s_constructed_inventory" "constructed_test" {
 			name = "%[3]s"
 			organization = %[1]s_organization.test.id
-			kind = "constructed"
-			host_filter = ""
 		}
 
 		resource "%[1]s_inventory_input" "test" {
-			constructed_inventory_id = %[1]s_inventory.constructed_test.id
+			constructed_inventory_id = %[1]s_constructed_inventory.constructed_test.id
 			input_inventory_id       = %[1]s_inventory.regular_test.id
 		}`,
 		configprefix.Prefix, orgName, constructedInvName, inputInvName,
@@ -164,15 +162,14 @@ func testAccInventoryInputReplaceConfig(orgName, constructedInvName, inputInvNam
 			organization = %[1]s_organization.test.id
 		}
 
-		resource "%[1]s_inventory" "constructed_test" {
+		resource "%[1]s_constructed_inventory" "constructed_test" {
 			name = "%[3]s"
 			organization = %[1]s_organization.test.id
-			kind = "constructed"
-			host_filter = ""
+
 		}
 
 		resource "%[1]s_inventory_input" "test" {
-			constructed_inventory_id = %[1]s_inventory.constructed_test.id
+			constructed_inventory_id = %[1]s_constructed_inventory.constructed_test.id
 			input_inventory_id       = %[1]s_inventory.regular_test_2.id
 		}`,
 		configprefix.Prefix, orgName, constructedInvName, inputInvName, inputReplaceInvName,
