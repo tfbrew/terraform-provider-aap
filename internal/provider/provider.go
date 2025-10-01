@@ -292,6 +292,7 @@ func (p *theProvider) Resources(ctx context.Context) []func() resource.Resource 
 		NewGroupResource,
 		NewGroupHostResource,
 		NewInstanceGroupResource,
+		NewConstructedInventoryResource,
 		NewInventoryResource,
 		NewInventoryInputResource,
 		NewInventorySourceResource,

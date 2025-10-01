@@ -200,6 +200,32 @@ type InstanceGroupAPIModel struct {
 	Credential               int    `json:"credential,omitempty"`
 }
 
+type ConstructedInventoryModel struct {
+	Id                           types.String `tfsdk:"id"`
+	Name                         types.String `tfsdk:"name"`
+	Description                  types.String `tfsdk:"description"`
+	Organization                 types.Int32  `tfsdk:"organization"`
+	Variables                    types.String `tfsdk:"variables"`
+	PreventInstanceGroupFallback types.Bool   `tfsdk:"prevent_instance_group_fallback"`
+	SourceVars                   types.String `tfsdk:"source_vars"`
+	UpdateCacheTimeout           types.Int32  `tfsdk:"update_cache_timeout"`
+	Limit                        types.String `tfsdk:"limit"`
+	Verbosity                    types.Int32  `tfsdk:"verbosity"`
+}
+
+type ConstructedInventoryAPIModel struct {
+	Id                           int    `json:"id"`
+	Name                         string `json:"name"`
+	Description                  string `json:"description"`
+	Organization                 int    `json:"organization"`
+	Variables                    string `json:"variables"`
+	PreventInstanceGroupFallback bool   `json:"prevent_instance_group_fallback"`
+	SourceVars                   string `json:"source_vars"`
+	UpdateCacheTimeout           int    `json:"update_cache_timeout"`
+	Limit                        string `json:"limit"`
+	Verbosity                    int    `json:"verbosity"`
+}
+
 type InventoryModel struct {
 	Id           types.String `tfsdk:"id"`
 	Name         types.String `tfsdk:"name"`

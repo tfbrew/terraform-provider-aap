@@ -7,8 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -18,24 +17,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ resource.Resource = &InventoryResource{}
-var _ resource.ResourceWithImportState = &InventoryResource{}
+var _ resource.Resource = &ConstructedInventoryResource{}
+var _ resource.ResourceWithImportState = &ConstructedInventoryResource{}
 
-func NewInventoryResource() resource.Resource {
-	return &InventoryResource{}
+func NewConstructedInventoryResource() resource.Resource {
+	return &ConstructedInventoryResource{}
 }
 
-type InventoryResource struct {
+type ConstructedInventoryResource struct {
 	client *providerClient
 }
 
-func (r *InventoryResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_inventory"
+func (r *ConstructedInventoryResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_constructed_inventory"
 }
 
-func (r *InventoryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *ConstructedInventoryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `Manage an Automation Controller inventory.`,
+		Description: `Manage an Automation Controller contructed inventory.`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Inventory ID.",
@@ -53,38 +52,43 @@ func (r *InventoryResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional:    true,
 			},
 			"organization": schema.Int32Attribute{
-				Description: "Organization ID for the inventory to live in.",
+				Description: "Organization ID containing this constructed inventory.",
 				Required:    true,
 			},
 			"variables": schema.StringAttribute{
 				Description: "Enter inventory variables using either JSON or YAML syntax.",
 				Optional:    true,
 			},
-			"kind": schema.StringAttribute{
-				Description: "Leave empty for regular inventories. Set to `smart` for smart inventories (AAP documentation recommends against using smart type - use constructed_inventory resource.)",
+			"prevent_instance_group_fallback": schema.BoolAttribute{
+				Description: "If enabled, the inventory will prevent adding any organization instance groups to the list of preferred instances groups to run associated job templates on.If this setting is enabled and you provided an empty list, the global instance groups will be applied.",
 				Optional:    true,
-				Validators: []validator.String{
-					stringvalidator.OneOf([]string{"smart"}...),
-				},
 			},
-			"host_filter": schema.StringAttribute{
-				Description: "Populate the hosts for this inventory by using a search filter. Example: `name__icontains=localhost`.",
+			"source_vars": schema.StringAttribute{
+				Description: "The source_vars for the related auto-created inventory source, special to constructed inventory.",
 				Optional:    true,
+			},
+			"update_cache_timeout": schema.Int32Attribute{
+				Description: "The cache timeout for the related auto-created inventory source, special to constructed inventory.",
+				Optional:    true,
+			},
+			"limit": schema.StringAttribute{
+				Description: "Hosts in the inventory will be limited to only those that match the filter.",
+				Optional:    true,
+			},
+			"verbosity": schema.Int32Attribute{
+				Description: "The verbosity level for the related auto-created inventory source, special to constructed inventory",
+				Optional:    true,
+				// Default:     int32default.StaticInt32(1),
+				// Computed:    true,
+				Validators: []validator.Int32{
+					int32validator.Between(0, 2),
+				},
 			},
 		},
 	}
 }
 
-func (d InventoryResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourcevalidator.RequiredTogether(
-			path.MatchRoot("kind"),
-			path.MatchRoot("host_filter"),
-		),
-	}
-}
-
-func (r *InventoryResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *ConstructedInventoryResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -102,8 +106,8 @@ func (r *InventoryResource) Configure(ctx context.Context, req resource.Configur
 	r.client = configureData
 }
 
-func (r *InventoryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data InventoryModel
+func (r *ConstructedInventoryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data ConstructedInventoryModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -111,7 +115,7 @@ func (r *InventoryResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	var bodyData InventoryAPIModel
+	var bodyData ConstructedInventoryAPIModel
 
 	if !(data.Name.IsNull()) {
 		bodyData.Name = data.Name.ValueString()
@@ -125,14 +129,23 @@ func (r *InventoryResource) Create(ctx context.Context, req resource.CreateReque
 	if !(data.Variables.IsNull()) {
 		bodyData.Variables = data.Variables.ValueString()
 	}
-	if !(data.Kind.IsNull()) {
-		bodyData.Kind = data.Kind.ValueString()
+	if !(data.PreventInstanceGroupFallback.IsNull()) {
+		bodyData.PreventInstanceGroupFallback = data.PreventInstanceGroupFallback.ValueBool()
 	}
-	if !(data.HostFilter.IsNull()) {
-		bodyData.HostFilter = data.HostFilter.ValueString()
+	if !(data.SourceVars.IsNull()) {
+		bodyData.SourceVars = data.SourceVars.ValueString()
+	}
+	if !(data.UpdateCacheTimeout.IsNull()) {
+		bodyData.UpdateCacheTimeout = int(data.UpdateCacheTimeout.ValueInt32())
+	}
+	if !(data.Limit.IsNull()) {
+		bodyData.Limit = data.Limit.ValueString()
+	}
+	if !(data.Verbosity.IsNull()) {
+		bodyData.Verbosity = int(data.Verbosity.ValueInt32())
 	}
 
-	url := "inventories/"
+	url := "constructed_inventories/"
 	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPost, url, bodyData, []int{201}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -156,8 +169,8 @@ func (r *InventoryResource) Create(ctx context.Context, req resource.CreateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *InventoryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data InventoryModel
+func (r *ConstructedInventoryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data ConstructedInventoryModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -186,7 +199,7 @@ func (r *InventoryResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	var responseData InventoryAPIModel
+	var responseData ConstructedInventoryAPIModel
 
 	err = json.Unmarshal(body, &responseData)
 	if err != nil {
@@ -224,23 +237,45 @@ func (r *InventoryResource) Read(ctx context.Context, req resource.ReadRequest, 
 		}
 	}
 
-	if !data.Kind.IsNull() || responseData.Kind != "" {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("kind"), responseData.Kind)...)
+	if !data.PreventInstanceGroupFallback.IsNull() || responseData.PreventInstanceGroupFallback != false {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prevent_instance_group_fallback"), responseData.PreventInstanceGroupFallback)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	if !data.HostFilter.IsNull() || responseData.HostFilter != "" {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("host_filter"), responseData.HostFilter)...)
+	if !data.SourceVars.IsNull() || responseData.SourceVars != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("source_vars"), responseData.SourceVars)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
+
+	if !data.UpdateCacheTimeout.IsNull() || responseData.UpdateCacheTimeout != 0 {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("update_cache_timeout"), responseData.UpdateCacheTimeout)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !data.Limit.IsNull() || responseData.Limit != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("limit"), responseData.Limit)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !data.Verbosity.IsNull() || responseData.Verbosity != 0 {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("verbosity"), responseData.Verbosity)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 }
 
-func (r *InventoryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data InventoryModel
+func (r *ConstructedInventoryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data ConstructedInventoryModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -255,7 +290,7 @@ func (r *InventoryResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	var bodyData InventoryAPIModel
+	var bodyData ConstructedInventoryAPIModel
 
 	if !(data.Name.IsNull()) {
 		bodyData.Name = data.Name.ValueString()
@@ -269,14 +304,23 @@ func (r *InventoryResource) Update(ctx context.Context, req resource.UpdateReque
 	if !(data.Variables.IsNull()) {
 		bodyData.Variables = data.Variables.ValueString()
 	}
-	if !(data.Kind.IsNull()) {
-		bodyData.Kind = data.Kind.ValueString()
+	if !(data.PreventInstanceGroupFallback.IsNull()) {
+		bodyData.PreventInstanceGroupFallback = data.PreventInstanceGroupFallback.ValueBool()
 	}
-	if !(data.HostFilter.IsNull()) {
-		bodyData.HostFilter = data.HostFilter.ValueString()
+	if !(data.SourceVars.IsNull()) {
+		bodyData.SourceVars = data.SourceVars.ValueString()
+	}
+	if !(data.UpdateCacheTimeout.IsNull()) {
+		bodyData.UpdateCacheTimeout = int(data.UpdateCacheTimeout.ValueInt32())
+	}
+	if !(data.Limit.IsNull()) {
+		bodyData.Limit = data.Limit.ValueString()
+	}
+	if !(data.Verbosity.IsNull()) {
+		bodyData.Verbosity = int(data.Verbosity.ValueInt32())
 	}
 
-	url := fmt.Sprintf("inventories/%d/", id)
+	url := fmt.Sprintf("constructed_inventories/%d/", id)
 	_, _, err = r.client.CreateUpdateAPIRequest(ctx, http.MethodPut, url, bodyData, []int{200}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -288,8 +332,8 @@ func (r *InventoryResource) Update(ctx context.Context, req resource.UpdateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *InventoryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data InventoryModel
+func (r *ConstructedInventoryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data ConstructedInventoryModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -304,7 +348,7 @@ func (r *InventoryResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	url := fmt.Sprintf("inventories/%d/", id)
+	url := fmt.Sprintf("constructed_inventories/%d/", id)
 	_, _, err = r.client.GenericAPIRequest(ctx, http.MethodDelete, url, nil, []int{202, 204}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -314,6 +358,6 @@ func (r *InventoryResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *InventoryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *ConstructedInventoryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

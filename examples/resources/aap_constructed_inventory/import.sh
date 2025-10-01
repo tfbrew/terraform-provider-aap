@@ -1,0 +1,1 @@
+terraform import aap_constructed_inventory.example 21
