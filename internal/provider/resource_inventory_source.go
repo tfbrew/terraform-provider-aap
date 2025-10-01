@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -59,10 +60,10 @@ func (r *InventorySourceResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"source": schema.StringAttribute{
-				Description: "Options: `file`, `constructed`, `scm`, `ec2`, `gce`, `azure_rm`, `vmware`, `vmware_esxi`, `satellite6`, `openstack`, `rhv`, `controller`, `insights`, `terraform`, `openshift_virtualization`.",
+				Description: "Type of SCM resource. Options: `scm`, `ec2`, `gce`, `azure_rm`, `vmware`, `satellite6`, `openstack`, `rhv`, `controller`, `insights`, `terraform`, `openshift_virtualization`.",
 				Required:    true,
 				Validators: []validator.String{
-					stringvalidator.OneOf([]string{"file", "constructed", "scm", "ec2", "gce", "azure_rm", "vmware", "vmware_esxi", "satellite6", "openstack", "rhv", "controller", "insights", "terraform", "openshift_virtualization"}...),
+					stringvalidator.OneOf([]string{"scm", "ec2", "gce", "azure_rm", "vmware", "satellite6", "openstack", "rhv", "controller", "insights", "terraform", "openshift_virtualization"}...),
 				},
 			},
 			"description": schema.StringAttribute{
@@ -96,13 +97,13 @@ func (r *InventorySourceResource) Schema(ctx context.Context, req resource.Schem
 			"overwrite": schema.BoolAttribute{
 				Description: "If checked, any hosts and groups that were previously present on the external source but are now removed will be removed from the inventory. Hosts and groups that were not managed by the inventory source will be promoted to the next manually created group or if there is no manually created group to promote them into, they will be left in the `all` default group for the inventory. When not checked, local child hosts and groups not found on the external source will remain untouched by the inventory update process.",
 				Optional:    true,
-				Default:     booldefault.StaticBool(true),
+				Default:     booldefault.StaticBool(false),
 				Computed:    true,
 			},
 			"overwrite_vars": schema.BoolAttribute{
 				Description: "If checked, all variables for child groups and hosts will be removed and replaced by those found on the external source. When not checked, a merge will be performed, combining local variables with those found on the external source.",
 				Optional:    true,
-				Default:     booldefault.StaticBool(true),
+				Default:     booldefault.StaticBool(false),
 				Computed:    true,
 			},
 			"update_on_launch": schema.BoolAttribute{
@@ -112,9 +113,9 @@ func (r *InventorySourceResource) Schema(ctx context.Context, req resource.Schem
 				Computed:    true,
 			},
 			"source_vars": schema.StringAttribute{
-				Optional: true,
-				// Default:     stringdefault.StaticString("---"),
-				// Computed:    true,
+				Optional:    true,
+				Default:     stringdefault.StaticString("---"),
+				Computed:    true,
 				Description: "Default value is `\"---\"`",
 			},
 			"source_project": schema.Int32Attribute{
@@ -125,15 +126,11 @@ func (r *InventorySourceResource) Schema(ctx context.Context, req resource.Schem
 				Optional:    true,
 				Description: "Branch to use on inventory sync. Project default used if blank. Only allowed if project allow_override field is set to true.",
 			},
-			"limit": schema.StringAttribute{
-				Optional:    true,
-				Description: "Enter host, group or pattern to further limit the hosts in the inventory that will be synced. This is applied after any filtering performed by the inventory plugin and the host_filter field.",
-			},
 			"update_cache_timeout": schema.Int32Attribute{
 				Description: "Time in seconds to consider an inventory sync to be current. During job runs and callbacks the task system will evaluate the timestamp of the latest sync. If it is older than Cache Timeout, it is not considered current, and a new inventory sync will be performed.",
 				Optional:    true,
-				// Default:     int32default.StaticInt32(0),
-				// Computed:    true,
+				Default:     int32default.StaticInt32(0),
+				Computed:    true,
 			},
 			"verbosity": schema.Int32Attribute{
 				Description: "Control the level of output Ansible will produce for inventory source update jobs. `0 - Warning`, `1 - Info`, `2 - Debug`",
@@ -269,9 +266,6 @@ func (r *InventorySourceResource) Create(ctx context.Context, req resource.Creat
 	}
 	if !(data.ScmBranch.IsNull()) {
 		bodyData.ScmBranch = data.ScmBranch.ValueString()
-	}
-	if !(data.Limit.IsNull()) {
-		bodyData.Limit = data.Limit.ValueString()
 	}
 	if !(data.UpdateCacheTimeout.IsNull()) {
 		bodyData.UpdateCacheTimeout = int(data.UpdateCacheTimeout.ValueInt32())
@@ -429,13 +423,6 @@ func (r *InventorySourceResource) Read(ctx context.Context, req resource.ReadReq
 		}
 	}
 
-	if !data.Limit.IsNull() || responseData.Limit != "" {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("limit"), responseData.Limit)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
 	if !data.UpdateCacheTimeout.IsNull() || responseData.UpdateCacheTimeout != 0 {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("update_cache_timeout"), responseData.UpdateCacheTimeout)...)
 		if resp.Diagnostics.HasError() {
@@ -511,9 +498,6 @@ func (r *InventorySourceResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !(data.ScmBranch.IsNull()) {
 		bodyData.ScmBranch = data.ScmBranch.ValueString()
-	}
-	if !(data.Limit.IsNull()) {
-		bodyData.Limit = data.Limit.ValueString()
 	}
 	if !(data.UpdateCacheTimeout.IsNull()) {
 		bodyData.UpdateCacheTimeout = int(data.UpdateCacheTimeout.ValueInt32())
