@@ -167,6 +167,15 @@ type GroupHostAssocAPIModel struct {
 	Id int `json:"id"`
 }
 
+type InventoryInputModel struct {
+	ConstructedInventoryID types.String `tfsdk:"constructed_inventory_id"`
+	InputInventoryID       types.String `tfsdk:"input_inventory_id"`
+}
+
+type InventoryInputAssocAPIModel struct {
+	Id int `json:"id"`
+}
+
 type InstanceGroupModel struct {
 	Id                       types.String `tfsdk:"id"`
 	Name                     types.String `tfsdk:"name"`
