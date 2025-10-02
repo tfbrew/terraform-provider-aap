@@ -48,7 +48,7 @@ resource "aap_inventory" "example-variables" {
 
 - `description` (String) Inventory description.
 - `host_filter` (String) Populate the hosts for this inventory by using a search filter. Example: `name__icontains=localhost`.
-- `kind` (String) Set to `smart` for smart inventories
+- `kind` (String) Leave empty for regular inventories. Set to `smart` for smart inventories (AAP documentation recommends against using smart type - use constructed_inventory resource.)
 - `variables` (String) Enter inventory variables using either JSON or YAML syntax.
 
 ### Read-Only

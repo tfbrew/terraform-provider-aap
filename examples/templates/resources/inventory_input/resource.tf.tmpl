@@ -1,0 +1,18 @@
+resource "{{.Prefix}}_organization" "example" {
+    name = "example"
+  }
+
+  resource "{{.Prefix}}_inventory" "regular" {
+    name =  "example"
+    organization = {{.Prefix}}_organization.example.id
+  }
+  
+  resource "{{.Prefix}}_constructed_inventory" "constructed" {
+    name = "example"
+    organization = {{.Prefix}}_organization.example.id
+  }
+
+  resource "{{.Prefix}}_inventory_input" "example" {
+    constructed_inventory_id = {{.Prefix}}_constructed_inventory.constructed.id
+    input_inventory_id       = {{.Prefix}}_inventory.regular.id
+  }

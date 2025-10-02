@@ -559,7 +559,7 @@ func (r *CredentialResource) ImportState(ctx context.Context, req resource.Impor
 
 	idUnescaped, _ := strconv.Unquote(`"` + req.ID + `"`)
 
-	idParts := strings.Split(idUnescaped, ",")
+	idParts := strings.Split(idUnescaped, importIDSeparator)
 	countParts := len(idParts)
 
 	switch {
