@@ -208,7 +208,7 @@ func TestAccCredentialResource_inputObjbasic(t *testing.T) {
 					if id == "" {
 						return "", fmt.Errorf("no ID is set")
 					}
-					return fmt.Sprintf("%s,password,%s", id, simulatedImportApiValues.Inputs["password"]), nil
+					return fmt.Sprintf("%s%spassword%s%s", id, importIDSeparator, importIDSeparator, simulatedImportApiValues.Inputs["password"]), nil
 				},
 			},
 		},

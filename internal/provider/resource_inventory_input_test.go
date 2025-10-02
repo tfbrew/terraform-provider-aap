@@ -89,7 +89,7 @@ func TestAccInventoryInputResource_import(t *testing.T) {
 						return "", fmt.Errorf("input inventory has no ID")
 					}
 
-					return fmt.Sprintf("%s,%s", id, inputID), nil
+					return fmt.Sprintf("%s%s%s", id, importIDSeparator, inputID), nil
 				},
 			},
 		},
