@@ -32,7 +32,18 @@ resource "aap_schedule" "example" {
 ### Optional
 
 - `description` (String) Schedule description.
+- `diff_mode` (Boolean) Diff Mode - for providing prompt values.
 - `enabled` (Boolean) Schedule enabled (defaults true).
+- `execution_environment` (Number) Execution Environment id - for providing prompt values
+- `forks` (Number) Forks for schedule - for providing prompt values
+- `inventory` (Number) Inventory id for schedule - for providing prompt values
+- `job_slice_count` (Number) Job Slice Count for schedule - for providing prompt values
+- `job_tags` (String) Job Tags - for providing prompt values.
+- `limit` (String) Limit - for providing prompt values.
+- `scm_branch` (String) SCM Branch - for providing prompt values.
+- `skip_tags` (String) Skip Tags - for providing prompt values.
+- `timeout` (Number) Timeout - for providing prompt values
+- `verbosity` (Number) Verbosity - for providing prompt values
 
 ### Read-Only
 
