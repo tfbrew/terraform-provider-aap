@@ -221,7 +221,7 @@ func (r *InventoryInputResource) ImportState(ctx context.Context, req resource.I
 
 	idUnescaped, _ := strconv.Unquote(`"` + req.ID + `"`)
 
-	idParts := strings.Split(idUnescaped, ",")
+	idParts := strings.Split(idUnescaped, importIDSeparator)
 	countParts := len(idParts)
 
 	switch countParts {

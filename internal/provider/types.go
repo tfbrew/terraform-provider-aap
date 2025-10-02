@@ -4,6 +4,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+const importIDSeparator = "/"
+
 type JTChildAPIRead struct {
 	Count   int           `json:"count"`
 	Results []ChildResult `json:"results"`
