@@ -54,6 +54,50 @@ func (d *ScheduleDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				Description: "Schedule enabled (defaults true).",
 				Computed:    true,
 			},
+			"inventory": schema.Int32Attribute{
+				Description: "Inventory id for schedule - for providing prompt values",
+				Computed:    true,
+			},
+			"limit": schema.StringAttribute{
+				Description: "Limit - for providing prompt values.",
+				Computed:    true,
+			},
+			"forks": schema.Int32Attribute{
+				Description: "Forks for schedule - for providing prompt values",
+				Computed:    true,
+			},
+			"job_slice_count": schema.Int32Attribute{
+				Description: "Job Slice Count for schedule - for providing prompt values",
+				Computed:    true,
+			},
+			"scm_branch": schema.StringAttribute{
+				Description: "SCM Branch - for providing prompt values.",
+				Computed:    true,
+			},
+			"job_tags": schema.StringAttribute{
+				Description: "Job Tags - for providing prompt values.",
+				Computed:    true,
+			},
+			"skip_tags": schema.StringAttribute{
+				Description: "Skip Tags - for providing prompt values.",
+				Computed:    true,
+			},
+			"diff_mode": schema.BoolAttribute{
+				Description: "Diff Mode - for providing prompt values.",
+				Computed:    true,
+			},
+			"verbosity": schema.Int32Attribute{
+				Description: "Verbosity - for providing prompt values",
+				Computed:    true,
+			},
+			"execution_environment": schema.Int32Attribute{
+				Description: "Execution Environment id - for providing prompt values",
+				Computed:    true,
+			},
+			"timeout": schema.Int32Attribute{
+				Description: "Timeout - for providing prompt values",
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -121,15 +165,22 @@ func (d *ScheduleDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	idAsString := strconv.Itoa(responseData.Id)
 	data.Id = types.StringValue(idAsString)
-
 	data.Name = types.StringValue(responseData.Name)
 	data.UnifiedJobTemplate = types.Int32Value(int32(responseData.UnifiedJobTemplate))
 	data.Rrule = types.StringValue(responseData.Rrule)
 	data.Enabled = types.BoolValue(responseData.Enabled)
-
-	if responseData.Description != "" {
-		data.Description = types.StringValue(responseData.Description)
-	}
+	data.Description = types.StringValue(responseData.Description)
+	data.Inventory = types.Int32Value(int32(responseData.Inventory))
+	data.Limit = types.StringValue(responseData.Limit)
+	data.Forks = types.Int32Value(int32(responseData.Forks))
+	data.JobSliceCount = types.Int32Value(int32(responseData.JobSliceCount))
+	data.Verbosity = types.Int32Value(int32(responseData.Verbosity))
+	data.ExecutionEnvironment = types.Int32Value(int32(responseData.ExecutionEnvironment))
+	data.Timeout = types.Int32Value(int32(responseData.Timeout))
+	data.ScmBranch = types.StringValue(responseData.ScmBranch)
+	data.JobTags = types.StringValue(responseData.JobTags)
+	data.SkipTags = types.StringValue(responseData.SkipTags)
+	data.DiffMode = types.BoolValue(responseData.DiffMode)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

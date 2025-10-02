@@ -30,6 +30,14 @@ func TestAccScheduleResource(t *testing.T) {
 		Enabled:            false,
 	}
 
+	schedule3 := ScheduleAPIModel{
+		Name:        "test-schedule-" + acctest.RandString(5),
+		Description: "Updated test schedule",
+		Rrule:       "DTSTART;TZID=UTC:20250301T140000 RRULE:FREQ=WEEKLY;INTERVAL=1",
+		Enabled:     false,
+		Verbosity:   2,
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -102,6 +110,37 @@ func TestAccScheduleResource(t *testing.T) {
 					),
 				},
 			},
+			// The step below is to verify that it handles at least one optional field that can be used in prompting
+			{
+				Config: testAccScheduleResourceOptionalConfig(schedule3),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						tfjsonpath.New("name"),
+						knownvalue.StringExact(schedule3.Name),
+					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						tfjsonpath.New("description"),
+						knownvalue.StringExact(schedule3.Description),
+					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						tfjsonpath.New("rrule"),
+						knownvalue.StringExact(schedule3.Rrule),
+					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						tfjsonpath.New("enabled"),
+						knownvalue.Bool(schedule3.Enabled),
+					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						tfjsonpath.New("verbosity"),
+						knownvalue.Int32Exact(int32(schedule3.Verbosity)),
+					),
+				},
+			},
 		},
 	})
 }
@@ -116,4 +155,45 @@ resource "%[1]s_schedule" "test" {
   enabled     			= %[6]t
 }
   `, configprefix.Prefix, resource.Name, resource.Description, resource.Rrule, resource.UnifiedJobTemplate, resource.Enabled)
+}
+
+func testAccScheduleResourceOptionalConfig(resource ScheduleAPIModel) string {
+	return fmt.Sprintf(`
+
+data "%[1]s_organization" "default" {
+	name = "Default"
+}
+
+resource "%[1]s_project" "temp_project" {
+  name = "Temp Project for Schedule JT %[2]s"
+  organization = data.%[1]s_organization.default.id
+  scm_type     = "git"
+  scm_url      = "git@github.com:user/repo.git"
+  allow_override 	= true
+}
+
+resource "%[1]s_inventory" "test" {
+  name         = "%[2]s"
+  organization = data.%[1]s_organization.default.id
+}
+
+resource "%[1]s_job_template" "test_launch" {
+	name = "test-launch-%[2]s"
+	description = "Test job template for launching from schedule"
+	job_type = "check"
+	inventory = %[1]s_inventory.test.id
+	project = %[1]s_project.temp_project.id
+	playbook = "test.yml"
+	ask_verbosity_on_launch = true
+}
+
+resource "%[1]s_schedule" "test" {
+  name        			= "%[2]s"
+  description 			= "%[3]s"
+  rrule       			= "%[4]s"
+  unified_job_template 	= %[1]s_job_template.test_launch.id
+  enabled     			= %[5]t
+  verbosity             = %[6]d
+}
+  `, configprefix.Prefix, resource.Name, resource.Description, resource.Rrule, resource.Enabled, resource.Verbosity)
 }

@@ -28,7 +28,18 @@ data "aap_schedule" "example" {
 ### Read-Only
 
 - `description` (String) Schedule description.
+- `diff_mode` (Boolean) Diff Mode - for providing prompt values.
 - `enabled` (Boolean) Schedule enabled (defaults true).
+- `execution_environment` (Number) Execution Environment id - for providing prompt values
+- `forks` (Number) Forks for schedule - for providing prompt values
+- `inventory` (Number) Inventory id for schedule - for providing prompt values
+- `job_slice_count` (Number) Job Slice Count for schedule - for providing prompt values
+- `job_tags` (String) Job Tags - for providing prompt values.
+- `limit` (String) Limit - for providing prompt values.
 - `name` (String) Schedule name.
 - `rrule` (String) Schedule rrule (i.e. `DTSTART;TZID=America/Chicago:20250124T090000 RRULE:INTERVAL=1;FREQ=WEEKLY;BYDAY=TU`.
+- `scm_branch` (String) SCM Branch - for providing prompt values.
+- `skip_tags` (String) Skip Tags - for providing prompt values.
+- `timeout` (Number) Timeout - for providing prompt values
 - `unified_job_template` (Number) Job template id for schedule.
+- `verbosity` (Number) Verbosity - for providing prompt values
