@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var _ resource.Resource = &ScheduleResource{}
@@ -108,6 +109,10 @@ func (r *ScheduleResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description: "Timeout - for providing prompt values",
 				Optional:    true,
 			},
+			"extra_data": schema.DynamicAttribute{
+				Description: "This field expects an object of key value pairs. If the value for a particular key is a list of strings, wrap the value in `tolist([...])` in your terraform configuration code. See the example schedule for more details.",
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -180,6 +185,54 @@ func (r *ScheduleResource) Create(ctx context.Context, req resource.CreateReques
 	}
 	if !(data.DiffMode.IsNull()) {
 		bodyData.DiffMode = data.DiffMode.ValueBool()
+	}
+
+	if !data.ExtraData.IsUnderlyingValueNull() && !data.ExtraData.IsNull() {
+		extraDataMap := make(map[string]any)
+
+		switch val := data.ExtraData.UnderlyingValue().(type) {
+		case types.Object:
+
+			for key, v := range val.Attributes() {
+				switch v := v.(type) {
+				case basetypes.StringValue:
+					extraDataMap[key] = v.ValueString()
+
+				case basetypes.NumberValue:
+					f64, _ := v.ValueBigFloat().Float64()
+					extraDataMap[key] = f64
+
+				case basetypes.ListValue:
+
+					beforeStringConversion := v.Elements()
+					stringSlice := make([]string, len(beforeStringConversion))
+					for i, elem := range beforeStringConversion {
+						strElem, ok := elem.(types.String)
+						if !ok {
+							resp.Diagnostics.AddError(
+								"extra data list contains non-string element",
+								fmt.Sprintf("extra data key '%s' has a non-string element of type: %T", key, elem),
+							)
+							return
+						}
+						stringSlice[i] = strElem.ValueString()
+					}
+					extraDataMap[key] = stringSlice
+
+				default:
+					resp.Diagnostics.AddError(
+						"extra data value specified is invalid type create",
+						fmt.Sprintf("extra data key '%s' has an unexpected type: %T. Wrap lists in tolist([...]) for the list element within extra data.", key, v),
+					)
+					return
+				}
+			}
+		default:
+			resp.Diagnostics.AddError("Extra data type invalid (create)", "The extra_data should be a types.Object.")
+			return
+		}
+
+		bodyData.ExtraData = extraDataMap
 	}
 
 	url := "schedules/"
@@ -324,6 +377,67 @@ func (r *ScheduleResource) Read(ctx context.Context, req resource.ReadRequest, r
 		}
 	}
 
+	if !data.ExtraData.IsUnderlyingValueNull() && !data.ExtraData.IsNull() {
+
+		extraDataValue := data.ExtraData.UnderlyingValue()
+
+		// convert state to map[string]any
+		currExtraDataState := make(map[string]any)
+
+		switch val := extraDataValue.(type) {
+		case types.Object:
+			for key, v := range val.Attributes() {
+				switch v := v.(type) {
+				case basetypes.StringValue:
+					currExtraDataState[key] = v.ValueString()
+
+				case basetypes.NumberValue:
+					f64, _ := v.ValueBigFloat().Float64()
+					currExtraDataState[key] = f64
+
+				case basetypes.ListValue:
+
+					beforeStringConversion := v.Elements()
+					stringSlice := make([]string, len(beforeStringConversion))
+					for i, elem := range beforeStringConversion {
+						strElem, ok := elem.(types.String)
+						if !ok {
+							resp.Diagnostics.AddError(
+								"extra data tuple contains non-string element",
+								fmt.Sprintf("extra data key '%s' has a non-string element of type: %T", key, elem),
+							)
+							return
+						}
+						stringSlice[i] = strElem.ValueString()
+					}
+					currExtraDataState[key] = stringSlice
+
+				default:
+					resp.Diagnostics.AddError(
+						"extra data value specified is invalid type",
+						fmt.Sprintf("extra data key '%s' has an unexpected type: %T", key, v),
+					)
+					return
+				}
+			}
+
+			var dynValue basetypes.DynamicValue
+			resp.Diagnostics.Append(extraDataApiToDynamicObject(ctx, responseData.ExtraData, &dynValue)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("extra_data"), &dynValue)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+		default:
+			resp.Diagnostics.AddError("extra data value specified is invalid type", "extra data must be an object.")
+			return
+		}
+	}
+
 }
 
 func (r *ScheduleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -384,6 +498,54 @@ func (r *ScheduleResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !(data.DiffMode.IsNull()) {
 		bodyData.DiffMode = data.DiffMode.ValueBool()
+	}
+
+	if !data.ExtraData.IsUnderlyingValueNull() && !data.ExtraData.IsNull() {
+		extraDataMap := make(map[string]any)
+
+		switch val := data.ExtraData.UnderlyingValue().(type) {
+
+		case types.Object:
+			for key, v := range val.Attributes() {
+
+				switch v := v.(type) {
+				case basetypes.StringValue:
+					extraDataMap[key] = v.ValueString()
+
+				case basetypes.NumberValue:
+					f64, _ := v.ValueBigFloat().Float64()
+					extraDataMap[key] = f64
+
+				case basetypes.ListValue:
+
+					beforeStringConversion := v.Elements()
+					stringSlice := make([]string, len(beforeStringConversion))
+					for i, elem := range beforeStringConversion {
+						strElem, ok := elem.(types.String)
+						if !ok {
+							resp.Diagnostics.AddError(
+								"extra data tuple contains non-string element",
+								fmt.Sprintf("extra data key '%s' has a non-string element of type: %T", key, elem),
+							)
+							return
+						}
+						stringSlice[i] = strElem.ValueString()
+					}
+					extraDataMap[key] = stringSlice
+				default:
+					resp.Diagnostics.AddError(
+						"extra data value specified is invalid type",
+						fmt.Sprintf("extra data key '%s' has an unexpected type: %T", key, v),
+					)
+					return
+				}
+			}
+		default:
+			resp.Diagnostics.AddError("Extra Data type invalid", "The extra data should be a types.Object.")
+			return
+		}
+
+		bodyData.ExtraData = extraDataMap
 	}
 
 	url := fmt.Sprintf("schedules/%d/", id)

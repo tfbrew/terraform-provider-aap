@@ -12,6 +12,51 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+func extraDataApiToDynamicObject(ctx context.Context, apiExtraData map[string]any, dynValue *basetypes.DynamicValue) diag.Diagnostics {
+	extraData := apiExtraData
+	extraDataValues := make(map[string]attr.Value)
+	extraDataAttrTypes := make(map[string]attr.Type)
+
+	for k, v := range extraData {
+		switch val := v.(type) {
+		case string:
+
+			extraDataValues[k] = types.StringValue(val)
+			extraDataAttrTypes[k] = types.StringType
+		case []any:
+			// Treat the slice as a string
+
+			tfList, diags := types.ListValueFrom(ctx, types.StringType, val)
+			if diags.HasError() {
+				return diags
+			}
+			extraDataValues[k] = tfList
+			extraDataAttrTypes[k] = types.ListType{ElemType: types.StringType}
+		case float64:
+			extraDataValues[k] = types.Float64Value(val)
+			extraDataAttrTypes[k] = types.Float64Type
+
+		default:
+			diags := diag.Diagnostics{}
+			diags.AddError(
+				"Unexpected Extra Data Type",
+				fmt.Sprintf("Extra Data '%s' has an unexpected type: %T", k, v),
+			)
+			return diags
+		}
+	}
+
+	objVal, diag := types.ObjectValue(extraDataAttrTypes, extraDataValues)
+
+	if diag.HasError() {
+		return diag
+	}
+
+	*dynValue = types.DynamicValue(objVal)
+
+	return nil
+}
+
 func credentialInputApiToDynamicObject(apiInputs map[string]any, dynValue *basetypes.DynamicValue) diag.Diagnostics {
 	inputs := apiInputs
 	inputsValues := make(map[string]attr.Value)

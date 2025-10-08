@@ -31,6 +31,7 @@ data "aap_schedule" "example" {
 - `diff_mode` (Boolean) Diff Mode - for providing prompt values.
 - `enabled` (Boolean) Schedule enabled (defaults true).
 - `execution_environment` (Number) Execution Environment id - for providing prompt values
+- `extra_data` (Dynamic) This field expects an object of key value pairs.
 - `forks` (Number) Forks for schedule - for providing prompt values
 - `inventory` (Number) Inventory id for schedule - for providing prompt values
 - `job_slice_count` (Number) Job Slice Count for schedule - for providing prompt values

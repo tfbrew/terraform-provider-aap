@@ -216,7 +216,7 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	if !(data.User.IsNull()) {
 		bodyData.User = int(data.User.ValueInt32())
 	}
-	data.Inputs.IsNull()
+
 	if !data.Inputs.IsUnderlyingValueNull() && !data.Inputs.IsNull() {
 		inputsDataMap := make(map[string]any)
 

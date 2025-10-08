@@ -98,6 +98,10 @@ func (d *ScheduleDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				Description: "Timeout - for providing prompt values",
 				Computed:    true,
 			},
+			"extra_data": schema.DynamicAttribute{
+				Description: "This field expects an object of key value pairs.",
+				Computed:    true,
+			},
 		},
 	}
 }
