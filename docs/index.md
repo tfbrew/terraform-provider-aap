@@ -22,12 +22,12 @@ terraform {
 }
 
 provider "aap" {
-  endpoint = "https://tower.example.com"
+  endpoint = "https://aap.example.com"
   token    = "token"
 }
 
 provider "aap" {
-  endpoint = "http://tower.example.com"
+  endpoint = "http://aap.example.com"
   username = "admin"
   password = "password"
 }
