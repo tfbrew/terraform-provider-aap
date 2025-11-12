@@ -109,8 +109,9 @@ resource "%[1]s_host" "test" {
   description = "%[4]s"
   inventory   = %[1]s_inventory.test.id
   variables   = jsonencode(%[5]s)
+  enabled     = %[6]v
 }
-  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables)
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables, resource.Enabled)
 }
 
 func testAccHostResourceConfig2(resource HostAPIModel) string {
@@ -128,6 +129,7 @@ resource "%[1]s_host" "test" {
   name        = "%[3]s"
   description = "%[4]s"
   inventory   = %[1]s_inventory.test.id
+  enabled     = %[5]v
 }
-  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables)
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Enabled)
 }
