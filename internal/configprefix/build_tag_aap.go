@@ -1,5 +1,4 @@
 //go:build repoAAP
-// +build repoAAP
 
 package configprefix
 
