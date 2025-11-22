@@ -4,6 +4,7 @@ package provider
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -273,10 +274,37 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	_, _, err := client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"tower authentication failure",
+			"AAP authentication failure",
 			fmt.Sprintf("Error was: %s.", err.Error()))
 		return
 	}
+
+	body, _, err := client.GenericAPIRequest(ctx, http.MethodGet, "ping/", nil, []int{200, 404}, "gateway")
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error making API request to determine AAP version",
+			fmt.Sprintf("Error was: %s.", err.Error()))
+		return
+	}
+
+	var responseData PingAPIModel
+	err = json.Unmarshal(body, &responseData)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to unmarshal json",
+			fmt.Sprintf("bodyData: %+v.", body))
+		return
+	}
+
+	versionFloat, err := strconv.ParseFloat(responseData.Version, 32)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to convert AAP version to float",
+			fmt.Sprintf("Version string: %+v.", responseData.Version))
+		return
+	}
+
+	client.aapVersion = float32(versionFloat)
 
 	resp.DataSourceData = client
 	resp.ResourceData = client

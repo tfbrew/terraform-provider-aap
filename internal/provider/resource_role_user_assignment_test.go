@@ -28,7 +28,7 @@ func TestAccRoleUserAssignmentResource(t *testing.T) {
 					statecheck.CompareValuePairs(
 						fmt.Sprintf("%s_role_user_assignment.test", configprefix.Prefix),
 						tfjsonpath.New("object_id"),
-						fmt.Sprintf("%s_organization.test-1", configprefix.Prefix),
+						fmt.Sprintf("%s_project.test-1", configprefix.Prefix),
 						tfjsonpath.New("id"),
 						IdCompare,
 					),
@@ -59,7 +59,7 @@ func TestAccRoleUserAssignmentResource(t *testing.T) {
 					statecheck.CompareValuePairs(
 						fmt.Sprintf("%s_role_user_assignment.test", configprefix.Prefix),
 						tfjsonpath.New("object_id"),
-						fmt.Sprintf("%s_organization.test-2", configprefix.Prefix),
+						fmt.Sprintf("%s_project.test-2", configprefix.Prefix),
 						tfjsonpath.New("id"),
 						IdCompare,
 					),
@@ -88,11 +88,17 @@ func testAccRoleUserAssignmentResourceConfig(number int) string {
 resource "%[1]s_organization" "test-%[3]d" {
   name        			= "%[2]s-%[3]d"
 }
+resource "%[1]s_project" "test-%[3]d" {
+  name        			= "%[2]s-%[3]d"
+  scm_type			    = "git"
+  scm_url			    = "https://github.com/"
+  organization  		= %[1]s_organization.test-%[3]d.id
+}
 resource "%[1]s_role_definition" "test-%[3]d" {
   name         = "%[2]s"
   description  = "Test role definition"
-  content_type = "shared.organization"
-  permissions   = ["shared.view_organization"]
+  content_type = "awx.project"
+  permissions   = ["awx.use_project", "awx.view_project"]
 }
 resource "%[1]s_user" "test-%[3]d" {
   username      = "%[2]s-%[3]d"
@@ -102,7 +108,7 @@ resource "%[1]s_user" "test-%[3]d" {
   password 		= "%[2]s-%[3]d-password"
 }
 resource "%[1]s_role_user_assignment" "test" {
-  object_id       = %[1]s_organization.test-%[3]d.id
+  object_id       = %[1]s_project.test-%[3]d.id
   role_definition = %[1]s_role_definition.test-%[3]d.id
   user            = %[1]s_user.test-%[3]d.id
 }

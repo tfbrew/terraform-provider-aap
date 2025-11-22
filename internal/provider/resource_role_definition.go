@@ -98,7 +98,7 @@ func (r *RoleDefinitionResource) Create(ctx context.Context, req resource.Create
 	}
 
 	url := "role_definitions/"
-	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPost, url, bodyData, []int{201}, "")
+	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPost, url, bodyData, []int{201}, "gateway26")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -136,7 +136,7 @@ func (r *RoleDefinitionResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	url := fmt.Sprintf("role_definitions/%d/", id)
-	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "")
+	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "gateway26")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -197,7 +197,7 @@ func (r *RoleDefinitionResource) Update(ctx context.Context, req resource.Update
 	}
 
 	url := fmt.Sprintf("role_definitions/%d/", id)
-	_, _, err = r.client.CreateUpdateAPIRequest(ctx, http.MethodPut, url, bodyData, []int{200}, "")
+	_, _, err = r.client.CreateUpdateAPIRequest(ctx, http.MethodPut, url, bodyData, []int{200}, "gateway26")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API update request",
@@ -225,7 +225,7 @@ func (r *RoleDefinitionResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	url := fmt.Sprintf("role_definitions/%d/", id)
-	_, _, err = r.client.GenericAPIRequest(ctx, http.MethodDelete, url, nil, []int{202, 204}, "")
+	_, _, err = r.client.GenericAPIRequest(ctx, http.MethodDelete, url, nil, []int{202, 204}, "gateway26")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API delete request",
