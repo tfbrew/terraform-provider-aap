@@ -1,0 +1,1 @@
+terraform import aapworkflow_job_template_notification_template_approvals.example 100

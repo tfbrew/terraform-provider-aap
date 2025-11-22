@@ -14,45 +14,44 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ resource.Resource = &WorkflowJobTemplatesNodeLabelResource{}
-var _ resource.ResourceWithImportState = &WorkflowJobTemplatesNodeLabelResource{}
+var _ resource.Resource = &WorkflowJobTemplateNotifTemplErrorResource{}
+var _ resource.ResourceWithImportState = &WorkflowJobTemplateNotifTemplErrorResource{}
 
-func NewWorkflowJobTemplateNodeLabelResource() resource.Resource {
-	return &WorkflowJobTemplatesNodeLabelResource{}
+func NewWorkflowJobTemplateNotifTemplErrorResource() resource.Resource {
+	return &WorkflowJobTemplateNotifTemplErrorResource{}
 }
 
-type WorkflowJobTemplatesNodeLabelResource struct {
+type WorkflowJobTemplateNotifTemplErrorResource struct {
 	client *providerClient
 }
 
-type WorkflowJobTemplatesNodeLabelResourceModel struct {
-	Id       types.String `tfsdk:"id"`
-	LabelIDs types.Set    `tfsdk:"label_ids"`
+type WorkflowJobTemplateNotifTemplErrorResourceModel struct {
+	WorkflowJobTemplateId types.String `tfsdk:"workflow_job_template_id"`
+	NotifTEmplateIDs      types.Set    `tfsdk:"notif_template_ids"`
 }
 
-func (r *WorkflowJobTemplatesNodeLabelResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_workflow_job_template_node_label"
+func (r *WorkflowJobTemplateNotifTemplErrorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_workflow_job_template_notification_template_error"
 }
 
-func (r *WorkflowJobTemplatesNodeLabelResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *WorkflowJobTemplateNotifTemplErrorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Specify a node ID and then a list of the label IDs that are associated to this node. NOTE: This can only be used if the job template specified in the node has `ask_labels_on_launch` specified.",
-
+		Description: "Associate notification template(s) to a workflow job template.",
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			"workflow_job_template_id": schema.StringAttribute{
 				Required:    true,
-				Description: "The ID of the containing workflow job template node.",
+				Description: "The ID of the containing Workflow Job Template.",
 			},
-			"label_ids": schema.SetAttribute{
+			"notif_template_ids": schema.SetAttribute{
 				Required:    true,
-				Description: "An unordered list of label IDs associated to a particular Workflwo Job Template node. Create new labels first with `Automation Controller_label` resource type.",
+				Description: "An unordered list of `Automation Controller_notification_template` IDs associated to a particular Workflow Job Template.",
 				ElementType: types.Int32Type,
 			},
 		},
 	}
 }
 
-func (r *WorkflowJobTemplatesNodeLabelResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *WorkflowJobTemplateNotifTemplErrorResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -71,8 +70,8 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Configure(ctx context.Context, r
 	r.client = configureData
 }
 
-func (r *WorkflowJobTemplatesNodeLabelResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data WorkflowJobTemplatesNodeLabelResourceModel
+func (r *WorkflowJobTemplateNotifTemplErrorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data WorkflowJobTemplateNotifTemplErrorResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -80,18 +79,18 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Create(ctx context.Context, req 
 		return
 	}
 
-	id, err := strconv.Atoi(data.Id.ValueString())
+	id, err := strconv.Atoi(data.WorkflowJobTemplateId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable convert id from string to int",
-			fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
+			fmt.Sprintf("Unable to convert id: %v. ", data.WorkflowJobTemplateId.ValueString()))
 	}
 
-	url := fmt.Sprintf("workflow_job_template_nodes/%d/labels/", id)
+	url := fmt.Sprintf("workflow_job_templates/%d/notification_templates_error/", id)
 
 	var relatedIds []int
 
-	diags := data.LabelIDs.ElementsAs(ctx, &relatedIds, false)
+	diags := data.NotifTEmplateIDs.ElementsAs(ctx, &relatedIds, false)
 	if diags.HasError() {
 		return
 	}
@@ -111,8 +110,8 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Create(ctx context.Context, req 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *WorkflowJobTemplatesNodeLabelResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data WorkflowJobTemplatesNodeLabelResourceModel
+func (r *WorkflowJobTemplateNotifTemplErrorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data WorkflowJobTemplateNotifTemplErrorResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
@@ -120,14 +119,13 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Read(ctx context.Context, req re
 		return
 	}
 
-	id, err := strconv.Atoi(data.Id.ValueString())
+	id, err := strconv.Atoi(data.WorkflowJobTemplateId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable convert id from string to int",
-			fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
+		resp.Diagnostics.AddError("Converting ID to Int failed", fmt.Sprintf("Converting the workflow job template id %s to int failed.", data.WorkflowJobTemplateId.ValueString()))
 		return
 	}
-	url := fmt.Sprintf("workflow_job_template_nodes/%d/labels/", id)
+
+	url := fmt.Sprintf("workflow_job_templates/%d/notification_templates_error/", id)
 
 	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "")
 	if err != nil {
@@ -142,7 +140,7 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Read(ctx context.Context, req re
 		return
 	}
 
-	var responseData JTCredentialAPIRead
+	var responseData JTChildAPIRead
 
 	err = json.Unmarshal(body, &responseData)
 	if err != nil {
@@ -162,13 +160,13 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Read(ctx context.Context, req re
 	if diags.HasError() {
 		return
 	}
-	data.LabelIDs = listValue
+	data.NotifTEmplateIDs = listValue
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *WorkflowJobTemplatesNodeLabelResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data WorkflowJobTemplatesNodeLabelResourceModel
+func (r *WorkflowJobTemplateNotifTemplErrorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data WorkflowJobTemplateNotifTemplErrorResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -176,15 +174,15 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Update(ctx context.Context, req 
 		return
 	}
 
-	id, err := strconv.Atoi(data.Id.ValueString())
+	id, err := strconv.Atoi(data.WorkflowJobTemplateId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Converting ID to Int failed", fmt.Sprintf("Converting the job template id %s to int failed.", data.Id.ValueString()))
+		resp.Diagnostics.AddError("Converting ID to Int failed", fmt.Sprintf("Converting the workflow job template id %s to int failed.", data.WorkflowJobTemplateId.ValueString()))
 		return
 	}
 
-	url := fmt.Sprintf("workflow_job_template_nodes/%d/labels/", id)
+	url := fmt.Sprintf("workflow_job_templates/%d/notification_templates_error/", id)
 
-	responseBody, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
+	body, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -194,7 +192,7 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Update(ctx context.Context, req 
 
 	var responseData JTChildAPIRead
 
-	err = json.Unmarshal(responseBody, &responseData)
+	err = json.Unmarshal(body, &responseData)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable unmarshal response body into object",
@@ -209,7 +207,7 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Update(ctx context.Context, req 
 	}
 
 	var PlanChildIds []int
-	diags := data.LabelIDs.ElementsAs(ctx, &PlanChildIds, false)
+	diags := data.NotifTEmplateIDs.ElementsAs(ctx, &PlanChildIds, false)
 	if diags.HasError() {
 		return
 	}
@@ -245,8 +243,8 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Update(ctx context.Context, req 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *WorkflowJobTemplatesNodeLabelResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data WorkflowJobTemplatesNodeLabelResourceModel
+func (r *WorkflowJobTemplateNotifTemplErrorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data WorkflowJobTemplateNotifTemplErrorResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
@@ -254,18 +252,18 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Delete(ctx context.Context, req 
 		return
 	}
 
-	id, err := strconv.Atoi(data.Id.ValueString())
+	id, err := strconv.Atoi(data.WorkflowJobTemplateId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable convert id from string to int",
-			fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
+			fmt.Sprintf("Unable to convert id: %v. ", data.WorkflowJobTemplateId.ValueString()))
 	}
 
-	url := fmt.Sprintf("workflow_job_template_nodes/%d/labels/", id)
+	url := fmt.Sprintf("workflow_job_templates/%d/notification_templates_error/", id)
 
 	var RelatedIds []int
 
-	diags := data.LabelIDs.ElementsAs(ctx, &RelatedIds, false)
+	diags := data.NotifTEmplateIDs.ElementsAs(ctx, &RelatedIds, false)
 	if diags.HasError() {
 		return
 	}
@@ -283,8 +281,9 @@ func (r *WorkflowJobTemplatesNodeLabelResource) Delete(ctx context.Context, req 
 			return
 		}
 	}
+
 }
 
-func (r *WorkflowJobTemplatesNodeLabelResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *WorkflowJobTemplateNotifTemplErrorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("workflow_job_template_id"), req, resp)
 }

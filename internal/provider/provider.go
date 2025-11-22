@@ -285,6 +285,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 func (p *theProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewExecutionEnvironmentResource,
+		NewConstructedInventoryResource,
 		NewCredentialResource,
 		NewCredentialInputSourcesResource,
 		NewCredentialTypeResource,
@@ -292,9 +293,8 @@ func (p *theProvider) Resources(ctx context.Context) []func() resource.Resource 
 		NewGroupResource,
 		NewGroupHostResource,
 		NewInstanceGroupResource,
-		NewConstructedInventoryResource,
-		NewInventoryResource,
 		NewInventoryInputResource,
+		NewInventoryResource,
 		NewInventorySourceResource,
 		NewJobTemplateCredentialResource,
 		NewJobTemplateInstanceGroupsResource,
@@ -314,13 +314,17 @@ func (p *theProvider) Resources(ctx context.Context) []func() resource.Resource 
 		NewScheduleResource,
 		NewTeamResource,
 		NewUserResource,
-		NewWorkflowJobTemplatesResource,
-		NewWorkflowJobTemplatesJobNodeResource,
-		NewWorkflowJobTemplatesNodeLabelResource,
-		NewWorkflowJobTemplatesNodeSuccessResource,
-		NewWorkflowJobTemplatesNodeFailureResource,
-		NewWorkflowJobTemplatesNodeAlwaysResource,
 		NewWorkflowJobTemplateApprovalNodeResource,
+		NewWorkflowJobTemplateJobNodeResource,
+		NewWorkflowJobTemplateNodeLabelResource,
+		NewWorkflowJobTemplateNodeSuccessResource,
+		NewWorkflowJobTemplateNodeFailureResource,
+		NewWorkflowJobTemplateNodeAlwaysResource,
+		NewWorkflowJobTemplateNotifTemplApprovalsResource,
+		NewWorkflowJobTemplateNotifTemplErrorResource,
+		NewWorkflowJobTemplateNotifTemplStartedResource,
+		NewWorkflowJobTemplateNotifTemplSuccessResource,
+		NewWorkflowJobTemplateResource,
 	}
 }
 

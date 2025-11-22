@@ -17,7 +17,7 @@ import (
 var _ resource.Resource = &WorkflowJobTemplatesNodeAlwaysResource{}
 var _ resource.ResourceWithImportState = &WorkflowJobTemplatesNodeAlwaysResource{}
 
-func NewWorkflowJobTemplatesNodeAlwaysResource() resource.Resource {
+func NewWorkflowJobTemplateNodeAlwaysResource() resource.Resource {
 	return &WorkflowJobTemplatesNodeAlwaysResource{}
 }
 
