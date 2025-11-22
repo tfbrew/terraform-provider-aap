@@ -18,6 +18,7 @@ type providerClient struct {
 	endpoint             string
 	auth                 string
 	urlPrefix            string
+	aapVersion           float32
 	apiRetryCount        int32
 	apiRetryDelaySeconds int32
 }
@@ -26,7 +27,7 @@ type providerClient struct {
 // headers and then makes the actual http request.
 func (c *providerClient) GenericAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, aap25_api_endpoint_hint string) (responseBody []byte, statusCode int, errorMessage error) {
 
-	url = c.buildAPIUrl(url, aap25_api_endpoint_hint)
+	url = c.buildAPIUrl(url, aap25_api_endpoint_hint, c)
 
 	var body io.Reader
 
@@ -113,7 +114,7 @@ func SleepWithContext(ctx context.Context, d time.Duration) {
 
 func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, aap25_api_endpoint_hint string) (returnedData map[string]any, statusCode int, errorMessage error) {
 
-	url = c.buildAPIUrl(url, aap25_api_endpoint_hint)
+	url = c.buildAPIUrl(url, aap25_api_endpoint_hint, c)
 
 	var body io.Reader
 
@@ -195,9 +196,11 @@ func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url
 }
 
 // In AAP, most api endpoint live in /controller/. But, sometimes they specifyc gateway endpoint instead.
-func (c *providerClient) buildAPIUrl(resourceUrl, aap25_api_endpoint_hint string) (url string) {
+func (c *providerClient) buildAPIUrl(resourceUrl, aap25_api_endpoint_hint string, client *providerClient) (url string) {
 
 	if aap25_api_endpoint_hint == "gateway" && configprefix.Prefix == "aap" {
+		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
+	} else if aap25_api_endpoint_hint == "gateway26" && configprefix.Prefix == "aap" && client.aapVersion >= float32(2.6) {
 		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
 	} else {
 		url = c.endpoint + c.urlPrefix + resourceUrl

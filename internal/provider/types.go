@@ -466,6 +466,10 @@ type OrganizationAPIModel struct {
 	MaxHosts    int    `json:"max_hosts,omitempty"`
 }
 
+type PingAPIModel struct {
+	Version string `json:"version"`
+}
+
 type ProjectModel struct {
 	Id                    types.String `tfsdk:"id"`
 	Name                  types.String `tfsdk:"name"`
