@@ -27,7 +27,7 @@ type providerClient struct {
 // headers and then makes the actual http request.
 func (c *providerClient) GenericAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, aap25_api_endpoint_hint string) (responseBody []byte, statusCode int, errorMessage error) {
 
-	url = c.buildAPIUrl(url, aap25_api_endpoint_hint, c)
+	url = c.buildAPIUrl(url, aap25_api_endpoint_hint)
 
 	var body io.Reader
 
@@ -114,7 +114,7 @@ func SleepWithContext(ctx context.Context, d time.Duration) {
 
 func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, aap25_api_endpoint_hint string) (returnedData map[string]any, statusCode int, errorMessage error) {
 
-	url = c.buildAPIUrl(url, aap25_api_endpoint_hint, c)
+	url = c.buildAPIUrl(url, aap25_api_endpoint_hint)
 
 	var body io.Reader
 
