@@ -196,11 +196,11 @@ func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url
 }
 
 // In AAP, most api endpoint live in /controller/. But, sometimes they specifyc gateway endpoint instead.
-func (c *providerClient) buildAPIUrl(resourceUrl, aap25_api_endpoint_hint string, client *providerClient) (url string) {
+func (c *providerClient) buildAPIUrl(resourceUrl, aap25_api_endpoint_hint string) (url string) {
 
 	if aap25_api_endpoint_hint == "gateway" && configprefix.Prefix == "aap" {
 		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
-	} else if aap25_api_endpoint_hint == "gateway26" && configprefix.Prefix == "aap" && client.aapVersion >= float32(2.6) {
+	} else if aap25_api_endpoint_hint == "gateway26" && configprefix.Prefix == "aap" && c.aapVersion >= float32(2.6) {
 		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
 	} else {
 		url = c.endpoint + c.urlPrefix + resourceUrl
