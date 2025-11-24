@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -66,10 +65,8 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"variables": schema.StringAttribute{
-				Description: "Specify `vars` for the template. Default value is `\"---\"`",
+				Description: "Specify `vars` for the template.",
 				Optional:    true,
-				Default:     stringdefault.StaticString("---"),
-				Computed:    true,
 			},
 		},
 	}

@@ -74,7 +74,7 @@ resource "aap_job_template" "example" {
 - `description` (String) Job template description.
 - `diff_mode` (Boolean) If enabled, show the changes made by Ansible tasks, where supported. This is equivalent to Ansible's `--diff` mode.
 - `execution_environment` (Number) Execution Environment ID to use for the job template.
-- `extra_vars` (String) Specify `extra_vars` for the template. Default value is `"---"`
+- `extra_vars` (String) Specify `extra_vars` for the template.
 - `force_handlers` (Boolean) Enable forcing playbook handlers to run even if a task fails.
 - `forks` (Number) The number of parallel or simultaneous processes to use while executing the playbook. An empty value, or a value less than 1 will use the Ansible default which is usually 5. The default number of forks can be overwritten with a change to ansible.cfg.
 - `host_config_key` (String) Allow provisioning callbacks using this host config key.

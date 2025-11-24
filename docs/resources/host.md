@@ -48,7 +48,7 @@ resource "aap_host" "example-variables" {
 
 - `description` (String) Host description.
 - `enabled` (Boolean) Indicates if a host is available and should be included in running jobs.
-- `variables` (String) Specify `vars` for the template. Default value is `"---"`
+- `variables` (String) Specify `vars` for the template.
 
 ### Read-Only
 

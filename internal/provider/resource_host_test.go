@@ -24,7 +24,6 @@ func TestAccHostResource(t *testing.T) {
 	host2 := HostAPIModel{
 		Name:        "test-host-" + acctest.RandString(5),
 		Description: "Updated example with different variables",
-		Variables:   "{\"baz\":\"qux\"}",
 		Enabled:     false,
 	}
 
@@ -36,7 +35,7 @@ func TestAccHostResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostResourceConfig(host1),
+				Config: testAccHostResourceConfig1(host1),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						fmt.Sprintf("%s_host.test", configprefix.Prefix),
@@ -66,7 +65,7 @@ func TestAccHostResource(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccHostResourceConfig(host2),
+				Config: testAccHostResourceConfig2(host2),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						fmt.Sprintf("%s_host.test", configprefix.Prefix),
@@ -81,12 +80,12 @@ func TestAccHostResource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						fmt.Sprintf("%s_host.test", configprefix.Prefix),
 						tfjsonpath.New("variables"),
-						knownvalue.StringExact(host2.Variables),
+						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
 						fmt.Sprintf("%s_host.test", configprefix.Prefix),
 						tfjsonpath.New("enabled"),
-						knownvalue.Bool(host1.Enabled),
+						knownvalue.Bool(host2.Enabled),
 					),
 				},
 			},
@@ -94,7 +93,7 @@ func TestAccHostResource(t *testing.T) {
 	})
 }
 
-func testAccHostResourceConfig(resource HostAPIModel) string {
+func testAccHostResourceConfig1(resource HostAPIModel) string {
 	return fmt.Sprintf(`
 resource "%[1]s_organization" "test" {
   name        = "test-organization-%[2]s"
@@ -110,6 +109,27 @@ resource "%[1]s_host" "test" {
   description = "%[4]s"
   inventory   = %[1]s_inventory.test.id
   variables   = jsonencode(%[5]s)
+  enabled     = %[6]v
 }
-  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables)
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables, resource.Enabled)
+}
+
+func testAccHostResourceConfig2(resource HostAPIModel) string {
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test" {
+  name        = "test-organization-%[2]s"
+  description = "test"
+}
+resource "%[1]s_inventory" "test" {
+  name         = "test-inventory-%[2]s"
+  description  = "test"
+  organization = %[1]s_organization.test.id
+}
+resource "%[1]s_host" "test" {
+  name        = "%[3]s"
+  description = "%[4]s"
+  inventory   = %[1]s_inventory.test.id
+  enabled     = %[5]v
+}
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Enabled)
 }

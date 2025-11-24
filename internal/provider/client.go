@@ -18,6 +18,7 @@ type providerClient struct {
 	endpoint             string
 	auth                 string
 	urlPrefix            string
+	aapVersion           float32
 	apiRetryCount        int32
 	apiRetryDelaySeconds int32
 }
@@ -198,6 +199,8 @@ func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url
 func (c *providerClient) buildAPIUrl(resourceUrl, aap25_api_endpoint_hint string) (url string) {
 
 	if aap25_api_endpoint_hint == "gateway" && configprefix.Prefix == "aap" {
+		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
+	} else if aap25_api_endpoint_hint == "gateway26" && configprefix.Prefix == "aap" && c.aapVersion >= float32(2.6) {
 		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
 	} else {
 		url = c.endpoint + c.urlPrefix + resourceUrl

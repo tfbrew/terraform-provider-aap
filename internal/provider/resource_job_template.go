@@ -108,9 +108,9 @@ func (r *JobTemplateResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"extra_vars": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("---"),
 				Computed:    true,
-				Description: "Specify `extra_vars` for the template. Default value is `\"---\"`",
+				Default:     stringdefault.StaticString(""),
+				Description: "Specify `extra_vars` for the template.",
 			},
 			"job_tags": schema.StringAttribute{
 				Optional:    true,

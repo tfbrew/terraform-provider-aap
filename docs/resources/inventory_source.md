@@ -65,7 +65,7 @@ resource "aap_inventory_source" "github_inventory_source" {
 - `scm_branch` (String) Branch to use on inventory sync. Project default used if blank. Only allowed if project allow_override field is set to true.
 - `source_path` (String) (Inventory file) - The inventory file to be synced by this source.
 - `source_project` (Number) The ID of the source project.
-- `source_vars` (String) Default value is `"---"`
+- `source_vars` (String)
 - `update_cache_timeout` (Number) Time in seconds to consider an inventory sync to be current. During job runs and callbacks the task system will evaluate the timestamp of the latest sync. If it is older than Cache Timeout, it is not considered current, and a new inventory sync will be performed.
 - `update_on_launch` (Boolean) Each time a job runs using this inventory, refresh the inventory from the selected source before executing job tasks.
 - `verbosity` (Number) Control the level of output Ansible will produce for inventory source update jobs. `0 - Warning`, `1 - Info`, `2 - Debug`

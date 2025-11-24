@@ -101,6 +101,11 @@ func TestAccJobTemplateResource(t *testing.T) {
 						tfjsonpath.New("playbook"),
 						knownvalue.StringExact(resource2.Playbook),
 					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("%s_job_template.test", configprefix.Prefix),
+						tfjsonpath.New("extra_vars"),
+						knownvalue.StringExact(""),
+					),
 					statecheck.CompareValuePairs(
 						fmt.Sprintf("%s_inventory.test", configprefix.Prefix),
 						tfjsonpath.New("id"),

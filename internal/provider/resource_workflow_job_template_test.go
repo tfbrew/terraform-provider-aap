@@ -71,6 +71,11 @@ func TestAccWorkflowJobTemplateResource(t *testing.T) {
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(resource2.Description),
 					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("%s_workflow_job_template.test", configprefix.Prefix),
+						tfjsonpath.New("extra_vars"),
+						knownvalue.Null(),
+					),
 					statecheck.CompareValuePairs(
 						fmt.Sprintf("%s_inventory.test", configprefix.Prefix),
 						tfjsonpath.New("id"),
