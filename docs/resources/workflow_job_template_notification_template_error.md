@@ -32,5 +32,5 @@ resource "aap_workflow_job_template_notification_template_error" "example" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import aapworkflow_job_template_notification_template_error.example 100
+terraform import aap_workflow_job_template_notification_template_error.example 100
 ```
