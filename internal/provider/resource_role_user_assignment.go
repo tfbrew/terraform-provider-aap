@@ -96,7 +96,7 @@ func (r *RoleUserAssignmentResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	url := "role_user_assignments/"
-	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPost, url, bodyData, []int{201}, "gateway26")
+	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPost, url, bodyData, []int{201}, "gateway")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -133,7 +133,7 @@ func (r *RoleUserAssignmentResource) Read(ctx context.Context, req resource.Read
 	}
 
 	url := fmt.Sprintf("role_user_assignments/%d/", id)
-	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "gateway26")
+	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "gateway")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -179,7 +179,7 @@ func (r *RoleUserAssignmentResource) Delete(ctx context.Context, req resource.De
 	}
 
 	url := fmt.Sprintf("role_user_assignments/%d/", id)
-	_, _, err = r.client.GenericAPIRequest(ctx, http.MethodDelete, url, nil, []int{202, 204}, "gateway26")
+	_, _, err = r.client.GenericAPIRequest(ctx, http.MethodDelete, url, nil, []int{202, 204}, "gateway")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API delete request",
