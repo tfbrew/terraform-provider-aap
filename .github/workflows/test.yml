@@ -95,6 +95,34 @@ jobs:
         # list whatever Terraform versions here you would like to support
         terraform:
           - '1.12.*'
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: 'go.mod'
+          cache: false
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{ matrix.terraform }}
+          terraform_wrapper: false
+      - run: go mod download
+      - env:
+          TF_ACC: "1"
+          AAP_HOST: ${{ secrets.AAP_26_HOST }}
+          AAP_OAUTH_TOKEN: ${{ secrets.AAP_26_OAUTH_TOKEN }}
+        run: go test -v -failfast -cover -tags=${{ vars.BUILD_TAG }} -timeout 20m ./internal/provider/
+        timeout-minutes: 20
+
+  testaap26:
+    name: Terraform Provider Acceptance Tests AAP 2.6
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: true # cancel all in-progress runs if one fails
+      matrix:
+        # list whatever Terraform versions here you would like to support
+        terraform:
           - '1.13.*'
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
