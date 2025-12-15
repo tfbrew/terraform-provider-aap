@@ -17,7 +17,7 @@ import (
 var _ resource.Resource = &WorkflowJobTemplatesNodeFailureResource{}
 var _ resource.ResourceWithImportState = &WorkflowJobTemplatesNodeFailureResource{}
 
-func NewWorkflowJobTemplatesNodeFailureResource() resource.Resource {
+func NewWorkflowJobTemplateNodeFailureResource() resource.Resource {
 	return &WorkflowJobTemplatesNodeFailureResource{}
 }
 

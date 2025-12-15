@@ -42,9 +42,11 @@ func TestAccJobTemplNotifSuccessResource(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      fmt.Sprintf("%s_job_template.test", configprefix.Prefix),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         fmt.Sprintf("%s_job_template_notification_template_success.test", configprefix.Prefix),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateJobTemplateID(fmt.Sprintf("%s_job_template_notification_template_success.test", configprefix.Prefix)),
+				ImportStateVerifyIdentifierAttribute: ("job_template_id"),
 			},
 			{
 				Config: testAccJobTemplNotifSuccess2ResourceConfig(),

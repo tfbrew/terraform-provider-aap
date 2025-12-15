@@ -20,7 +20,7 @@ import (
 var _ resource.Resource = &WorkflowJobTemplatesResource{}
 var _ resource.ResourceWithImportState = &WorkflowJobTemplatesResource{}
 
-func NewWorkflowJobTemplatesResource() resource.Resource {
+func NewWorkflowJobTemplateResource() resource.Resource {
 	return &WorkflowJobTemplatesResource{}
 }
 

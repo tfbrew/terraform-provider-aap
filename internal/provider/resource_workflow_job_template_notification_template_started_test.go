@@ -12,7 +12,7 @@ import (
 	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
 )
 
-func TestAccJobTemplNotifErrResource(t *testing.T) {
+func TestAccWorkflowJobTemplNotifStartedResource(t *testing.T) {
 	IdCompare := &compareTwoValuesAsStrings{}
 	StringListCompare := &compareStringInList{}
 	resource.Test(t, resource.TestCase{
@@ -23,52 +23,52 @@ func TestAccJobTemplNotifErrResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobTemplNotifErr1ResourceConfig(),
+				Config: testAccWorkflowJobTemplNotifStarted1ResourceConfig(),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_job_template.test", configprefix.Prefix),
+						fmt.Sprintf("%s_workflow_job_template.test", configprefix.Prefix),
 						tfjsonpath.New("id"),
-						fmt.Sprintf("%s_job_template_notification_template_error.test", configprefix.Prefix),
-						tfjsonpath.New("job_template_id"),
+						fmt.Sprintf("%s_workflow_job_template_notification_template_started.test", configprefix.Prefix),
+						tfjsonpath.New("workflow_job_template_id"),
 						IdCompare,
 					),
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_notification_template.test1", configprefix.Prefix),
+						fmt.Sprintf("%s_notification_template.test", configprefix.Prefix),
 						tfjsonpath.New("id"),
-						fmt.Sprintf("%s_job_template_notification_template_error.test", configprefix.Prefix),
+						fmt.Sprintf("%s_workflow_job_template_notification_template_started.test", configprefix.Prefix),
 						tfjsonpath.New("notif_template_ids"),
 						StringListCompare,
 					),
 				},
 			},
 			{
-				ResourceName:                         fmt.Sprintf("%s_job_template_notification_template_error.test", configprefix.Prefix),
+				ResourceName:                         fmt.Sprintf("%s_workflow_job_template_notification_template_started.test", configprefix.Prefix),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    importStateJobTemplateID(fmt.Sprintf("%s_job_template_notification_template_error.test", configprefix.Prefix)),
-				ImportStateVerifyIdentifierAttribute: ("job_template_id"),
+				ImportStateIdFunc:                    importStateWorkflowJobTemplateID(fmt.Sprintf("%s_workflow_job_template_notification_template_started.test", configprefix.Prefix)),
+				ImportStateVerifyIdentifierAttribute: ("workflow_job_template_id"),
 			},
 			{
-				Config: testAccJobTemplNotifErr2ResourceConfig(),
+				Config: testAccWorkflowJobTemplNotifStarted2ResourceConfig(),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_job_template.test", configprefix.Prefix),
+						fmt.Sprintf("%s_workflow_job_template.test", configprefix.Prefix),
 						tfjsonpath.New("id"),
-						fmt.Sprintf("%s_job_template_notification_template_error.test", configprefix.Prefix),
-						tfjsonpath.New("job_template_id"),
+						fmt.Sprintf("%s_workflow_job_template_notification_template_started.test", configprefix.Prefix),
+						tfjsonpath.New("workflow_job_template_id"),
 						IdCompare,
 					),
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_notification_template.test2", configprefix.Prefix),
+						fmt.Sprintf("%s_notification_template.test", configprefix.Prefix),
 						tfjsonpath.New("id"),
-						fmt.Sprintf("%s_job_template_notification_template_error.test", configprefix.Prefix),
+						fmt.Sprintf("%s_workflow_job_template_notification_template_started.test", configprefix.Prefix),
 						tfjsonpath.New("notif_template_ids"),
 						StringListCompare,
 					),
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_notification_template.test3", configprefix.Prefix),
+						fmt.Sprintf("%s_notification_template.test2", configprefix.Prefix),
 						tfjsonpath.New("id"),
-						fmt.Sprintf("%s_job_template_notification_template_error.test", configprefix.Prefix),
+						fmt.Sprintf("%s_workflow_job_template_notification_template_started.test", configprefix.Prefix),
 						tfjsonpath.New("notif_template_ids"),
 						StringListCompare,
 					),
@@ -78,33 +78,16 @@ func TestAccJobTemplNotifErrResource(t *testing.T) {
 	})
 }
 
-func testAccJobTemplNotifErr1ResourceConfig() string {
+func testAccWorkflowJobTemplNotifStarted1ResourceConfig() string {
 	return fmt.Sprintf(`
 resource "%[1]s_organization" "test" {
   name        = "%[2]s"
 }
-
-resource "%[1]s_inventory" "test" {
-  name         = "%[2]s"
-  organization = %[1]s_organization.test.id
-}
-
-resource "%[1]s_project" "test" {
-  name         		= "%[2]s"
-  organization 		= %[1]s_organization.test.id
-  scm_type     		= "git"
-  scm_url      		= "git@github.com:user/repo.git"
-  allow_override 	= true
-}
-
-resource "%[1]s_job_template" "test" {
+resource "%[1]s_workflow_job_template" "test" {
   name        = "%[2]s"
-  job_type    = "run"
-  inventory   = %[1]s_inventory.test.id
-  project     = %[1]s_project.test.id
-  playbook    = "test.yml"
+  organization 		= %[1]s_organization.test.id
 }
-resource "%[1]s_notification_template" "test1" {
+resource "%[1]s_notification_template" "test" {
   name              = "%[2]s"
   notification_type = "slack"
   organization      = %[1]s_organization.test.id
@@ -146,40 +129,23 @@ resource "%[1]s_notification_template" "test1" {
     }
   })
 }
-resource "%[1]s_job_template_notification_template_error" "test" {
-  job_template_id    = %[1]s_job_template.test.id
-  notif_template_ids = [%[1]s_notification_template.test1.id]
+resource "%[1]s_workflow_job_template_notification_template_started" "test" {
+  workflow_job_template_id    = %[1]s_workflow_job_template.test.id
+  notif_template_ids = [%[1]s_notification_template.test.id]
 }
-  `, configprefix.Prefix, acctest.RandString(7))
+  `, configprefix.Prefix, acctest.RandString(5))
 }
 
-func testAccJobTemplNotifErr2ResourceConfig() string {
+func testAccWorkflowJobTemplNotifStarted2ResourceConfig() string {
 	return fmt.Sprintf(`
 resource "%[1]s_organization" "test" {
   name        = "%[2]s"
 }
-
-resource "%[1]s_inventory" "test" {
-  name         = "%[2]s"
-  organization = %[1]s_organization.test.id
-}
-
-resource "%[1]s_project" "test" {
-  name         		= "%[2]s"
-  organization 		= %[1]s_organization.test.id
-  scm_type     		= "git"
-  scm_url      		= "git@github.com:user/repo.git"
-  allow_override 	= true
-}
-
-resource "%[1]s_job_template" "test" {
+resource "%[1]s_workflow_job_template" "test" {
   name        = "%[2]s"
-  job_type    = "run"
-  inventory   = %[1]s_inventory.test.id
-  project     = %[1]s_project.test.id
-  playbook    = "test.yml"
+  organization 		= %[1]s_organization.test.id
 }
-resource "%[1]s_notification_template" "test2" {
+resource "%[1]s_notification_template" "test" {
   name              = "%[2]s-2"
   notification_type = "slack"
   organization      = %[1]s_organization.test.id
@@ -221,7 +187,7 @@ resource "%[1]s_notification_template" "test2" {
     }
   })
 }
-resource "%[1]s_notification_template" "test3" {
+resource "%[1]s_notification_template" "test2" {
   name              = "%[2]s-3"
   notification_type = "slack"
   organization      = %[1]s_organization.test.id
@@ -263,9 +229,9 @@ resource "%[1]s_notification_template" "test3" {
     }
   })
 }
-resource "%[1]s_job_template_notification_template_error" "test" {
-  job_template_id    = %[1]s_job_template.test.id
-  notif_template_ids = [%[1]s_notification_template.test2.id, %[1]s_notification_template.test3.id]
+resource "%[1]s_workflow_job_template_notification_template_started" "test" {
+  workflow_job_template_id    = %[1]s_workflow_job_template.test.id
+  notif_template_ids = [%[1]s_notification_template.test.id, %[1]s_notification_template.test2.id]
 }
   `, configprefix.Prefix, acctest.RandString(5))
 }

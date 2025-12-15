@@ -150,6 +150,22 @@ func importStateJobTemplateID(resourceName string) resource.ImportStateIdFunc {
 	}
 }
 
+func importStateWorkflowJobTemplateID(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("resource not found: %s", resourceName)
+		}
+
+		jobTemplateID, exists := rs.Primary.Attributes["workflow_job_template_id"]
+		if !exists {
+			return "", fmt.Errorf("workflow_job_template_id not found in state")
+		}
+
+		return jobTemplateID, nil
+	}
+}
+
 // panic if can't convert to string.
 func mustMarshal(v any) string {
 	b, err := json.Marshal(v)

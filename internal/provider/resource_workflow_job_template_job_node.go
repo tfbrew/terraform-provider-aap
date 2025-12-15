@@ -23,7 +23,7 @@ import (
 var _ resource.Resource = &WorkflowJobTemplatesJobNodeResource{}
 var _ resource.ResourceWithImportState = &WorkflowJobTemplatesJobNodeResource{}
 
-func NewWorkflowJobTemplatesJobNodeResource() resource.Resource {
+func NewWorkflowJobTemplateJobNodeResource() resource.Resource {
 	return &WorkflowJobTemplatesJobNodeResource{}
 }
 
