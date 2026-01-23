@@ -25,12 +25,33 @@ type EdaProjectDataSource struct {
 }
 
 type EdaProjectDataSourceModel struct {
-	ID             types.String `tfsdk:"id"`
-	Name           types.String `tfsdk:"name"`
-	Description    types.String `tfsdk:"description"`
-	URL            types.String `tfsdk:"url"`
-	SCMBranch      types.String `tfsdk:"scm_branch"`
-	OrganizationID types.Int64  `tfsdk:"organization_id"`
+	ID               types.String `tfsdk:"id"`
+	Name             types.String `tfsdk:"name"`
+	Description      types.String `tfsdk:"description"`
+	URL              types.String `tfsdk:"url"`
+	Proxy            types.String `tfsdk:"proxy"`
+	SCMType          types.String `tfsdk:"scm_type"`
+	SCMBranch        types.String `tfsdk:"scm_branch"`
+	SCMRefspec       types.String `tfsdk:"scm_refspec"`
+	OrganizationID   types.Int64  `tfsdk:"organization_id"`
+	OrganizationName types.String `tfsdk:"organization_name"`
+}
+
+type EdaProjectDataSourceAPIModel struct {
+	ID           int64                                    `json:"id"`
+	Name         string                                   `json:"name"`
+	Description  string                                   `json:"description,omitempty"`
+	URL          string                                   `json:"url"`
+	Proxy        string                                   `json:"proxy,omitempty"`
+	SCMType      string                                   `json:"scm_type,omitempty"`
+	SCMBranch    string                                   `json:"scm_branch,omitempty"`
+	SCMRefspec   string                                   `json:"scm_refspec,omitempty"`
+	Organization EdaProjectDataSourceAPIOrganizationModel `json:"organization"`
+}
+
+type EdaProjectDataSourceAPIOrganizationModel struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
 }
 
 func (d *EdaProjectDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -65,6 +86,22 @@ func (d *EdaProjectDataSource) Schema(ctx context.Context, req datasource.Schema
 			},
 			"organization_id": schema.Int64Attribute{
 				Description: "The organization ID for the EDA project.",
+				Computed:    true,
+			},
+			"organization_name": schema.StringAttribute{
+				Description: "The organization name for the EDA project.",
+				Computed:    true,
+			},
+			"proxy": schema.StringAttribute{
+				Description: "The proxy server for the EDA project.",
+				Computed:    true,
+			},
+			"scm_type": schema.StringAttribute{
+				Description: "The SCM type (e.g., 'git').",
+				Computed:    true,
+			},
+			"scm_refspec": schema.StringAttribute{
+				Description: "The SCM refspec for the EDA project.",
 				Computed:    true,
 			},
 		},
@@ -132,7 +169,7 @@ func (d *EdaProjectDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	var responseData EdaProjectAPIModel
+	var responseData EdaProjectDataSourceAPIModel
 
 	// If we got a list response (name lookup), extract first result
 	if !data.ID.IsNull() {
@@ -147,8 +184,8 @@ func (d *EdaProjectDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	} else {
 		// Name lookup - list response
 		countResult := struct {
-			Count   int                  `json:"count"`
-			Results []EdaProjectAPIModel `json:"results"`
+			Count   int                            `json:"count"`
+			Results []EdaProjectDataSourceAPIModel `json:"results"`
 		}{}
 
 		err = json.Unmarshal(body, &countResult)
@@ -172,19 +209,66 @@ func (d *EdaProjectDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		}
 
 		responseData = countResult.Results[0]
+
+		// Fetch full project details to get nested organization object
+		url = fmt.Sprintf("api/eda/v1/projects/%d/", responseData.ID)
+		body, statusCode, err = d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "eda")
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error making API http request for full project details",
+				fmt.Sprintf("Error was: %s.", err.Error()))
+			return
+		}
+
+		if statusCode == 404 {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+
+		err = json.Unmarshal(body, &responseData)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to unmarshal full project response",
+				fmt.Sprintf("Error =  %v.", err.Error()))
+			return
+		}
 	}
 
+	// Populate all fields from API response
 	data.ID = types.StringValue(fmt.Sprintf("%d", responseData.ID))
 	data.Name = types.StringValue(responseData.Name)
 	data.URL = types.StringValue(responseData.URL)
-	data.OrganizationID = types.Int64Value(responseData.OrganizationID)
+	data.OrganizationID = types.Int64Value(responseData.Organization.ID)
+	data.OrganizationName = types.StringValue(responseData.Organization.Name)
 
 	if responseData.Description != "" {
 		data.Description = types.StringValue(responseData.Description)
+	} else {
+		data.Description = types.StringNull()
+	}
+
+	if responseData.Proxy != "" {
+		data.Proxy = types.StringValue(responseData.Proxy)
+	} else {
+		data.Proxy = types.StringNull()
+	}
+
+	if responseData.SCMType != "" {
+		data.SCMType = types.StringValue(responseData.SCMType)
+	} else {
+		data.SCMType = types.StringNull()
 	}
 
 	if responseData.SCMBranch != "" {
 		data.SCMBranch = types.StringValue(responseData.SCMBranch)
+	} else {
+		data.SCMBranch = types.StringNull()
+	}
+
+	if responseData.SCMRefspec != "" {
+		data.SCMRefspec = types.StringValue(responseData.SCMRefspec)
+	} else {
+		data.SCMRefspec = types.StringNull()
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

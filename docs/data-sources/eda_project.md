@@ -30,5 +30,9 @@ data "aap_eda_project" "example" {
 
 - `description` (String) EDA Project description.
 - `organization_id` (Number) The organization ID for the EDA project.
+- `organization_name` (String) The organization name for the EDA project.
+- `proxy` (String) The proxy server for the EDA project.
 - `scm_branch` (String) The SCM branch for the EDA project.
+- `scm_refspec` (String) The SCM refspec for the EDA project.
+- `scm_type` (String) The SCM type (e.g., 'git').
 - `url` (String) The SCM URL for the EDA project.
