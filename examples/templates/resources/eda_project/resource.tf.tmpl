@@ -1,0 +1,10 @@
+data "{{.Prefix}}_organization" "default" {
+  name = "Default"
+}
+
+resource "{{.Prefix}}_eda_project" "example" {
+  name            = "My EDA Project"
+  description     = "An example EDA project"
+  url             = var.project_repo_url
+  organization_id = data.{{.Prefix}}_organization.default.id
+}

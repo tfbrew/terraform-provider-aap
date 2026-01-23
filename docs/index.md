@@ -21,17 +21,26 @@ terraform {
   }
 }
 
+# OAuth token authentication
 provider "aap" {
   endpoint = "https://aap.example.com"
-  token    = "token"
+  token    = "oauth_token_here"
 }
 
+# API token authentication
+provider "aap" {
+  endpoint  = "https://aap.example.com"
+  api_token = "api_token_here"
+}
+
+# Username/password authentication
 provider "aap" {
   endpoint = "http://aap.example.com"
   username = "admin"
   password = "password"
 }
 
+# With API retry configuration
 provider "aap" {
   endpoint = "http://aap.example.com"
   token    = "mysecrettoken"
@@ -48,6 +57,7 @@ provider "aap" {
 ### Optional
 
 - `api_retry` (Attributes) An optional block to define if the provider should retry GET/read API requests that intitially fail. (see [below for nested schema](#nestedatt--api_retry))
+- `api_token` (String) Automation controller API token (instead of username/password or OAuth token). You can also set this using the AAP_TOKEN environment variable.
 - `endpoint` (String) URL for automation controller (i.e. https://tower.example.com)
 - `password` (String) Automation controller password (instead of token). You can also set this using the AAP_PASSWORD environment variable.
 - `token` (String) Automation controller access token (instead of username/password). You can also set this using the AAP_OAUTH_TOKEN environment variable.

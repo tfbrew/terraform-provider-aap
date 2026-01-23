@@ -202,6 +202,8 @@ func (c *providerClient) buildAPIUrl(resourceUrl, aap25_api_endpoint_hint string
 		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
 	} else if aap25_api_endpoint_hint == "gateway26" && configprefix.Prefix == "aap" && c.aapVersion >= float32(2.6) {
 		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
+	} else if aap25_api_endpoint_hint == "eda" {
+		url = c.endpoint + "/" + resourceUrl
 	} else {
 		url = c.endpoint + c.urlPrefix + resourceUrl
 	}

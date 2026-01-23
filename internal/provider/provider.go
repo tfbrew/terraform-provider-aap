@@ -3,6 +3,7 @@ package provider
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -41,6 +42,7 @@ type theProvider struct {
 type theProviderModel struct {
 	Endpoint types.String `tfsdk:"endpoint"`
 	Token    types.String `tfsdk:"token"`
+	APIToken types.String `tfsdk:"api_token"`
 	Username types.String `tfsdk:"username"`
 	Password types.String `tfsdk:"password"`
 	APIretry types.Object `tfsdk:"api_retry"`
@@ -66,6 +68,10 @@ func (p *theProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 			},
 			"token": schema.StringAttribute{
 				Description: "Automation controller access token (instead of username/password). You can also set this using the AAP_OAUTH_TOKEN environment variable.",
+				Optional:    true,
+			},
+			"api_token": schema.StringAttribute{
+				Description: "Automation controller API token (instead of username/password or OAuth token). You can also set this using the AAP_TOKEN environment variable.",
 				Optional:    true,
 			},
 			"username": schema.StringAttribute{
@@ -108,6 +114,18 @@ func (p *theProvider) ConfigValidators(ctx context.Context) []provider.ConfigVal
 		),
 		providervalidator.Conflicting(
 			path.MatchRoot("token"),
+			path.MatchRoot("password"),
+		),
+		providervalidator.Conflicting(
+			path.MatchRoot("token"),
+			path.MatchRoot("api_token"),
+		),
+		providervalidator.Conflicting(
+			path.MatchRoot("api_token"),
+			path.MatchRoot("username"),
+		),
+		providervalidator.Conflicting(
+			path.MatchRoot("api_token"),
 			path.MatchRoot("password"),
 		),
 		providervalidator.RequiredTogether(
@@ -160,6 +178,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if !tokenExists {
 		envToken, tokenExists = os.LookupEnv("TOWER_OAUTH_TOKEN")
 	}
+	envAPIToken, apiTokenExists := os.LookupEnv("AAP_TOKEN")
 	envUsername, userExists := os.LookupEnv("AAP_USERNAME")
 	if !userExists {
 		envUsername, userExists = os.LookupEnv("TOWER_USERNAME")
@@ -169,18 +188,24 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		envPassword, passwordExists = os.LookupEnv("TOWER_PASSWORD")
 	}
 
-	// Get token if password/username not set
-	if data.Token.IsNull() && data.Username.IsNull() && data.Password.IsNull() && tokenExists {
-		token = envToken
-	}
-
-	if data.Token.IsNull() && data.Username.IsNull() && data.Password.IsNull() && !tokenExists && userExists && passwordExists {
-		username = envUsername
-		password = envPassword
+	// Get token from environment variables if not set in config
+	if data.Token.IsNull() && data.APIToken.IsNull() && data.Username.IsNull() && data.Password.IsNull() {
+		if tokenExists {
+			token = envToken
+		} else if apiTokenExists {
+			token = envAPIToken
+		} else if userExists && passwordExists {
+			username = envUsername
+			password = envPassword
+		}
 	}
 
 	if !data.Token.IsNull() {
 		token = data.Token.ValueString()
+	}
+
+	if !data.APIToken.IsNull() {
+		token = data.APIToken.ValueString()
 	}
 
 	if !data.Username.IsNull() {
@@ -194,7 +219,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if (token != "" && (username != "" || password != "")) || (token == "" && (username == "" || password == "")) {
 		resp.Diagnostics.AddError(
 			"Provider Configuration Error",
-			"Specify a token (AAP_OAUTH_TOKEN) OR username/password (AAP_USERNAME/AAP_PASSWORD).")
+			"Specify a token (AAP_OAUTH_TOKEN or AAP_TOKEN) OR username/password (AAP_USERNAME/AAP_PASSWORD).")
 		return
 	}
 
@@ -206,8 +231,24 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		auth = "Basic" + " " + encodedAuth
 	}
 
+	// Check for insecure skip verify option
+	insecureSkipVerify := false
+	if envInsecure, exists := os.LookupEnv("AAP_INSECURE_SKIP_VERIFY"); exists {
+		if envInsecure == "true" || envInsecure == "1" {
+			insecureSkipVerify = true
+		}
+	}
+
 	httpclient := &http.Client{
 		Timeout: 30 * time.Second,
+	}
+
+	if insecureSkipVerify {
+		httpclient.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
 	}
 
 	client := new(providerClient)
@@ -353,6 +394,7 @@ func (p *theProvider) Resources(ctx context.Context) []func() resource.Resource 
 		NewWorkflowJobTemplateNotifTemplStartedResource,
 		NewWorkflowJobTemplateNotifTemplSuccessResource,
 		NewWorkflowJobTemplateResource,
+		NewEdaProjectResource,
 	}
 }
 
@@ -374,6 +416,7 @@ func (p *theProvider) DataSources(ctx context.Context) []func() datasource.DataS
 		NewScheduleDataSource,
 		NewTeamDataSource,
 		NewUserDataSource,
+		NewEdaProjectDataSource,
 	}
 }
 

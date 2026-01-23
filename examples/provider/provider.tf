@@ -6,17 +6,26 @@ terraform {
   }
 }
 
+# OAuth token authentication
 provider "aap" {
   endpoint = "https://aap.example.com"
-  token    = "token"
+  token    = "oauth_token_here"
 }
 
+# API token authentication
+provider "aap" {
+  endpoint  = "https://aap.example.com"
+  api_token = "api_token_here"
+}
+
+# Username/password authentication
 provider "aap" {
   endpoint = "http://aap.example.com"
   username = "admin"
   password = "password"
 }
 
+# With API retry configuration
 provider "aap" {
   endpoint = "http://aap.example.com"
   token    = "mysecrettoken"
