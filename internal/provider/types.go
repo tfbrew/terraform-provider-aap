@@ -450,6 +450,8 @@ type Messages struct {
 type OrganizationModel struct {
 	Id             types.String `tfsdk:"id"`
 	Aap25GatewayId types.Int32  `tfsdk:"aap25_gateway_id"`
+	GatewayId      types.Int32  `tfsdk:"gateway_id"`
+	EdaId          types.Int32  `tfsdk:"eda_id"`
 	Name           types.String `tfsdk:"name"`
 	Description    types.String `tfsdk:"description"`
 	DefaultEnv     types.Int32  `tfsdk:"default_environment"`
@@ -698,4 +700,43 @@ type CredentialInputSourcesAPIModel struct {
 	Metadata         map[string]string `json:"metadata"`
 	TargetCredential int               `json:"target_credential"`
 	SourceCredential int               `json:"source_credential"`
+}
+
+// EDA
+
+type EdaProjectModel struct {
+	Id                              types.String `tfsdk:"id"`
+	Name                            types.String `tfsdk:"name"`
+	Description                     types.String `tfsdk:"description"`
+	EdaCredentialId                 types.Int32  `tfsdk:"eda_credential_id"`
+	OrganizationId                  types.Int32  `tfsdk:"organization_id"`
+	Proxy                           types.String `tfsdk:"proxy"`
+	ScmBranch                       types.String `tfsdk:"scm_branch"`
+	ScmRefSpec                      types.String `tfsdk:"scm_refspec"`
+	ScmType                         types.String `tfsdk:"scm_type"`
+	SignatureValidationCredentialId types.Int32  `tfsdk:"signature_validation_credential_id"`
+	Url                             types.String `tfsdk:"url"`
+	VerifySsl                       types.Bool   `tfsdk:"verify_ssl"`
+}
+
+type EdaProjectAPIModel struct {
+	Id                              int                        `json:"id"`
+	Name                            string                     `json:"name"`
+	Description                     string                     `json:"description,omitempty"`
+	EdaCredentialId                 int                        `json:"eda_credential_id,omitempty"`
+	Organization                    OrganizationNestedAPIModel `json:"organization"`
+	OrganizationId                  int                        `json:"organization_id"`
+	Proxy                           string                     `json:"proxy,omitempty"`
+	ScmBranch                       string                     `json:"scm_branch,omitempty"`
+	ScmRefSpec                      string                     `json:"scm_refspec,omitempty"`
+	ScmType                         string                     `json:"scm_type"`
+	SignatureValidationCredentialId int                        `json:"signature_validation_credential_id,omitempty"`
+	Url                             string                     `json:"url"`
+	VerifySsl                       bool                       `json:"verify_ssl"`
+}
+
+type OrganizationNestedAPIModel struct {
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }

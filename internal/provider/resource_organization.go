@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	urlbuilder "net/url"
+	urlParser "net/url"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -40,13 +40,29 @@ func (r *OrganizationResource) Schema(ctx context.Context, req resource.SchemaRe
 		Description: `Manage an Automation Controller organization.`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "Organization ID from the controller API. See `gateway_id` or `eda_id` for the organization's ID in the other APIs.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"aap25_gateway_id": schema.Int32Attribute{
-				Computed: true,
+				Description: "DEPRICATED: Organization ID in the gateway API. See `gateway_id`",
+				Computed:    true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
+			"gateway_id": schema.Int32Attribute{
+				Description: "Organization ID in the gateway API",
+				Computed:    true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
+			"eda_id": schema.Int32Attribute{
+				Description: "Organization ID in the EDA API",
+				Computed:    true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.UseStateForUnknown(),
 				},
@@ -79,25 +95,14 @@ func (r OrganizationResource) ValidateConfig(ctx context.Context, req resource.V
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	// Disallow default_environment for >AAP2.5
-	if configprefix.Prefix != "awx" && !data.DefaultEnv.IsNull() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("default_environment"),
-			"Invalid Attribute Configuration",
-			"Attribute default_environment is not supported in this version of the provider.",
+	if !data.Aap25GatewayId.IsNull() && data.Aap25GatewayId.ValueInt32() != 0 {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("aap25_gateway_id"),
+			"Deprecated Attribute Configuration",
+			"Attribute aap25_gateway_id will be removed in the next version of this provider. Please use gateway_id instead.",
 		)
 		return
 	}
-
-	// Disallow max_hosts for >AAP2.5 unless it's awx or unset/zero
-	if configprefix.Prefix != "awx" && !data.MaxHosts.IsNull() && data.MaxHosts.ValueInt32() != 0 {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("max_hosts"),
-			"Invalid Attribute Configuration",
-			"Attribute max_hosts is not supported in this version of the provider.",
-		)
-		return
-	}
-
 }
 
 func (r *OrganizationResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -161,12 +166,41 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 	data.Aap25GatewayId = types.Int32Value(int32(id))
+	data.GatewayId = types.Int32Value(int32(id))
+
+	// now get the EDA ID by querying the eda endpoint
+
+	eda_url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
+	body, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, eda_url, nil, []int{200, 404}, "eda")
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error making API http request",
+			fmt.Sprintf("Error was: %s.", err.Error()))
+		return
+	}
+
+	// Parse EDA response and extract ID
+	var edaResult JTChildAPIRead
+	err = json.Unmarshal(body, &edaResult)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to unmarshal EDA response body into result object",
+			fmt.Sprintf("Error: %v.", err.Error()))
+		return
+	}
+	if edaResult.Count != 1 {
+		resp.Diagnostics.AddError(
+			"Org EDA result count not 1.",
+			fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
+		return
+	}
+	data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
 
 	if configprefix.Prefix == "aap" {
 
 		// overwrite returnedData with Get against org's /controller/ endpoint
 
-		url := fmt.Sprintf("organizations/?name=%s", urlbuilder.QueryEscape(data.Name.ValueString()))
+		url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
 		responseBodyData, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "controller")
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -241,7 +275,7 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 	// if aap2.5 get the /gateway/ id and set the related field
 	if configprefix.Prefix == "aap" {
 
-		url := fmt.Sprintf("organizations/?name=%s", urlbuilder.QueryEscape(responseData.Name))
+		url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
 		responseBodyData, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "gateway")
 		if err != nil {
 			resp.Diagnostics.AddError(
