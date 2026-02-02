@@ -25,9 +25,9 @@ type providerClient struct {
 
 // A wrapper for http.NewRequestWithContext() that prepends tower endpoint to URL & sets authorization
 // headers and then makes the actual http request.
-func (c *providerClient) GenericAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, aap25_api_endpoint_hint string) (responseBody []byte, statusCode int, errorMessage error) {
+func (c *providerClient) GenericAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, api_endpoint string) (responseBody []byte, statusCode int, errorMessage error) {
 
-	url = c.buildAPIUrl(url, aap25_api_endpoint_hint)
+	url = c.buildAPIUrl(url, api_endpoint)
 
 	var body io.Reader
 
@@ -112,9 +112,9 @@ func SleepWithContext(ctx context.Context, d time.Duration) {
 	}
 }
 
-func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, aap25_api_endpoint_hint string) (returnedData map[string]any, statusCode int, errorMessage error) {
+func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, api_endpoint string) (returnedData map[string]any, statusCode int, errorMessage error) {
 
-	url = c.buildAPIUrl(url, aap25_api_endpoint_hint)
+	url = c.buildAPIUrl(url, api_endpoint)
 
 	var body io.Reader
 
@@ -196,12 +196,14 @@ func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url
 }
 
 // In AAP, most api endpoint live in /controller/. But, sometimes they specifyc gateway endpoint instead.
-func (c *providerClient) buildAPIUrl(resourceUrl, aap25_api_endpoint_hint string) (url string) {
+func (c *providerClient) buildAPIUrl(resourceUrl, api_endpoint string) (url string) {
 
-	if aap25_api_endpoint_hint == "gateway" && configprefix.Prefix == "aap" {
+	if api_endpoint == "gateway" && configprefix.Prefix == "aap" {
 		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
-	} else if aap25_api_endpoint_hint == "gateway26" && configprefix.Prefix == "aap" && c.aapVersion >= float32(2.6) {
+	} else if api_endpoint == "gateway26" && configprefix.Prefix == "aap" && c.aapVersion >= float32(2.6) {
 		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
+	} else if api_endpoint == "eda" && configprefix.Prefix == "aap" {
+		url = c.endpoint + "/api/eda/v1/" + resourceUrl
 	} else {
 		url = c.endpoint + c.urlPrefix + resourceUrl
 	}
