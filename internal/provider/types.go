@@ -228,6 +228,17 @@ type ConstructedInventoryAPIModel struct {
 	Verbosity                    int    `json:"verbosity"`
 }
 
+type GenericEndpointModel struct {
+	Id            types.String `tfsdk:"id"`
+	ApiPath       types.String `tfsdk:"api_path"`
+	ApiEndpoint   types.String `tfsdk:"api_endpoint"`
+	DataJson      types.String `tfsdk:"data_json"`
+	UpdateMethod  types.String `tfsdk:"update_method"`
+	DisableRead   types.Bool   `tfsdk:"disable_read"`
+	IgnoreRead    types.Set    `tfsdk:"ignore_read"`
+	DisableDelete types.Bool   `tfsdk:"disable_delete"`
+}
+
 type InventoryModel struct {
 	Id           types.String `tfsdk:"id"`
 	Name         types.String `tfsdk:"name"`
@@ -448,14 +459,13 @@ type Messages struct {
 }
 
 type OrganizationModel struct {
-	Id             types.String `tfsdk:"id"`
-	Aap25GatewayId types.Int32  `tfsdk:"aap25_gateway_id"`
-	GatewayId      types.Int32  `tfsdk:"gateway_id"`
-	EdaId          types.Int32  `tfsdk:"eda_id"`
-	Name           types.String `tfsdk:"name"`
-	Description    types.String `tfsdk:"description"`
-	DefaultEnv     types.Int32  `tfsdk:"default_environment"`
-	MaxHosts       types.Int32  `tfsdk:"max_hosts"`
+	Id          types.String `tfsdk:"id"`
+	GatewayId   types.Int32  `tfsdk:"gateway_id"`
+	EdaId       types.Int32  `tfsdk:"eda_id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	DefaultEnv  types.Int32  `tfsdk:"default_environment"`
+	MaxHosts    types.Int32  `tfsdk:"max_hosts"`
 }
 
 type contextKey string

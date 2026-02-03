@@ -46,13 +46,6 @@ func (r *OrganizationResource) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"aap25_gateway_id": schema.Int32Attribute{
-				Description: "DEPRICATED: Organization ID in the gateway API. See `gateway_id`",
-				Computed:    true,
-				PlanModifiers: []planmodifier.Int32{
-					int32planmodifier.UseStateForUnknown(),
-				},
-			},
 			"gateway_id": schema.Int32Attribute{
 				Description: "Organization ID in the gateway API",
 				Computed:    true,
@@ -86,22 +79,6 @@ func (r *OrganizationResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 			},
 		},
-	}
-}
-
-func (r OrganizationResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data OrganizationModel
-
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
-	// Disallow default_environment for >AAP2.5
-	if !data.Aap25GatewayId.IsNull() && data.Aap25GatewayId.ValueInt32() != 0 {
-		resp.Diagnostics.AddAttributeWarning(
-			path.Root("aap25_gateway_id"),
-			"Deprecated Attribute Configuration",
-			"Attribute aap25_gateway_id will be removed in the next version of this provider. Please use gateway_id instead.",
-		)
-		return
 	}
 }
 
@@ -165,36 +142,9 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 			fmt.Sprintf("Value provided was: %v.", returnedData["id"]))
 		return
 	}
-	data.Aap25GatewayId = types.Int32Value(int32(id))
 	data.GatewayId = types.Int32Value(int32(id))
 
 	// now get the EDA ID by querying the eda endpoint
-
-	eda_url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-	body, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, eda_url, nil, []int{200, 404}, "eda")
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error making API http request",
-			fmt.Sprintf("Error was: %s.", err.Error()))
-		return
-	}
-
-	// Parse EDA response and extract ID
-	var edaResult JTChildAPIRead
-	err = json.Unmarshal(body, &edaResult)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to unmarshal EDA response body into result object",
-			fmt.Sprintf("Error: %v.", err.Error()))
-		return
-	}
-	if edaResult.Count != 1 {
-		resp.Diagnostics.AddError(
-			"Org EDA result count not 1.",
-			fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
-		return
-	}
-	data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
 
 	if configprefix.Prefix == "aap" {
 
@@ -224,6 +174,32 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 			return
 		}
 		data.Id = types.StringValue(strconv.Itoa(nameResult.Results[0].Id))
+
+		eda_url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
+		body, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, eda_url, nil, []int{200}, "eda")
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error making API http request",
+				fmt.Sprintf("Error was: %s.", err.Error()))
+			return
+		}
+
+		// Parse EDA response and extract ID
+		var edaResult JTChildAPIRead
+		err = json.Unmarshal(body, &edaResult)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to unmarshal EDA response body into result object",
+				fmt.Sprintf("Error: %v.", err.Error()))
+			return
+		}
+		if edaResult.Count != 1 {
+			resp.Diagnostics.AddError(
+				"Org EDA result count not 1.",
+				fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
+			return
+		}
+		data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
 
 	} else {
 		data.Id = types.StringValue(fmt.Sprintf("%v", returnedData["id"]))
@@ -299,7 +275,35 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 			return
 		}
 
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("aap25_gateway_id"), nameResult.Results[0].Id)...)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gateway_id"), nameResult.Results[0].Id)...)
+
+		eda_url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
+		body, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, eda_url, nil, []int{200}, "eda")
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error making API http request",
+				fmt.Sprintf("Error was: %s.", err.Error()))
+			return
+		}
+
+		// Parse EDA response and extract ID
+		var edaResult JTChildAPIRead
+		err = json.Unmarshal(body, &edaResult)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to unmarshal EDA response body into result object",
+				fmt.Sprintf("Error: %v.", err.Error()))
+			return
+		}
+		if edaResult.Count != 1 {
+			resp.Diagnostics.AddError(
+				"Org EDA result count not 1.",
+				fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
+			return
+		}
+
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("eda_id"), edaResult.Results[0].Id)...)
+
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -313,7 +317,7 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 			return
 		}
 
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("aap25_gateway_id"), id)...)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gateway_id"), id)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -355,7 +359,7 @@ func (r *OrganizationResource) Update(ctx context.Context, req resource.UpdateRe
 	var err error
 
 	if configprefix.Prefix == "aap" {
-		id = int(data.Aap25GatewayId.ValueInt32())
+		id = int(data.GatewayId.ValueInt32())
 	} else {
 		id, err = strconv.Atoi(data.Id.ValueString())
 	}
@@ -406,7 +410,7 @@ func (r *OrganizationResource) Delete(ctx context.Context, req resource.DeleteRe
 	var err error
 
 	if configprefix.Prefix == "aap" {
-		id = int(data.Aap25GatewayId.ValueInt32())
+		id = int(data.GatewayId.ValueInt32())
 	} else {
 		id, err = strconv.Atoi(data.Id.ValueString())
 	}

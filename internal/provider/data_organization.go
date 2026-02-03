@@ -245,7 +245,6 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 			fmt.Sprintf("Querying for org by name against Gateway endpoint resulted in result count of %d instead of 0.", gatewayResult.Count))
 		return
 	}
-	data.Aap25GatewayId = types.Int32Value(int32(gatewayResult.Results[0].Id))
 	data.GatewayId = types.Int32Value(int32(gatewayResult.Results[0].Id))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
