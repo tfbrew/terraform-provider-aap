@@ -38,10 +38,6 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: configprefix.OrgDataSourceIdDescription,
 				Optional:    true,
 			},
-			"aap25_gateway_id": schema.Int32Attribute{
-				Description: "DEPRICATED: Organization ID in the gateway API. See `gateway_id`",
-				Computed:    true,
-			},
 			"gateway_id": schema.Int32Attribute{
 				Description: "Organization ID in the gateway API",
 				Computed:    true,
