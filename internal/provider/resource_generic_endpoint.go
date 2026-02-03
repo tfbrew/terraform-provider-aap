@@ -137,7 +137,7 @@ func (r *GenericEndpointResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	bodyData := data.DataJson.ValueString()
-	var jsonData interface{}
+	var jsonData any
 	if err := json.Unmarshal([]byte(bodyData), &jsonData); err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing JSON data",
@@ -205,7 +205,7 @@ func (r *GenericEndpointResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	var bodyMap map[string]interface{}
+	var bodyMap map[string]any
 	if err := json.Unmarshal(body, &bodyMap); err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing API response JSON",
@@ -252,7 +252,7 @@ func (r *GenericEndpointResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	bodyData := data.DataJson.ValueString()
-	var jsonData interface{}
+	var jsonData any
 	if err := json.Unmarshal([]byte(bodyData), &jsonData); err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing JSON data",

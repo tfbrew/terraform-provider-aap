@@ -54,5 +54,5 @@ resource "aap_eda_project" "example" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import aapeda_project.example 1
+terraform import aap_eda_project.example 1
 ```
