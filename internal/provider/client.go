@@ -17,7 +17,6 @@ type providerClient struct {
 	client               *http.Client
 	endpoint             string
 	auth                 string
-	urlPrefix            string
 	aapVersion           float32
 	apiRetryCount        int32
 	apiRetryDelaySeconds int32
@@ -204,8 +203,12 @@ func (c *providerClient) buildAPIUrl(resourceUrl, api_endpoint string) (url stri
 		url = c.endpoint + "/api/gateway/v1/" + resourceUrl
 	} else if api_endpoint == "eda" && configprefix.Prefix == "aap" {
 		url = c.endpoint + "/api/eda/v1/" + resourceUrl
-	} else {
-		url = c.endpoint + c.urlPrefix + resourceUrl
+	} else if api_endpoint == "galaxy" && configprefix.Prefix == "aap" {
+		url = c.endpoint + "/api/galaxy/v3/" + resourceUrl
+	} else if (api_endpoint == "controller" || api_endpoint == "") && configprefix.Prefix == "aap" {
+		url = c.endpoint + "/api/controller/v2/" + resourceUrl
+	} else if configprefix.Prefix == "awx" {
+		url = c.endpoint + "/api/v2/" + resourceUrl // handle awx
 	}
 
 	return

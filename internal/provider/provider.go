@@ -241,14 +241,6 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	client.endpoint = endpoint
 	client.auth = auth
 
-	if configprefix.Prefix == "awx" {
-		client.urlPrefix = "/api/v2/"
-	}
-
-	if configprefix.Prefix == "aap" {
-		client.urlPrefix = "/api/controller/v2/"
-	}
-
 	if data.APIretry.IsNull() {
 		envAPIRetryCount, envAPIRetryCountExists := os.LookupEnv("AAP_API_RETRY_COUNT")
 		envAPIRetryDelaySeconds, envAPIRetryDelaySecondsExists := os.LookupEnv("AAP_API_RETRY_DELAY_SECONDS")
@@ -344,6 +336,7 @@ func (p *theProvider) Resources(ctx context.Context) []func() resource.Resource 
 		NewCredentialTypeResource,
 		NewEdaProjectResource,
 		NewHostResource,
+		NewGenericEndpointResource,
 		NewGroupResource,
 		NewGroupHostResource,
 		NewInstanceGroupResource,
