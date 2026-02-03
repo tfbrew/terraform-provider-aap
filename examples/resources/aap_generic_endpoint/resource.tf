@@ -1,0 +1,34 @@
+resource "aap_generic_endpoint" "test-authenticators" {
+  api_path     = "authenticators"
+  api_endpoint = "gateway"
+  data_json = jsonencode(
+    {
+      "auto_migrate_users_to" : null,
+      "configuration" : {},
+      "create_objects" : true,
+      "enabled" : false,
+      "name" : "test-authenticator",
+      "order" : 1,
+      "remove_users" : true,
+      "type" : "ansible_base.authentication.authenticator_plugins.local"
+    }
+  )
+}
+
+resource "aap_generic_endpoint" "test-authenticator-maps" {
+  api_path     = "authenticator_maps"
+  api_endpoint = "gateway"
+  data_json = jsonencode(
+    {
+      "authenticator" : 1,
+      "map_type" : "allow",
+      "name" : "test-authenticator-maps",
+      "order" : 1,
+      "organization" : "",
+      "revoke" : false,
+      "role" : "",
+      "team" : "",
+      "triggers" : { "always" : {} }
+    }
+  )
+}
