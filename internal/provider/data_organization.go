@@ -190,7 +190,7 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	// now get the EDA ID by querying the eda endpoint
 
 	edaUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-	edaBody, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200, 404}, "eda")
+	edaBody, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200}, "eda")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -218,7 +218,7 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	// now get the Gateway ID by querying the eda endpoint
 
 	gatewayUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-	gatewayBody, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, gatewayUrl, nil, []int{200, 404}, "eda")
+	gatewayBody, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, gatewayUrl, nil, []int{200}, "gateway")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -235,10 +235,10 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 			fmt.Sprintf("Error: %v.", err.Error()))
 		return
 	}
-	if gatewayResult.Count != 0 {
+	if gatewayResult.Count != 1 {
 		resp.Diagnostics.AddError(
-			"Org Gateway result count not 0.",
-			fmt.Sprintf("Querying for org by name against Gateway endpoint resulted in result count of %d instead of 0.", gatewayResult.Count))
+			"Org Gateway result count not 1.",
+			fmt.Sprintf("Querying for org by name against Gateway endpoint resulted in result count of %d instead of 1.", gatewayResult.Count))
 		return
 	}
 	data.GatewayId = types.Int32Value(int32(gatewayResult.Results[0].Id))

@@ -248,11 +248,34 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
+	if !data.Name.IsNull() || responseData.Name != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), responseData.Name)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !data.Description.IsNull() || responseData.Description != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), responseData.Description)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !data.DefaultEnv.IsNull() || responseData.DefaultEnv != 0 {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("default_environment"), responseData.DefaultEnv)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("max_hosts"), responseData.MaxHosts)...)
+
 	// if aap2.5 get the /gateway/ id and set the related field
 	if configprefix.Prefix == "aap" {
 
-		url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
-		responseBodyData, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "gateway")
+		gatewayUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
+		gatewayBody, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, gatewayUrl, nil, []int{200}, "gateway")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error making API http request",
@@ -261,7 +284,7 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 		}
 
 		var nameResult JTChildAPIRead
-		err = json.Unmarshal(responseBodyData, &nameResult)
+		err = json.Unmarshal(gatewayBody, &nameResult)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Unable to unmarshal response body into result object",
@@ -277,8 +300,8 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gateway_id"), nameResult.Results[0].Id)...)
 
-		eda_url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-		body, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, eda_url, nil, []int{200}, "eda")
+		edaUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
+		edaBody, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200}, "eda")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error making API http request",
@@ -288,7 +311,7 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 
 		// Parse EDA response and extract ID
 		var edaResult JTChildAPIRead
-		err = json.Unmarshal(body, &edaResult)
+		err = json.Unmarshal(edaBody, &edaResult)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Unable to unmarshal EDA response body into result object",
@@ -322,29 +345,6 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 			return
 		}
 	}
-
-	if !data.Name.IsNull() || responseData.Name != "" {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), responseData.Name)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	if !data.Description.IsNull() || responseData.Description != "" {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), responseData.Description)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	if !data.DefaultEnv.IsNull() || responseData.DefaultEnv != 0 {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("default_environment"), responseData.DefaultEnv)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("max_hosts"), responseData.MaxHosts)...)
 }
 
 func (r *OrganizationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
