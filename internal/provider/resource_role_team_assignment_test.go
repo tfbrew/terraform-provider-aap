@@ -29,7 +29,7 @@ func TestAccRoleTeamAssignmentResource(t *testing.T) {
 						fmt.Sprintf("%s_role_team_assignment.test", configprefix.Prefix),
 						tfjsonpath.New("object_id"),
 						fmt.Sprintf("%s_organization.test-1", configprefix.Prefix),
-						tfjsonpath.New("aap25_gateway_id"),
+						tfjsonpath.New("gateway_id"),
 						IdCompare,
 					),
 					statecheck.CompareValuePairs(
@@ -60,7 +60,7 @@ func TestAccRoleTeamAssignmentResource(t *testing.T) {
 						fmt.Sprintf("%s_role_team_assignment.test", configprefix.Prefix),
 						tfjsonpath.New("object_id"),
 						fmt.Sprintf("%s_organization.test-2", configprefix.Prefix),
-						tfjsonpath.New("aap25_gateway_id"),
+						tfjsonpath.New("gateway_id"),
 						IdCompare,
 					),
 					statecheck.CompareValuePairs(
@@ -96,11 +96,11 @@ resource "%[1]s_role_definition" "test-%[3]d" {
 }
 resource "%[1]s_team" "test-%[3]d" {
   name      = "%[2]s-%[3]d"
-  organization   = %[1]s_organization.test-%[3]d.aap25_gateway_id
+  organization   = %[1]s_organization.test-%[3]d.gateway_id
   description  = "%[2]s-%[3]d description"
 }
 resource "%[1]s_role_team_assignment" "test" {
-  object_id       = %[1]s_organization.test-%[3]d.aap25_gateway_id
+  object_id       = %[1]s_organization.test-%[3]d.gateway_id
   role_definition = %[1]s_role_definition.test-%[3]d.id
   team            = %[1]s_team.test-%[3]d.id
 }

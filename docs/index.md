@@ -48,7 +48,8 @@ provider "aap" {
 ### Optional
 
 - `api_retry` (Attributes) An optional block to define if the provider should retry GET/read API requests that intitially fail. (see [below for nested schema](#nestedatt--api_retry))
-- `endpoint` (String) URL for automation controller (i.e. https://tower.example.com)
+- `endpoint` (String) URL for automation controller (i.e. https://aap.example.com)
+- `insecure_skip_verify` (Boolean) Set true to skip SSL certificate verification for the automation controller. You can also set this using the AAP_INSECURE_SKIP_VERIFY environment variable.
 - `password` (String) Automation controller password (instead of token). You can also set this using the AAP_PASSWORD environment variable.
 - `token` (String) Automation controller access token (instead of username/password). You can also set this using the AAP_OAUTH_TOKEN environment variable.
 - `username` (String) Automation controller username (instead of token). You can also set this using the AAP_USERNAME environment variable.

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	urlbuilder "net/url"
+	urlParser "net/url"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -40,13 +40,22 @@ func (r *OrganizationResource) Schema(ctx context.Context, req resource.SchemaRe
 		Description: `Manage an Automation Controller organization.`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "Organization ID from the controller API. See `gateway_id` or `eda_id` for the organization's ID in the other APIs.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"aap25_gateway_id": schema.Int32Attribute{
-				Computed: true,
+			"gateway_id": schema.Int32Attribute{
+				Description: "Organization ID in the gateway API",
+				Computed:    true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
+			"eda_id": schema.Int32Attribute{
+				Description: "Organization ID in the EDA API",
+				Computed:    true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.UseStateForUnknown(),
 				},
@@ -71,33 +80,6 @@ func (r *OrganizationResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 		},
 	}
-}
-
-func (r OrganizationResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data OrganizationModel
-
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
-	// Disallow default_environment for >AAP2.5
-	if configprefix.Prefix != "awx" && !data.DefaultEnv.IsNull() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("default_environment"),
-			"Invalid Attribute Configuration",
-			"Attribute default_environment is not supported in this version of the provider.",
-		)
-		return
-	}
-
-	// Disallow max_hosts for >AAP2.5 unless it's awx or unset/zero
-	if configprefix.Prefix != "awx" && !data.MaxHosts.IsNull() && data.MaxHosts.ValueInt32() != 0 {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("max_hosts"),
-			"Invalid Attribute Configuration",
-			"Attribute max_hosts is not supported in this version of the provider.",
-		)
-		return
-	}
-
 }
 
 func (r *OrganizationResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -160,13 +142,15 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 			fmt.Sprintf("Value provided was: %v.", returnedData["id"]))
 		return
 	}
-	data.Aap25GatewayId = types.Int32Value(int32(id))
+	data.GatewayId = types.Int32Value(int32(id))
+
+	// now get the EDA ID by querying the eda endpoint
 
 	if configprefix.Prefix == "aap" {
 
 		// overwrite returnedData with Get against org's /controller/ endpoint
 
-		url := fmt.Sprintf("organizations/?name=%s", urlbuilder.QueryEscape(data.Name.ValueString()))
+		url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
 		responseBodyData, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "controller")
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -190,6 +174,32 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 			return
 		}
 		data.Id = types.StringValue(strconv.Itoa(nameResult.Results[0].Id))
+
+		eda_url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
+		body, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, eda_url, nil, []int{200}, "eda")
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error making API http request",
+				fmt.Sprintf("Error was: %s.", err.Error()))
+			return
+		}
+
+		// Parse EDA response and extract ID
+		var edaResult JTChildAPIRead
+		err = json.Unmarshal(body, &edaResult)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to unmarshal EDA response body into result object",
+				fmt.Sprintf("Error: %v.", err.Error()))
+			return
+		}
+		if edaResult.Count != 1 {
+			resp.Diagnostics.AddError(
+				"Org EDA result count not 1.",
+				fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
+			return
+		}
+		data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
 
 	} else {
 		data.Id = types.StringValue(fmt.Sprintf("%v", returnedData["id"]))
@@ -238,53 +248,6 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	// if aap2.5 get the /gateway/ id and set the related field
-	if configprefix.Prefix == "aap" {
-
-		url := fmt.Sprintf("organizations/?name=%s", urlbuilder.QueryEscape(responseData.Name))
-		responseBodyData, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "gateway")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error making API http request",
-				fmt.Sprintf("Error was: %s.", err.Error()))
-			return
-		}
-
-		var nameResult JTChildAPIRead
-		err = json.Unmarshal(responseBodyData, &nameResult)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to unmarshal response body into result object",
-				fmt.Sprintf("Error:  %v.", err.Error()))
-			return
-		}
-		if nameResult.Count != 1 {
-			resp.Diagnostics.AddError(
-				"Expected only one org result from gateway",
-				fmt.Sprintf("Got count of %d instead.", nameResult.Count))
-			return
-		}
-
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("aap25_gateway_id"), nameResult.Results[0].Id)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	} else {
-		var id int
-		var err error
-
-		id, err = strconv.Atoi(data.Id.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError("can't convert Id to int", "unable to convert ID to int.")
-			return
-		}
-
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("aap25_gateway_id"), id)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
 	if !data.Name.IsNull() || responseData.Name != "" {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), responseData.Name)...)
 		if resp.Diagnostics.HasError() {
@@ -307,6 +270,81 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("max_hosts"), responseData.MaxHosts)...)
+
+	// if aap2.5 get the /gateway/ id and set the related field
+	if configprefix.Prefix == "aap" {
+
+		gatewayUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
+		gatewayBody, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, gatewayUrl, nil, []int{200}, "gateway")
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error making API http request",
+				fmt.Sprintf("Error was: %s.", err.Error()))
+			return
+		}
+
+		var nameResult JTChildAPIRead
+		err = json.Unmarshal(gatewayBody, &nameResult)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to unmarshal response body into result object",
+				fmt.Sprintf("Error:  %v.", err.Error()))
+			return
+		}
+		if nameResult.Count != 1 {
+			resp.Diagnostics.AddError(
+				"Expected only one org result from gateway",
+				fmt.Sprintf("Got count of %d instead.", nameResult.Count))
+			return
+		}
+
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gateway_id"), nameResult.Results[0].Id)...)
+
+		edaUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
+		edaBody, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200}, "eda")
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error making API http request",
+				fmt.Sprintf("Error was: %s.", err.Error()))
+			return
+		}
+
+		// Parse EDA response and extract ID
+		var edaResult JTChildAPIRead
+		err = json.Unmarshal(edaBody, &edaResult)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to unmarshal EDA response body into result object",
+				fmt.Sprintf("Error: %v.", err.Error()))
+			return
+		}
+		if edaResult.Count != 1 {
+			resp.Diagnostics.AddError(
+				"Org EDA result count not 1.",
+				fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
+			return
+		}
+
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("eda_id"), edaResult.Results[0].Id)...)
+
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	} else {
+		var id int
+		var err error
+
+		id, err = strconv.Atoi(data.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("can't convert Id to int", "unable to convert ID to int.")
+			return
+		}
+
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gateway_id"), id)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
 }
 
 func (r *OrganizationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -321,7 +359,7 @@ func (r *OrganizationResource) Update(ctx context.Context, req resource.UpdateRe
 	var err error
 
 	if configprefix.Prefix == "aap" {
-		id = int(data.Aap25GatewayId.ValueInt32())
+		id = int(data.GatewayId.ValueInt32())
 	} else {
 		id, err = strconv.Atoi(data.Id.ValueString())
 	}
@@ -372,7 +410,7 @@ func (r *OrganizationResource) Delete(ctx context.Context, req resource.DeleteRe
 	var err error
 
 	if configprefix.Prefix == "aap" {
-		id = int(data.Aap25GatewayId.ValueInt32())
+		id = int(data.GatewayId.ValueInt32())
 	} else {
 		id, err = strconv.Atoi(data.Id.ValueString())
 	}

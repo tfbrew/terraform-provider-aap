@@ -41,7 +41,7 @@ func TestAccTeamResource(t *testing.T) {
 					),
 					statecheck.CompareValuePairs(
 						fmt.Sprintf("%s_organization.test", configprefix.Prefix),
-						tfjsonpath.New("aap25_gateway_id"),
+						tfjsonpath.New("gateway_id"),
 						fmt.Sprintf("%s_team.test", configprefix.Prefix),
 						tfjsonpath.New("organization"),
 						IdCompare,
@@ -68,7 +68,7 @@ func TestAccTeamResource(t *testing.T) {
 					),
 					statecheck.CompareValuePairs(
 						fmt.Sprintf("%s_organization.test", configprefix.Prefix),
-						tfjsonpath.New("aap25_gateway_id"),
+						tfjsonpath.New("gateway_id"),
 						fmt.Sprintf("%s_team.test", configprefix.Prefix),
 						tfjsonpath.New("organization"),
 						IdCompare,
@@ -87,7 +87,7 @@ resource "%[1]s_organization" "test" {
 
 resource "%[1]s_team" "test" {
   name         = "%[3]s"
-  organization = %[1]s_organization.test.aap25_gateway_id
+  organization = %[1]s_organization.test.gateway_id
   description  = "%[4]s"
 }
 `, configprefix.Prefix, acctest.RandString(5), teamName, teamDesc)

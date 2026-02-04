@@ -3,6 +3,7 @@ package provider
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -39,11 +40,12 @@ type theProvider struct {
 
 // theProviderModel describes the provider data model.
 type theProviderModel struct {
-	Endpoint types.String `tfsdk:"endpoint"`
-	Token    types.String `tfsdk:"token"`
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
-	APIretry types.Object `tfsdk:"api_retry"`
+	Endpoint           types.String `tfsdk:"endpoint"`
+	Token              types.String `tfsdk:"token"`
+	Username           types.String `tfsdk:"username"`
+	Password           types.String `tfsdk:"password"`
+	APIretry           types.Object `tfsdk:"api_retry"`
+	InsecureSkipVerify types.Bool   `tfsdk:"insecure_skip_verify"`
 }
 
 type apiRetryModel struct {
@@ -61,7 +63,7 @@ func (p *theProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 		Description: "This is a Terraform Provider for managing resources in Automation Controller such as AWX/Tower or Ansible Automation Platform (AAP).",
 		Attributes: map[string]schema.Attribute{
 			"endpoint": schema.StringAttribute{
-				Description: "URL for automation controller (i.e. https://tower.example.com)",
+				Description: "URL for automation controller (i.e. https://aap.example.com)",
 				Optional:    true,
 			},
 			"token": schema.StringAttribute{
@@ -95,6 +97,10 @@ func (p *theProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 						},
 					},
 				},
+			},
+			"insecure_skip_verify": schema.BoolAttribute{
+				Description: "Set true to skip SSL certificate verification for the automation controller. You can also set this using the AAP_INSECURE_SKIP_VERIFY environment variable.",
+				Optional:    true,
 			},
 		},
 	}
@@ -210,19 +216,30 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		Timeout: 30 * time.Second,
 	}
 
+	// Check for insecure skip verify option
+	var insecureSkipVerify bool
+
+	if !data.InsecureSkipVerify.IsNull() {
+		insecureSkipVerify = data.InsecureSkipVerify.ValueBool()
+	} else if envInsecure, exists := os.LookupEnv("AAP_INSECURE_SKIP_VERIFY"); exists {
+		if envInsecure == "true" || envInsecure == "1" {
+			insecureSkipVerify = true
+		}
+	}
+
+	if insecureSkipVerify {
+		httpclient.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+	}
+
 	client := new(providerClient)
 
 	client.client = httpclient
 	client.endpoint = endpoint
 	client.auth = auth
-
-	if configprefix.Prefix == "awx" {
-		client.urlPrefix = "/api/v2/"
-	}
-
-	if configprefix.Prefix == "aap" {
-		client.urlPrefix = "/api/controller/v2/"
-	}
 
 	if data.APIretry.IsNull() {
 		envAPIRetryCount, envAPIRetryCountExists := os.LookupEnv("AAP_API_RETRY_COUNT")
@@ -317,7 +334,9 @@ func (p *theProvider) Resources(ctx context.Context) []func() resource.Resource 
 		NewCredentialResource,
 		NewCredentialInputSourcesResource,
 		NewCredentialTypeResource,
+		NewEdaProjectResource,
 		NewHostResource,
+		NewGenericEndpointResource,
 		NewGroupResource,
 		NewGroupHostResource,
 		NewInstanceGroupResource,
@@ -360,6 +379,7 @@ func (p *theProvider) DataSources(ctx context.Context) []func() datasource.DataS
 	return []func() datasource.DataSource{
 		NewCredentialDataSource,
 		NewCredentialTypeDataSource,
+		NewEdaProjectDataSource,
 		NewExecutionEnvironmentDataSource,
 		NewGroupDataSource,
 		NewHostDataSource,

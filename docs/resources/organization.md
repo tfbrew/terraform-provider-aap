@@ -34,8 +34,9 @@ resource "aap_organization" "example" {
 
 ### Read-Only
 
-- `aap25_gateway_id` (Number)
-- `id` (String) The ID of this resource.
+- `eda_id` (Number) Organization ID in the EDA API
+- `gateway_id` (Number) Organization ID in the gateway API
+- `id` (String) Organization ID from the controller API. See `gateway_id` or `eda_id` for the organization's ID in the other APIs.
 
 ## Import
 
