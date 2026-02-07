@@ -334,6 +334,7 @@ func (p *theProvider) Resources(ctx context.Context) []func() resource.Resource 
 		NewCredentialResource,
 		NewCredentialInputSourcesResource,
 		NewCredentialTypeResource,
+		NewEdaCredentialTypeResource,
 		NewEdaProjectResource,
 		NewHostResource,
 		NewGenericEndpointResource,
@@ -379,6 +380,7 @@ func (p *theProvider) DataSources(ctx context.Context) []func() datasource.DataS
 	return []func() datasource.DataSource{
 		NewCredentialDataSource,
 		NewCredentialTypeDataSource,
+		NewEdaCredentialTypeDataSource,
 		NewEdaProjectDataSource,
 		NewExecutionEnvironmentDataSource,
 		NewGroupDataSource,

@@ -106,6 +106,26 @@ type CredentialTypeAPIModel struct {
 	Kind        string `json:"kind"`
 }
 
+type EdaCredentialTypeModel struct {
+	Id          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	Inputs      types.String `tfsdk:"inputs"`
+	Injectors   types.String `tfsdk:"injectors"`
+	Kind        types.String `tfsdk:"kind"`
+	Namespace   types.String `tfsdk:"namespace"`
+}
+
+type EdaCredentialTypeAPIModel struct {
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	Inputs      any    `json:"inputs"`
+	Injectors   any    `json:"injectors"`
+	Kind        string `json:"kind"`
+	Namespace   any    `json:"namespace"`
+}
+
 type ExecutionEnvironmentModel struct {
 	Id           types.String `tfsdk:"id"`
 	Name         types.String `tfsdk:"name"`
