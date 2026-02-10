@@ -14,21 +14,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-var _ datasource.DataSource = &CredentialDataSource{}
+var _ datasource.DataSource = &EdaCredentialDataSource{}
 
-func NewCredentialDataSource() datasource.DataSource {
-	return &CredentialDataSource{}
+func NewEdaCredentialDataSource() datasource.DataSource {
+	return &EdaCredentialDataSource{}
 }
 
-type CredentialDataSource struct {
+type EdaCredentialDataSource struct {
 	client *providerClient
 }
 
-func (d *CredentialDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_credential"
+func (d *EdaCredentialDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_eda_credential"
 }
 
-func (d *CredentialDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EdaCredentialDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Get credential datasource",
 		Attributes: map[string]schema.Attribute{
@@ -44,28 +44,16 @@ func (d *CredentialDataSource) Schema(ctx context.Context, req datasource.Schema
 				Description: "Credential description.",
 				Computed:    true,
 			},
-			"kind": schema.StringAttribute{
-				Description: "Credential kind.",
+			"organization_id": schema.Int32Attribute{
+				Description: "ID of organization which owns this credential.",
 				Computed:    true,
 			},
-			"organization": schema.Int32Attribute{
-				Description: "ID of organization which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
-				Computed:    true,
-			},
-			"team": schema.Int32Attribute{
-				Description: "ID of team which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
-				Computed:    true,
-			},
-			"user": schema.Int32Attribute{
-				Description: "ID of user which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
-				Computed:    true,
-			},
-			"credential_type": schema.Int32Attribute{
+			"credential_type_id": schema.Int32Attribute{
 				Description: "ID of the credential type.",
 				Computed:    true,
 			},
 			"inputs": schema.StringAttribute{
-				Description: "Credential inputs. This is a JSON string representing a dictionary of inputs.",
+				Description: "Specify a string by using using `jsonencode()` to encode similar data as as string in state. Specify alphabetically when using the second method.",
 				Computed:    true,
 			},
 			"inputs_as_object": schema.DynamicAttribute{
@@ -76,7 +64,7 @@ func (d *CredentialDataSource) Schema(ctx context.Context, req datasource.Schema
 	}
 }
 
-func (d *CredentialDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *EdaCredentialDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -94,8 +82,8 @@ func (d *CredentialDataSource) Configure(ctx context.Context, req datasource.Con
 	d.client = configureData
 }
 
-func (d *CredentialDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CredentialDataModel
+func (d *EdaCredentialDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data EdaCredentialDataModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -114,8 +102,8 @@ func (d *CredentialDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	url = fmt.Sprintf("credentials/%d/", id)
-	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "")
+	url = fmt.Sprintf("eda-credentials/%d/", id)
+	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "eda")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -128,7 +116,7 @@ func (d *CredentialDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	var responseData CredentialAPIModel
+	var responseData EdaCredentialAPIModel
 
 	err = json.Unmarshal(body, &responseData)
 	if err != nil {
@@ -147,12 +135,11 @@ func (d *CredentialDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		data.Description = types.StringValue(responseData.Description)
 	}
 
-	if responseData.Organization != 0 {
-		data.Organization = types.Int32Value(int32(responseData.Organization))
+	if responseData.Organization.Id != 0 {
+		data.OrganizationId = types.Int32Value(int32(responseData.Organization.Id))
 	}
 
-	data.Kind = types.StringValue(responseData.Kind)
-	data.CredentialType = types.Int32Value(int32(responseData.CredentialType))
+	data.CredentialTypeId = types.Int32Value(int32(responseData.CredentialTypeId))
 
 	jsonInputs, err := json.Marshal(responseData.Inputs)
 	if err != nil {

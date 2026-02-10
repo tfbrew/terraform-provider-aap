@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -19,101 +18,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ resource.Resource = &CredentialResource{}
-var _ resource.ResourceWithImportState = &CredentialResource{}
+var _ resource.Resource = &EdaCredentialResource{}
+var _ resource.ResourceWithImportState = &EdaCredentialResource{}
 
-func NewCredentialResource() resource.Resource {
-	return &CredentialResource{}
+func NewEdaCredentialResource() resource.Resource {
+	return &EdaCredentialResource{}
 }
 
-type CredentialResource struct {
+type EdaCredentialResource struct {
 	client *providerClient
 }
 
-func (r *CredentialResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_credential"
+func (r *EdaCredentialResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_eda_credential"
 }
 
-func (r *CredentialResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
-	return map[int64]resource.StateUpgrader{
-		// State upgrade implementation from 0 (prior state version) to 1 (Schema.Version)
-		0: {
-			PriorSchema: &schema.Schema{Attributes: map[string]schema.Attribute{
-				"id": schema.StringAttribute{
-					Description: "Credential ID.",
-					Computed:    true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.UseStateForUnknown(),
-					},
-				},
-				"name": schema.StringAttribute{
-					Description: "Credential name.",
-					Required:    true,
-				},
-				"description": schema.StringAttribute{
-					Description: "Credential description.",
-					Optional:    true,
-				},
-				"organization": schema.Int32Attribute{
-					Description: "ID of organization which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
-					Optional:    true,
-				},
-				"team": schema.Int32Attribute{
-					Description: "ID of team which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
-					Optional:    true,
-				},
-				"user": schema.Int32Attribute{
-					Description: "ID of user which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
-					Optional:    true,
-				},
-				"credential_type": schema.Int32Attribute{
-					Description: "ID of the credential type.",
-					Required:    true,
-				},
-				"inputs": schema.StringAttribute{
-					Description: "This field can take inputs in two forms: an object or a JSON-encoded string. When importing this resource type, you must specify the inputs as an object. See above for examples of both types. The older, second method is to specify a string by using using `jsonencode()` to encode similar data as as string in state. Specify alphabetically when using the second method.",
-					Optional:    true,
-					Sensitive:   true,
-				},
-				"kind": schema.StringAttribute{
-					Description: "Credential kind.",
-					Computed:    true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.UseStateForUnknown(),
-					},
-				},
-			}},
-			StateUpgrader: func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
-				var priorStateData CredentialModelv0
-
-				resp.Diagnostics.Append(req.State.Get(ctx, &priorStateData)...)
-
-				if resp.Diagnostics.HasError() {
-					return
-				}
-
-				upgradedStateData := CredentialModel{
-					Id:             priorStateData.Id,
-					Name:           priorStateData.Name,
-					Description:    priorStateData.Description,
-					Organization:   priorStateData.Organization,
-					Team:           priorStateData.Team,
-					User:           priorStateData.User,
-					CredentialType: priorStateData.CredentialType,
-					Kind:           priorStateData.Kind,
-					Inputs:         types.DynamicValue(priorStateData.Inputs),
-				}
-
-				resp.Diagnostics.Append(resp.State.Set(ctx, upgradedStateData)...)
-			},
-		},
-	}
-}
-
-func (r *CredentialResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *EdaCredentialResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Version: 1, // Update this when schema changes are made that require state migration.
-		Description: `Manage an Automation Controller credential. 
+		Description: `Manage an EDA credential. 
 NOTE: The automation controller API does not return encrypted secrets so changes made in the controller of the inputs field will be ignored. 
 The only changes to the inputs field that will be sent are when the terraform code does not match the terraform state.`,
 		Attributes: map[string]schema.Attribute{
@@ -132,49 +54,24 @@ The only changes to the inputs field that will be sent are when the terraform co
 				Description: "Credential description.",
 				Optional:    true,
 			},
-			"organization": schema.Int32Attribute{
-				Description: "ID of organization which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
+			"organization_id": schema.Int32Attribute{
+				Description: "ID of organization which owns this credential.",
 				Optional:    true,
 			},
-			"team": schema.Int32Attribute{
-				Description: "ID of team which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
-				Optional:    true,
-			},
-			"user": schema.Int32Attribute{
-				Description: "ID of user which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
-				Optional:    true,
-			},
-			"credential_type": schema.Int32Attribute{
+			"credential_type_id": schema.Int32Attribute{
 				Description: "ID of the credential type.",
 				Required:    true,
 			},
 			"inputs": schema.DynamicAttribute{
-				Description: "This field can take inputs in two forms: an object or a JSON-encoded string. When importing this resource type, you must specify the inputs as an object. See above for examples of both types. The older, second method is to specify a string by using using `jsonencode()` to encode similar data as as string in state. Specify alphabetically when using the second method.",
+				Description: "Specify a string by using using `jsonencode()` to encode similar data as as string in state. Specify alphabetically when using the second method.",
 				Optional:    true,
 				Sensitive:   true,
-			},
-			"kind": schema.StringAttribute{
-				Description: "Credential kind.",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 	}
 }
 
-func (r CredentialResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("organization"),
-			path.MatchRoot("team"),
-			path.MatchRoot("user"),
-		),
-	}
-}
-
-func (r *CredentialResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *EdaCredentialResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -191,30 +88,22 @@ func (r *CredentialResource) Configure(ctx context.Context, req resource.Configu
 	r.client = configureData
 }
 
-func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data CredentialModel
+func (r *EdaCredentialResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data EdaCredentialModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var bodyData CredentialAPIModel
+	var bodyData EdaCredentialAPIModel
 
 	bodyData.Name = data.Name.ValueString()
-	bodyData.CredentialType = int(data.CredentialType.ValueInt32())
+	bodyData.CredentialTypeId = int(data.CredentialTypeId.ValueInt32())
+	bodyData.OrganizationId = int(data.OrganizationId.ValueInt32())
 
 	if !(data.Description.IsNull()) {
 		bodyData.Description = data.Description.ValueString()
-	}
-	if !(data.Organization.IsNull()) {
-		bodyData.Organization = int(data.Organization.ValueInt32())
-	}
-	if !(data.Team.IsNull()) {
-		bodyData.Team = int(data.Team.ValueInt32())
-	}
-	if !(data.User.IsNull()) {
-		bodyData.User = int(data.User.ValueInt32())
 	}
 
 	if !data.Inputs.IsUnderlyingValueNull() && !data.Inputs.IsNull() {
@@ -255,8 +144,8 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 		bodyData.Inputs = inputsDataMap
 	}
 
-	url := "credentials/"
-	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPost, url, bodyData, []int{201}, "")
+	url := "eda-credentials/"
+	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPost, url, bodyData, []int{201}, "eda")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -264,7 +153,7 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	returnedValues := []string{"id", "kind"}
+	returnedValues := []string{"id"}
 	for _, key := range returnedValues {
 		if _, exists := returnedData[key]; !exists {
 			resp.Diagnostics.AddError(
@@ -275,13 +164,12 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	data.Id = types.StringValue(fmt.Sprintf("%v", returnedData["id"]))
-	data.Kind = types.StringValue(fmt.Sprintf("%v", returnedData["kind"]))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data CredentialModel
+func (r *EdaCredentialResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data EdaCredentialModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -296,8 +184,8 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	url := fmt.Sprintf("credentials/%d/", id)
-	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "")
+	url := fmt.Sprintf("eda-credentials/%d/", id)
+	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "eda")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -310,43 +198,22 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	var responseData CredentialAPIModel
+	var responseData EdaCredentialAPIModel
 
 	err = json.Unmarshal(body, &responseData)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to unmarshal json",
-			fmt.Sprintf("bodyData: %+v.", body))
+			fmt.Sprintf("bodyData: %+v.", err))
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), responseData.Name)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("credential_type"), responseData.CredentialType)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("kind"), responseData.Kind)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("credential_type_id"), responseData.CredentialType.Id)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_id"), responseData.Organization.Id)...)
 
 	if !data.Description.IsNull() || responseData.Description != "" {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), responseData.Description)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	if !data.Organization.IsNull() || responseData.Organization != 0 {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization"), responseData.Organization)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	if !data.Team.IsNull() || responseData.Team != 0 {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("team"), responseData.Team)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	if !data.User.IsNull() || responseData.User != 0 {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user"), responseData.User)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -434,8 +301,8 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 
 }
 
-func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CredentialModel
+func (r *EdaCredentialResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data EdaCredentialModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -450,22 +317,14 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	var bodyData CredentialAPIModel
+	var bodyData EdaCredentialAPIModel
 
 	bodyData.Name = data.Name.ValueString()
-	bodyData.CredentialType = int(data.CredentialType.ValueInt32())
+	bodyData.CredentialTypeId = int(data.CredentialTypeId.ValueInt32())
+	bodyData.OrganizationId = int(data.OrganizationId.ValueInt32())
 
 	if !(data.Description.IsNull()) {
 		bodyData.Description = data.Description.ValueString()
-	}
-	if !(data.Organization.IsNull()) {
-		bodyData.Organization = int(data.Organization.ValueInt32())
-	}
-	if !(data.Team.IsNull()) {
-		bodyData.Team = int(data.Team.ValueInt32())
-	}
-	if !(data.User.IsNull()) {
-		bodyData.User = int(data.User.ValueInt32())
 	}
 
 	if !data.Inputs.IsUnderlyingValueNull() {
@@ -505,8 +364,8 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		bodyData.Inputs = inputsDataMap
 	}
 
-	url := fmt.Sprintf("credentials/%d/", id)
-	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPut, url, bodyData, []int{200}, "")
+	url := fmt.Sprintf("eda-credentials/%d/", id)
+	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPatch, url, bodyData, []int{200}, "eda")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API update request",
@@ -514,7 +373,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	returnedValues := []string{"id", "kind"}
+	returnedValues := []string{"id"}
 	for _, key := range returnedValues {
 		if _, exists := returnedData[key]; !exists {
 			resp.Diagnostics.AddError(
@@ -524,13 +383,11 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		}
 	}
 
-	data.Kind = types.StringValue(fmt.Sprintf("%v", returnedData["kind"]))
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *CredentialResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data CredentialModel
+func (r *EdaCredentialResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data EdaCredentialModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -545,8 +402,8 @@ func (r *CredentialResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	url := fmt.Sprintf("credentials/%d/", id)
-	_, _, err = r.client.GenericAPIRequest(ctx, http.MethodDelete, url, nil, []int{202, 204}, "")
+	url := fmt.Sprintf("eda-credentials/%d/", id)
+	_, _, err = r.client.GenericAPIRequest(ctx, http.MethodDelete, url, nil, []int{202, 204}, "eda")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API delete request",
@@ -555,7 +412,7 @@ func (r *CredentialResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *CredentialResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *EdaCredentialResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 
 	idUnescaped, _ := strconv.Unquote(`"` + req.ID + `"`)
 

@@ -1,0 +1,48 @@
+resource "{{.Prefix}}_organization" "example" {
+  name        = "tf_example"
+  description = "example"
+}
+
+// Example basic event stream
+
+// Inputs options for basic event stream credentials:
+// username, password, auth_type, http_header_key
+// Setting a value to "ASK" is equal to choosing "Prompt at Launch"
+
+data "{{.Prefix}}_eda_credential_type" "basic-event-stream" {
+  name = "Basic Event Stream"
+}
+
+resource "{{.Prefix}}_eda_credential" "example-basic-event-stream" {
+  name            = "example_basic_event_stream"
+  organization    = {{.Prefix}}_organization.example.eda_id
+  credential_type = data.{{.Prefix}}_credential_type.basic-event-stream.id
+  inputs = jsonencode({
+    "password" : "test1234",   // code should not contain secrets, example only
+    "username" : "{{.Prefix}}",
+    "auth_type" : "basic",
+    "http_header_key" : "Authorization"
+  })
+}
+
+// Example container registry credential
+
+// Inputs options for source control credentials:
+// host, username, password, verify_ssl
+// Setting a value to "ASK" is equal to choosing "Prompt at Launch"
+
+data "{{.Prefix}}_eda_credential_type" "container-registry" {
+  name = "Container Registry"
+}
+
+resource "{{.Prefix}}_eda_credential" "example-container-registry" {
+  name            = "example_container_registry"
+  organization    = {{.Prefix}}_organization.example.eda_id
+  credential_type = data.{{.Prefix}}_eda_credential_type.container-registry.id
+  inputs = jsonencode({
+    "host" : "quay.io",
+    "password" : "test1234", // code should not contain secrets, example only
+    "username" : "test",
+    "verify_ssl" : true
+  })
+}

@@ -106,6 +106,42 @@ type CredentialTypeAPIModel struct {
 	Kind        string `json:"kind"`
 }
 
+type EdaCredentialModel struct {
+	Id               types.String  `tfsdk:"id"`
+	Name             types.String  `tfsdk:"name"`
+	Description      types.String  `tfsdk:"description"`
+	OrganizationId   types.Int32   `tfsdk:"organization_id"`
+	CredentialTypeId types.Int32   `tfsdk:"credential_type_id"`
+	Inputs           types.Dynamic `tfsdk:"inputs"`
+}
+
+type EdaCredentialAPIModel struct {
+	Id               int                        `json:"id"`
+	Name             string                     `json:"name"`
+	Description      string                     `json:"description,omitempty"`
+	OrganizationId   int                        `json:"organization_id"`
+	Organization     OrganizationNestedAPIModel `json:"organization,omitempty"`
+	CredentialTypeId int                        `json:"credential_type_id"`
+	CredentialType   CredentialNestedAPIModel   `json:"credential_type,omitempty"`
+	Inputs           map[string]any             `json:"inputs"`
+}
+
+type EdaCredentialDataModel struct {
+	Id               types.String  `tfsdk:"id"`
+	Name             types.String  `tfsdk:"name"`
+	Description      types.String  `tfsdk:"description"`
+	OrganizationId   types.Int32   `tfsdk:"organization_id"`
+	CredentialTypeId types.Int32   `tfsdk:"credential_type_id"`
+	Inputs           types.String  `tfsdk:"inputs"`
+	InputsAsObject   types.Dynamic `tfsdk:"inputs_as_object"`
+}
+
+type CredentialNestedAPIModel struct {
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 type EdaCredentialTypeModel struct {
 	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
