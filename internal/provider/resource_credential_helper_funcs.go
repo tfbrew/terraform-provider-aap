@@ -57,12 +57,12 @@ func extraDataApiToDynamicObject(ctx context.Context, apiExtraData map[string]an
 	return nil
 }
 
-func credentialInputApiToDynamicObject(apiInputs map[string]any, dynValue *basetypes.DynamicValue) diag.Diagnostics {
+func credentialInputApiToDynamicObject(apiInputs *map[string]any, dynValue *basetypes.DynamicValue) diag.Diagnostics {
 	inputs := apiInputs
 	inputsValues := make(map[string]attr.Value)
 	inputsAttrTypes := make(map[string]attr.Type)
 
-	for k, v := range inputs {
+	for k, v := range *inputs {
 		switch val := v.(type) {
 		case string:
 			inputsValues[k] = types.StringValue(val)
@@ -91,9 +91,9 @@ func credentialInputApiToDynamicObject(apiInputs map[string]any, dynValue *baset
 	return nil
 }
 
-func setInputfromResponeData(ctx context.Context, resp *resource.ReadResponse, responseData *CredentialAPIModel) diag.Diagnostics {
+func setInputfromResponeData(ctx context.Context, resp *resource.ReadResponse, Inputs *map[string]any) diag.Diagnostics {
 	var dynValue basetypes.DynamicValue
-	diags := credentialInputApiToDynamicObject(responseData.Inputs, &dynValue)
+	diags := credentialInputApiToDynamicObject(Inputs, &dynValue)
 	if diags.HasError() {
 		return diags
 	}
@@ -102,15 +102,15 @@ func setInputfromResponeData(ctx context.Context, resp *resource.ReadResponse, r
 	return diags
 }
 
-func replaceEncryptedApiValues(currInputsState *map[string]any, responseData *CredentialAPIModel) {
+func replaceEncryptedApiValues(currInputsState *map[string]any, Inputs *map[string]any) {
 	currInputsStateMap := *currInputsState
 	// loop through API data and find/replace $encrypted$ values from state
-	for k, v := range responseData.Inputs {
+	for k, v := range *Inputs {
 		switch val := v.(type) {
 		case string:
 			if val == "$encrypted$" {
 				if currInputsStateMap[k] != nil && currInputsStateMap[k] != "" {
-					responseData.Inputs[k] = currInputsStateMap[k]
+					(*Inputs)[k] = currInputsStateMap[k]
 				}
 			}
 		}

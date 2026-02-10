@@ -1,0 +1,1 @@
+terraform import aap_eda_credential_type.example 1
