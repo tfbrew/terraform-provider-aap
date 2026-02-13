@@ -770,6 +770,28 @@ type CredentialInputSourcesAPIModel struct {
 
 // EDA
 
+type EdaDecisionEnvironmentModel struct {
+	Id              types.String `tfsdk:"id"`
+	Name            types.String `tfsdk:"name"`
+	Description     types.String `tfsdk:"description"`
+	EdaCredentialId types.Int32  `tfsdk:"eda_credential_id"`
+	OrganizationId  types.Int32  `tfsdk:"organization_id"`
+	ImageUrl        types.String `tfsdk:"image_url"`
+	PullPolicy      types.String `tfsdk:"pull_policy"`
+}
+
+type EdaDecisionEnvironmentAPIModel struct {
+	Id              int                        `json:"id"`
+	Name            string                     `json:"name"`
+	Description     string                     `json:"description,omitempty"`
+	EdaCredential   CredentialNestedAPIModel   `json:"eda_credential,omitempty"`
+	EdaCredentialId int                        `json:"eda_credential_id,omitempty"`
+	Organization    OrganizationNestedAPIModel `json:"organization,omitempty"`
+	OrganizationId  int                        `json:"organization_id"`
+	ImageUrl        string                     `json:"image_url"`
+	PullPolicy      string                     `json:"pull_policy"`
+}
+
 type EdaProjectModel struct {
 	Id                              types.String `tfsdk:"id"`
 	Name                            types.String `tfsdk:"name"`
