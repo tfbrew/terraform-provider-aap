@@ -118,6 +118,11 @@ func TestAccOrganizationDataSource(t *testing.T) {
 							tfjsonpath.New("description"),
 							knownvalue.StringExact(resource1.Description),
 						),
+						statecheck.ExpectKnownValue(
+							fmt.Sprintf("data.%s_organization.test-id", configprefix.Prefix),
+							tfjsonpath.New("eda_id"),
+							knownvalue.NotNull(),
+						),
 					},
 				},
 				// Read by name testing
@@ -133,6 +138,11 @@ func TestAccOrganizationDataSource(t *testing.T) {
 							fmt.Sprintf("data.%s_organization.test-name", configprefix.Prefix),
 							tfjsonpath.New("description"),
 							knownvalue.StringExact(resource2.Description),
+						),
+						statecheck.ExpectKnownValue(
+							fmt.Sprintf("data.%s_organization.test-name", configprefix.Prefix),
+							tfjsonpath.New("eda_id"),
+							knownvalue.NotNull(),
 						),
 					},
 				},

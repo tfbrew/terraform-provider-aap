@@ -122,6 +122,11 @@ func TestAccOrganizationResource(t *testing.T) {
 							tfjsonpath.New("description"),
 							knownvalue.StringExact(resource1.Description),
 						),
+						statecheck.ExpectKnownValue(
+							fmt.Sprintf("%s_organization.test", configprefix.Prefix),
+							tfjsonpath.New("eda_id"),
+							knownvalue.NotNull(),
+						),
 					},
 				},
 				// ImportState testing
@@ -143,6 +148,11 @@ func TestAccOrganizationResource(t *testing.T) {
 							fmt.Sprintf("%s_organization.test", configprefix.Prefix),
 							tfjsonpath.New("description"),
 							knownvalue.StringExact(resource2.Description),
+						),
+						statecheck.ExpectKnownValue(
+							fmt.Sprintf("%s_organization.test", configprefix.Prefix),
+							tfjsonpath.New("eda_id"),
+							knownvalue.NotNull(),
 						),
 					},
 				},
