@@ -1,0 +1,26 @@
+resource "{{.Prefix}}_organization" "example-container-registry" {
+  name        			= "Example Organization for Container Registry"
+}
+data "{{.Prefix}}_eda_credential_type" "example-container-registry" {
+  name = "Container Registry"
+}
+resource "{{.Prefix}}_eda_credential" "example-container-registry" {
+  name            = "%[3]s"
+  description	  = "%[4]s"
+  organization_id = {{.Prefix}}_organization.example-container-registry.eda_id
+  credential_type_id = data.{{.Prefix}}_eda_credential_type.example-container-registry.id
+  inputs = jsonencode({
+			"host":       "quay.io",
+			"password":   "test1234",
+			"username":   "test",
+			"verify_ssl": true,
+		})
+}
+resource "{{.Prefix}}_eda_decision_environment" "example-container-registry" {
+  name         			= "Example Decision Environment with Container Registry"
+  description  			= "Example Description"
+  image_url      	    = "quay.io/ansible/aap-latest"
+  eda_credential_id		= {{.Prefix}}_eda_credential.example-container-registry.id
+  organization_id    	= {{.Prefix}}_organization.example-container-registry.eda_id
+  pull_policy        	= "always"
+}

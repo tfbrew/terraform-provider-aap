@@ -176,7 +176,7 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 		data.Id = types.StringValue(strconv.Itoa(nameResult.Results[0].Id))
 
 		eda_url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-		body, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, eda_url, nil, []int{200}, "eda")
+		body, edaStatusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, eda_url, nil, []int{200, 404}, "eda")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error making API http request",
@@ -184,22 +184,27 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 			return
 		}
 
-		// Parse EDA response and extract ID
-		var edaResult JTChildAPIRead
-		err = json.Unmarshal(body, &edaResult)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to unmarshal EDA response body into result object",
-				fmt.Sprintf("Error: %v.", err.Error()))
-			return
+		// If the eda endpoint exists (200), parse the response and extract the EDA ID. If it doesn't exist (404), just continue without error and leave the EDA ID empty.
+		if edaStatusCode == 200 {
+			// Parse EDA response and extract ID
+			var edaResult JTChildAPIRead
+			err = json.Unmarshal(body, &edaResult)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Unable to unmarshal EDA response body into result object",
+					fmt.Sprintf("Error: %v.", err.Error()))
+				return
+			}
+			if edaResult.Count != 1 {
+				resp.Diagnostics.AddError(
+					"Org EDA result count not 1.",
+					fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
+				return
+			}
+			data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
+		} else {
+			data.EdaId = types.Int32Null()
 		}
-		if edaResult.Count != 1 {
-			resp.Diagnostics.AddError(
-				"Org EDA result count not 1.",
-				fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
-			return
-		}
-		data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
 
 	} else {
 		data.Id = types.StringValue(fmt.Sprintf("%v", returnedData["id"]))
@@ -271,7 +276,7 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("max_hosts"), responseData.MaxHosts)...)
 
-	// if aap2.5 get the /gateway/ id and set the related field
+	// if aap2.5+ get the /gateway/ id and set the related field
 	if configprefix.Prefix == "aap" {
 
 		gatewayUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
@@ -301,7 +306,7 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gateway_id"), nameResult.Results[0].Id)...)
 
 		edaUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
-		edaBody, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200}, "eda")
+		edaBody, edaStatusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200, 404}, "eda")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error making API http request",
@@ -309,23 +314,28 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 			return
 		}
 
-		// Parse EDA response and extract ID
-		var edaResult JTChildAPIRead
-		err = json.Unmarshal(edaBody, &edaResult)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to unmarshal EDA response body into result object",
-				fmt.Sprintf("Error: %v.", err.Error()))
-			return
-		}
-		if edaResult.Count != 1 {
-			resp.Diagnostics.AddError(
-				"Org EDA result count not 1.",
-				fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
-			return
-		}
+		// If the eda endpoint exists (200), parse the response and extract the EDA ID. If it doesn't exist (404), just continue without error and leave the EDA ID empty.
+		if edaStatusCode == 200 {
+			// Parse EDA response and extract ID
+			var edaResult JTChildAPIRead
+			err = json.Unmarshal(edaBody, &edaResult)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Unable to unmarshal EDA response body into result object",
+					fmt.Sprintf("Error: %v.", err.Error()))
+				return
+			}
+			if edaResult.Count != 1 {
+				resp.Diagnostics.AddError(
+					"Org EDA result count not 1.",
+					fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
+				return
+			}
 
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("eda_id"), edaResult.Results[0].Id)...)
+			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("eda_id"), edaResult.Results[0].Id)...)
+		} else {
+			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("eda_id"), types.Int32Null())...)
+		}
 
 		if resp.Diagnostics.HasError() {
 			return

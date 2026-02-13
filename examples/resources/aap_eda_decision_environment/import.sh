@@ -1,0 +1,1 @@
+terraform import aap_eda_decision_environment.example 1

@@ -190,30 +190,32 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	// now get the EDA ID by querying the eda endpoint
 
 	edaUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-	edaBody, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200}, "eda")
+	edaBody, edaStatusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200, 404}, "eda")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
 			fmt.Sprintf("Error was: %s.", err.Error()))
 		return
 	}
-
-	// Parse EDA response and extract ID
-	var edaResult JTChildAPIRead
-	err = json.Unmarshal(edaBody, &edaResult)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to unmarshal EDA response body into result object",
-			fmt.Sprintf("Error: %v.", err.Error()))
-		return
+	// If the eda endpoint exists (200), parse the response and extract the EDA ID. If it doesn't exist (404), just continue without error and leave the EDA ID empty.
+	if edaStatusCode == 200 {
+		// Parse EDA response and extract ID
+		var edaResult JTChildAPIRead
+		err = json.Unmarshal(edaBody, &edaResult)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to unmarshal EDA response body into result object",
+				fmt.Sprintf("Error: %v.", err.Error()))
+			return
+		}
+		if edaResult.Count != 1 {
+			resp.Diagnostics.AddError(
+				"Org EDA result count not 1.",
+				fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
+			return
+		}
+		data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
 	}
-	if edaResult.Count != 1 {
-		resp.Diagnostics.AddError(
-			"Org EDA result count not 1.",
-			fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
-		return
-	}
-	data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
 
 	// now get the Gateway ID by querying the eda endpoint
 
