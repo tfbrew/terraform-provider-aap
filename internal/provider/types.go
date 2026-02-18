@@ -792,6 +792,32 @@ type EdaDecisionEnvironmentAPIModel struct {
 	PullPolicy      string                     `json:"pull_policy"`
 }
 
+type EdaEventStreamModel struct {
+	Id                    types.String `tfsdk:"id"`
+	Name                  types.String `tfsdk:"name"`
+	AdditionalDataHeaders types.String `tfsdk:"additional_data_headers"`
+	EdaCredentialId       types.Int32  `tfsdk:"eda_credential_id"`
+	OrganizationId        types.Int32  `tfsdk:"organization_id"`
+	Url                   types.String `tfsdk:"url"`
+	Uuid                  types.String `tfsdk:"uuid"`
+	TestMode              types.Bool   `tfsdk:"test_mode"`
+	EventStreamType       types.String `tfsdk:"event_stream_type"`
+}
+
+type EdaEventStreamAPIModel struct {
+	Id                    int                        `json:"id"`
+	Name                  string                     `json:"name"`
+	AdditionalDataHeaders string                     `json:"additional_data_headers,omitempty"`
+	EdaCredential         CredentialNestedAPIModel   `json:"eda_credential,omitempty"`
+	EdaCredentialId       int                        `json:"eda_credential_id,omitempty"`
+	Organization          OrganizationNestedAPIModel `json:"organization,omitempty"`
+	OrganizationId        int                        `json:"organization_id"`
+	Url                   string                     `json:"url,omitempty"`
+	Uuid                  string                     `json:"uuid,omitempty"`
+	TestMode              bool                       `json:"test_mode"`
+	EventStreamType       string                     `json:"event_stream_type,omitempty"`
+}
+
 type EdaProjectModel struct {
 	Id                              types.String `tfsdk:"id"`
 	Name                            types.String `tfsdk:"name"`
