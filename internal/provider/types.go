@@ -475,6 +475,26 @@ type NotificationTemplateModel struct {
 	NotificationType          types.String `tfsdk:"notification_type"`
 	NotificationConfiguration types.String `tfsdk:"notification_configuration"`
 	Messages                  types.String `tfsdk:"messages"`
+	MessagesStructured        types.Object `tfsdk:"messages_structured"`
+}
+
+type MessagesModel struct {
+	Error            *MessageBodyModel      `tfsdk:"error"`
+	Started          *MessageBodyModel      `tfsdk:"started"`
+	Success          *MessageBodyModel      `tfsdk:"success"`
+	WorkflowApproval *WorkflowApprovalModel `tfsdk:"workflow_approval"`
+}
+
+type MessageBodyModel struct {
+	Body    types.String `tfsdk:"body"`
+	Message types.String `tfsdk:"message"`
+}
+
+type WorkflowApprovalModel struct {
+	Denied   *MessageBodyModel `tfsdk:"denied"`
+	Running  *MessageBodyModel `tfsdk:"running"`
+	Approved *MessageBodyModel `tfsdk:"approved"`
+	TimedOut *MessageBodyModel `tfsdk:"timed_out"`
 }
 
 type NotificationTemplateAPIModel struct {

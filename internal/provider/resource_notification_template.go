@@ -8,7 +8,9 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var _ resource.Resource = &NotificationTemplatesResource{}
@@ -71,9 +74,63 @@ func (r *NotificationTemplatesResource) Schema(ctx context.Context, req resource
 				Description: "json. This value depends on the `notification_type` chosen. But, the value should be json. E.g. `notification_configuration = jsonencode(blah blah blah)`. The Automation Controller Tower API never returns a value for Token. So, this provider is coded to ignore changes to that field.",
 			},
 			"messages": schema.StringAttribute{
-				Optional:    true,
-				Description: "json",
+				Optional:           true,
+				Description:        "json",
+				DeprecationMessage: "It is recommended to use the new `messages_structured` attribute instead.",
 			},
+			"messages_structured": schema.SingleNestedAttribute{
+				Optional: true,
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"error": schema.SingleNestedAttribute{
+						Optional:   true,
+						Computed:   true,
+						Attributes: messageBodyAttributes(),
+					},
+					"started": schema.SingleNestedAttribute{
+						Optional:   true,
+						Computed:   true,
+						Attributes: messageBodyAttributes(),
+					},
+					"success": schema.SingleNestedAttribute{
+						Optional:   true,
+						Computed:   true,
+						Attributes: messageBodyAttributes(),
+					},
+					"workflow_approval": schema.SingleNestedAttribute{
+						Optional: true,
+						Computed: true,
+						Attributes: map[string]schema.Attribute{
+							"denied":    schema.SingleNestedAttribute{Optional: true, Computed: true, Attributes: messageBodyAttributes()},
+							"running":   schema.SingleNestedAttribute{Optional: true, Computed: true, Attributes: messageBodyAttributes()},
+							"approved":  schema.SingleNestedAttribute{Optional: true, Computed: true, Attributes: messageBodyAttributes()},
+							"timed_out": schema.SingleNestedAttribute{Optional: true, Computed: true, Attributes: messageBodyAttributes()},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *NotificationTemplatesResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("messages"),
+			path.MatchRoot("messages_structure"),
+		),
+	}
+}
+
+func messageBodyAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"body": schema.StringAttribute{
+			Optional: true,
+			Computed: true,
+		},
+		"message": schema.StringAttribute{
+			Optional: true,
+			Computed: true,
 		},
 	}
 }
@@ -638,3 +695,114 @@ func (r *NotificationTemplatesResource) Delete(ctx context.Context, req resource
 func (r *NotificationTemplatesResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
+
+// func (r *NotificationTemplateResource) buildAPIPayload(ctx context.Context, plan *NotificationTemplateResourceModel) (map[string]interface{}, diag.Diagnostics) {
+// 	var diags diag.Diagnostics
+// 	payload := map[string]interface{}{}
+
+// 	// Handle messages
+// 	if !plan.Messages.IsNull() && !plan.Messages.IsUnknown() {
+// 		var messages MessagesModel
+// 		diags.Append(plan.Messages.As(ctx, &messages, basetypes.ObjectAsOptions{})...)
+// 		if diags.HasError() {
+// 			return nil, diags
+// 		}
+
+// 		messagesJSON := buildMessagesJSON(messages)
+// 		payload["messages"] = messagesJSON
+// 	}
+
+// 	return payload, diags
+// }
+
+// func buildMessagesJSON(m MessagesModel) map[string]interface{} {
+// 	result := map[string]interface{}{}
+
+// 	if m.Error != nil {
+// 		result["error"] = messageBodyToJSON(m.Error)
+// 	}
+// 	if m.Started != nil {
+// 		result["started"] = messageBodyToJSON(m.Started)
+// 	}
+// 	if m.Success != nil {
+// 		result["success"] = messageBodyToJSON(m.Success)
+// 	}
+// 	if m.WorkflowApproval != nil {
+// 		wa := map[string]interface{}{}
+// 		if m.WorkflowApproval.Denied != nil {
+// 			wa["denied"] = messageBodyToJSON(m.WorkflowApproval.Denied)
+// 		}
+// 		if m.WorkflowApproval.Running != nil {
+// 			wa["running"] = messageBodyToJSON(m.WorkflowApproval.Running)
+// 		}
+// 		if m.WorkflowApproval.Approved != nil {
+// 			wa["approved"] = messageBodyToJSON(m.WorkflowApproval.Approved)
+// 		}
+// 		if m.WorkflowApproval.TimedOut != nil {
+// 			wa["timed_out"] = messageBodyToJSON(m.WorkflowApproval.TimedOut)
+// 		}
+// 		result["workflow_approval"] = wa
+// 	}
+
+// 	return result
+// }
+
+// func messageBodyToJSON(mb *MessageBodyModel) map[string]interface{} {
+// 	return map[string]interface{}{
+// 		"body":    mb.Body.ValueString(),
+// 		"message": mb.Message.ValueString(),
+// 	}
+// }
+
+Yes! You can use json.Marshal/json.Unmarshal directly if you create a separate API struct that mirrors the JSON, then convert between your TF model and API struct.
+API Structs (mirror the JSON exactly)
+gotype MessagesAPIModel struct {
+    Error            MessageBodyAPIModel            `json:"error"`
+    Started          MessageBodyAPIModel            `json:"started"`
+    Success          MessageBodyAPIModel            `json:"success"`
+    WorkflowApproval WorkflowApprovalAPIModel       `json:"workflow_approval"`
+}
+
+type MessageBodyAPIModel struct {
+    Body    string `json:"body"`
+    Message string `json:"message"`
+}
+
+type WorkflowApprovalAPIModel struct {
+    Denied   MessageBodyAPIModel `json:"denied"`
+    Running  MessageBodyAPIModel `json:"running"`
+    Approved MessageBodyAPIModel `json:"approved"`
+    TimedOut MessageBodyAPIModel `json:"timed_out"`
+}
+TF Model → JSON (for API calls)
+go// 1. Extract TF model
+var messages MessagesModel
+plan.Messages.As(ctx, &messages, basetypes.ObjectAsOptions{})
+
+// 2. Map to API struct
+apiMessages := MessagesAPIModel{
+    Error:   MessageBodyAPIModel{Body: messages.Error.Body.ValueString(), Message: messages.Error.Message.ValueString()},
+    Started: MessageBodyAPIModel{Body: messages.Started.Body.ValueString(), Message: messages.Started.Message.ValueString()},
+    Success: MessageBodyAPIModel{Body: messages.Success.Body.ValueString(), Message: messages.Success.Message.ValueString()},
+    WorkflowApproval: WorkflowApprovalAPIModel{
+        Denied:   MessageBodyAPIModel{Body: messages.WorkflowApproval.Denied.Body.ValueString(), Message: messages.WorkflowApproval.Denied.Message.ValueString()},
+        Running:  MessageBodyAPIModel{Body: messages.WorkflowApproval.Running.Body.ValueString(), Message: messages.WorkflowApproval.Running.Message.ValueString()},
+        Approved: MessageBodyAPIModel{Body: messages.WorkflowApproval.Approved.Body.ValueString(), Message: messages.WorkflowApproval.Approved.Message.ValueString()},
+        TimedOut: MessageBodyAPIModel{Body: messages.WorkflowApproval.TimedOut.Body.ValueString(), Message: messages.WorkflowApproval.TimedOut.Message.ValueString()},
+    },
+}
+
+// 3. Marshal to JSON
+jsonBytes, err := json.Marshal(apiMessages)
+JSON → TF Model (reading API response)
+go// 1. Unmarshal API response
+var apiMessages MessagesAPIModel
+json.Unmarshal(responseBytes, &apiMessages)
+
+// 2. Map back to TF types - framework handles the rest via tfsdk tags
+messages := MessagesModel{
+    Error:   &MessageBodyModel{Body: types.StringValue(apiMessages.Error.Body), Message: types.StringValue(apiMessages.Error.Message)},
+    Started: &MessageBodyModel{Body: types.StringValue(apiMessages.Started.Body), Message: types.StringValue(apiMessages.Started.Message)},
+    // ... etc
+}
+The key insight is you need two separate struct hierarchies — one using types.String with tfsdk tags for Terraform state, and one using native Go types with json tags for the API. The framework can't directly marshal/unmarshal JSON because types.String doesn't serialize to a plain JSON string.
