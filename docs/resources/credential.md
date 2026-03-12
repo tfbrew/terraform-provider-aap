@@ -116,6 +116,8 @@ resource "aap_credential" "example-container-registry" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 # The example below is for a simple import that can be used when you do not have an inputs attribute block defined with secrets.
 terraform import aap_credential.example 5

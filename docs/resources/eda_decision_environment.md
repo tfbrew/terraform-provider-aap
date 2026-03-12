@@ -64,6 +64,8 @@ resource "aap_eda_decision_environment" "example-container-registry" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import aap_eda_decision_environment.example 1
 ```
