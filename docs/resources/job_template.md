@@ -102,6 +102,8 @@ resource "aap_job_template" "example" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import aap_job_template.example 100
 ```

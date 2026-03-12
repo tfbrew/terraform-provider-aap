@@ -31,6 +31,8 @@ resource "aap_workflow_job_template_node_failure" "example_node_failure" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import aap_workflow_job_template_node_failure.example_node 201
 ```
