@@ -19,45 +19,45 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ resource.Resource = &JobTemplateSurveyResource{}
-var _ resource.ResourceWithImportState = &JobTemplateSurveyResource{}
+var _ resource.Resource = &WorkflowJobTemplateSurveyResource{}
+var _ resource.ResourceWithImportState = &WorkflowJobTemplateSurveyResource{}
 
-func NewJobTemplateSurveyResource() resource.Resource {
-	return &JobTemplateSurveyResource{}
+func NewWorkflowJobTemplateSurveyResource() resource.Resource {
+	return &WorkflowJobTemplateSurveyResource{}
 }
 
-type JobTemplateSurveyResource struct {
+type WorkflowJobTemplateSurveyResource struct {
 	client *providerClient
 }
 
-type JobTemplateSurveyResourceModel struct {
+type WorkflowJobTemplateSurveyResourceModel struct {
 	Id          types.String      `tfsdk:"id"`
 	Name        types.String      `tfsdk:"name"`
 	Description types.String      `tfsdk:"description"`
 	Spec        []SurveySpecModel `tfsdk:"spec"`
 }
 
-func (r *JobTemplateSurveyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_job_template_survey_spec"
+func (r *WorkflowJobTemplateSurveyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_workflow_job_template_survey_spec"
 }
 
-func (r *JobTemplateSurveyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *WorkflowJobTemplateSurveyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Associate survey specs to an existing Job Template.",
+		Description: "Associate survey specs to an existing Workflow Job Template.",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Required:    true,
-				Description: "ID of job template to attach survey to.",
+				Description: "ID of workflow job template to attach survey to.",
 			},
 			"name": schema.StringAttribute{
-				Description: "Job template survey spec name.",
+				Description: "Workflow Job template survey spec name.",
 				Default:     stringdefault.StaticString(""),
 				Optional:    true,
 				Computed:    true,
 			},
 			"description": schema.StringAttribute{
-				Description: "Job template survey spec description.",
+				Description: "Workflow Job template survey spec description.",
 				Default:     stringdefault.StaticString(""),
 				Optional:    true,
 				Computed:    true,
@@ -119,7 +119,7 @@ func (r *JobTemplateSurveyResource) Schema(ctx context.Context, req resource.Sch
 	}
 }
 
-func (r *JobTemplateSurveyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *WorkflowJobTemplateSurveyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -138,8 +138,8 @@ func (r *JobTemplateSurveyResource) Configure(ctx context.Context, req resource.
 	r.client = configureData
 }
 
-func (r *JobTemplateSurveyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data JobTemplateSurveyResourceModel
+func (r *WorkflowJobTemplateSurveyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data WorkflowJobTemplateSurveyResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -154,7 +154,7 @@ func (r *JobTemplateSurveyResource) Create(ctx context.Context, req resource.Cre
 			fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
 	}
 
-	url := fmt.Sprintf("job_templates/%d/survey_spec/", id)
+	url := fmt.Sprintf("workflow_job_templates/%d/survey_spec/", id)
 
 	var bodyData Survey
 	bodyData.Name = data.Name.ValueString()
@@ -219,8 +219,8 @@ func (r *JobTemplateSurveyResource) Create(ctx context.Context, req resource.Cre
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *JobTemplateSurveyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data JobTemplateSurveyResourceModel
+func (r *WorkflowJobTemplateSurveyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data WorkflowJobTemplateSurveyResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -234,7 +234,7 @@ func (r *JobTemplateSurveyResource) Read(ctx context.Context, req resource.ReadR
 			fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
 	}
 
-	url := fmt.Sprintf("job_templates/%d/survey_spec/", id)
+	url := fmt.Sprintf("workflow_job_templates/%d/survey_spec/", id)
 
 	httpResponse, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "")
 	if err != nil {
@@ -349,8 +349,8 @@ func (r *JobTemplateSurveyResource) Read(ctx context.Context, req resource.ReadR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *JobTemplateSurveyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data JobTemplateSurveyResourceModel
+func (r *WorkflowJobTemplateSurveyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data WorkflowJobTemplateSurveyResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -364,7 +364,7 @@ func (r *JobTemplateSurveyResource) Update(ctx context.Context, req resource.Upd
 			fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
 	}
 
-	url := fmt.Sprintf("job_templates/%d/survey_spec/", id)
+	url := fmt.Sprintf("workflow_job_templates/%d/survey_spec/", id)
 
 	var bodyData Survey
 	bodyData.Name = data.Name.ValueString()
@@ -429,8 +429,8 @@ func (r *JobTemplateSurveyResource) Update(ctx context.Context, req resource.Upd
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *JobTemplateSurveyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data JobTemplateSurveyResourceModel
+func (r *WorkflowJobTemplateSurveyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data WorkflowJobTemplateSurveyResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
@@ -445,7 +445,7 @@ func (r *JobTemplateSurveyResource) Delete(ctx context.Context, req resource.Del
 			fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
 	}
 
-	url := fmt.Sprintf("job_templates/%d/survey_spec/", id)
+	url := fmt.Sprintf("workflow_job_templates/%d/survey_spec/", id)
 
 	_, _, err = r.client.GenericAPIRequest(ctx, http.MethodDelete, url, nil, []int{200}, "")
 	if err != nil {
@@ -456,6 +456,6 @@ func (r *JobTemplateSurveyResource) Delete(ctx context.Context, req resource.Del
 	}
 }
 
-func (r *JobTemplateSurveyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *WorkflowJobTemplateSurveyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

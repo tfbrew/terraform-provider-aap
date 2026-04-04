@@ -12,7 +12,7 @@ import (
 	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
 )
 
-func TestAccJobTemplateCredentialResource(t *testing.T) {
+func TestAccWkflwJobTemplJobNodeCredentialResource(t *testing.T) {
 	rName := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
 	IdCompare := &compareTwoValuesAsStrings{}
 	resource.Test(t, resource.TestCase{
@@ -23,32 +23,30 @@ func TestAccJobTemplateCredentialResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobTemplateCredentialResource1Config(rName),
+				Config: testAccWkflwJobTemplJobNodeCredentialResource1Config(rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_job_template.%s", configprefix.Prefix, rName),
+						fmt.Sprintf("%s_workflow_job_template_job_node.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("id"),
-						fmt.Sprintf("%s_job_template_credential.%s", configprefix.Prefix, rName),
-						tfjsonpath.New("job_template_id"),
+						fmt.Sprintf("%s_workflow_job_template_job_node_credential.%s", configprefix.Prefix, rName),
+						tfjsonpath.New("id"),
 						IdCompare,
 					),
 				},
 			},
 			{
-				ResourceName:                         fmt.Sprintf("%s_job_template_credential.%s", configprefix.Prefix, rName),
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    importStateJobTemplateID(fmt.Sprintf("%s_job_template_credential.%s", configprefix.Prefix, rName)),
-				ImportStateVerifyIdentifierAttribute: ("job_template_id"),
+				ResourceName:      fmt.Sprintf("%s_workflow_job_template_job_node_credential.%s", configprefix.Prefix, rName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobTemplateCredentialResource2Config(rName),
+				Config: testAccWkflwJobTemplJobNodeCredentialResource2Config(rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_job_template.%s", configprefix.Prefix, rName),
+						fmt.Sprintf("%s_workflow_job_template_job_node.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("id"),
-						fmt.Sprintf("%s_job_template_credential.%s", configprefix.Prefix, rName),
-						tfjsonpath.New("job_template_id"),
+						fmt.Sprintf("%s_workflow_job_template_job_node_credential.%s", configprefix.Prefix, rName),
+						tfjsonpath.New("id"),
 						IdCompare,
 					),
 				},
@@ -57,7 +55,7 @@ func TestAccJobTemplateCredentialResource(t *testing.T) {
 	})
 }
 
-func testAccJobTemplateCredentialResource1Config(rName string) string {
+func testAccWkflwJobTemplJobNodeCredentialResource1Config(rName string) string {
 	return fmt.Sprintf(`
 resource "%[1]s_organization" "%[3]s" {
   name        = "%[2]s"
@@ -79,7 +77,7 @@ data "%[1]s_credential_type" "%[3]s" {
 }
 resource "%[1]s_credential" "%[3]s" {
   name            = "%[2]s"
-  description	  = "%[2]s"
+  description	    = "%[2]s"
   organization    = %[1]s_organization.%[3]s.id
   credential_type = data.%[1]s_credential_type.%[3]s.id
   inputs = jsonencode({
@@ -90,18 +88,31 @@ resource "%[1]s_credential" "%[3]s" {
 resource "%[1]s_job_template" "%[3]s" {
   name        = "%[2]s"
   job_type    = "run"
-  inventory   = %[1]s_inventory.%[3]s.id
   project     = %[1]s_project.%[3]s.id
+  inventory   = %[1]s_inventory.%[3]s.id
   playbook    = "%[2]s"
+  ask_credential_on_launch = true
+  ask_inventory_on_launch  = true
 }
-resource "%[1]s_job_template_credential" "%[3]s" {
+resource "%[1]s_workflow_job_template" "%[3]s" {
+  name                     = "%[2]s"
+  inventory                = %[1]s_inventory.%[3]s.id
+  organization             = %[1]s_organization.%[3]s.id
+}
+resource "%[1]s_workflow_job_template_job_node" "%[3]s" {
+  unified_job_template     	= %[1]s_job_template.%[3]s.id
+  workflow_job_template_id 	= %[1]s_workflow_job_template.%[3]s.id
+  inventory 				        = %[1]s_inventory.%[3]s.id
+
+}
+resource "%[1]s_workflow_job_template_job_node_credential" "%[3]s" {
   credential_ids  = [ %[1]s_credential.%[3]s.id ]
-  job_template_id = %[1]s_job_template.%[3]s.id
+  id              = %[1]s_workflow_job_template_job_node.%[3]s.id
 }
-  `, configprefix.Prefix, acctest.RandString(5), rName)
+  `, configprefix.Prefix, acctest.RandString(5), rName, rName+"a", rName+"b")
 }
 
-func testAccJobTemplateCredentialResource2Config(rName string) string {
+func testAccWkflwJobTemplJobNodeCredentialResource2Config(rName string) string {
 	return fmt.Sprintf(`
 resource "%[1]s_organization" "%[3]s" {
   name        = "%[2]s"
@@ -148,13 +159,25 @@ resource "%[1]s_credential" "%[5]s" {
 resource "%[1]s_job_template" "%[3]s" {
   name        = "%[2]s"
   job_type    = "run"
-  inventory   = %[1]s_inventory.%[3]s.id
   project     = %[1]s_project.%[3]s.id
   playbook    = "%[2]s"
+  inventory   = %[1]s_inventory.%[3]s.id
+  ask_credential_on_launch = true
+  ask_inventory_on_launch  = true
 }
-resource "%[1]s_job_template_credential" "%[3]s" {
+resource "%[1]s_workflow_job_template" "%[3]s" {
+  name                     = "%[2]s"
+  inventory                = %[1]s_inventory.%[3]s.id
+  organization             = %[1]s_organization.%[3]s.id
+}
+resource "%[1]s_workflow_job_template_job_node" "%[3]s" {
+  unified_job_template     	= %[1]s_job_template.%[3]s.id
+  workflow_job_template_id 	= %[1]s_workflow_job_template.%[3]s.id
+  inventory 				= %[1]s_inventory.%[3]s.id
+}
+resource "%[1]s_workflow_job_template_job_node_credential" "%[3]s" {
   credential_ids  = [ %[1]s_credential.%[4]s.id, %[1]s_credential.%[5]s.id ]
-  job_template_id = %[1]s_job_template.%[3]s.id
+  id = %[1]s_workflow_job_template_job_node.%[3]s.id
 }
   `, configprefix.Prefix, acctest.RandString(5), rName, rName+"a", rName+"b")
 }

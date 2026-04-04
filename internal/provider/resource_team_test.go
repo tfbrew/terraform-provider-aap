@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccTeamResource(t *testing.T) {
+	rName := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
 	IdCompare := &compareTwoValuesAsStrings{}
 	teamName := "test-team-" + acctest.RandString(5)
 	teamDesc := "Test team description"
@@ -27,49 +28,49 @@ func TestAccTeamResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTeamResourceConfig(teamName, teamDesc),
+				Config: testAccTeamResourceConfig(teamName, teamDesc, rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_team.test", configprefix.Prefix),
+						fmt.Sprintf("%s_team.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("name"),
 						knownvalue.StringExact(teamName),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_team.test", configprefix.Prefix),
+						fmt.Sprintf("%s_team.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(teamDesc),
 					),
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_organization.test", configprefix.Prefix),
+						fmt.Sprintf("%s_organization.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("gateway_id"),
-						fmt.Sprintf("%s_team.test", configprefix.Prefix),
+						fmt.Sprintf("%s_team.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("organization"),
 						IdCompare,
 					),
 				},
 			},
 			{
-				ResourceName:      fmt.Sprintf("%s_team.test", configprefix.Prefix),
+				ResourceName:      fmt.Sprintf("%s_team.%s", configprefix.Prefix, rName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTeamResourceConfig(teamName, teamDesc2),
+				Config: testAccTeamResourceConfig(teamName, teamDesc2, rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_team.test", configprefix.Prefix),
+						fmt.Sprintf("%s_team.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("name"),
 						knownvalue.StringExact(teamName),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_team.test", configprefix.Prefix),
+						fmt.Sprintf("%s_team.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(teamDesc2),
 					),
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_organization.test", configprefix.Prefix),
+						fmt.Sprintf("%s_organization.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("gateway_id"),
-						fmt.Sprintf("%s_team.test", configprefix.Prefix),
+						fmt.Sprintf("%s_team.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("organization"),
 						IdCompare,
 					),
@@ -79,16 +80,16 @@ func TestAccTeamResource(t *testing.T) {
 	})
 }
 
-func testAccTeamResourceConfig(teamName, teamDesc string) string {
+func testAccTeamResourceConfig(teamName, teamDesc string, rName string) string {
 	return fmt.Sprintf(`
-resource "%[1]s_organization" "test" {
+resource "%[1]s_organization" "%[5]s" {
   name = "%[2]s"
 }
 
-resource "%[1]s_team" "test" {
+resource "%[1]s_team" "%[5]s" {
   name         = "%[3]s"
-  organization = %[1]s_organization.test.gateway_id
+  organization = %[1]s_organization.%[5]s.gateway_id
   description  = "%[4]s"
 }
-`, configprefix.Prefix, acctest.RandString(5), teamName, teamDesc)
+`, configprefix.Prefix, acctest.RandString(5), teamName, teamDesc, rName)
 }

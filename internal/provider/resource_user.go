@@ -73,7 +73,7 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"is_system_auditor": schema.BoolAttribute{
 				Optional:    true,
-				Description: "AWX/AAP2.4 only. User is a system wide auditor. Only one of `is_superuser` or `is_system_auditor` is allowed. AAP 2.5 changes this attribute to `is_platform_auditor`, but the API to set that to true does not work.",
+				Description: "User is a system wide auditor. Only one of `is_superuser` or `is_system_auditor` is allowed.",
 				Default:     booldefault.StaticBool(false),
 				Computed:    true,
 			},

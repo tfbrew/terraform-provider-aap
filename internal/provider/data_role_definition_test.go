@@ -15,7 +15,7 @@ import (
 
 func TestAccRoleDefinitionDataSource(t *testing.T) {
 	roleDef := RoleDefinitionAPIModel{
-		Name:        "test-roledef " + acctest.RandString(5),
+		Name:        "test-roledef-" + acctest.RandString(5),
 		Description: "Test role definition datasource",
 		ContentType: "shared.organization",
 		Permissions: []string{"awx.add_notificationtemplate", "awx.view_notificationtemplate"},

@@ -14,6 +14,11 @@ import (
 )
 
 func TestAccUserResource(t *testing.T) {
+	rName := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	rName2 := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	rName3 := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	rName4 := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+
 	if configprefix.Prefix == "awx" {
 		resource1 := UserAPIModel{
 			Username:  "test-user-" + acctest.RandString(5),
@@ -54,40 +59,40 @@ func TestAccUserResource(t *testing.T) {
 			ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccUserResource1Config(resource1),
+					Config: testAccUserResource1Config(resource1, rName),
 					ConfigStateChecks: []statecheck.StateCheck{
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("username"),
 							knownvalue.StringExact(resource1.Username),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("first_name"),
 							knownvalue.StringExact(resource1.FirstName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("last_name"),
 							knownvalue.StringExact(resource1.LastName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("email"),
 							knownvalue.StringExact(resource1.Email),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("password"),
 							knownvalue.StringExact(resource1.Password),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("is_superuser"),
 							knownvalue.Bool(false),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("is_system_auditor"),
 							knownvalue.Bool(false),
 						),
@@ -95,47 +100,47 @@ func TestAccUserResource(t *testing.T) {
 				},
 				// ImportState testing
 				{
-					ResourceName:            fmt.Sprintf("%s_user.test", configprefix.Prefix),
+					ResourceName:            fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 					ImportState:             true,
 					ImportStateVerify:       true,
 					ImportStateVerifyIgnore: []string{"password"},
 				},
 				// Update and Read testing
 				{
-					Config: testAccUserResource2Config(resource2),
+					Config: testAccUserResource2Config(resource2, rName2),
 					ConfigStateChecks: []statecheck.StateCheck{
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("username"),
 							knownvalue.StringExact(resource2.Username),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("first_name"),
 							knownvalue.StringExact(resource2.FirstName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("last_name"),
 							knownvalue.StringExact(resource2.LastName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("email"),
 							knownvalue.StringExact(resource2.Email),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("password"),
 							knownvalue.StringExact(resource2.Password),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("is_superuser"),
 							knownvalue.Bool(resource2.IsSuperuser),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("is_system_auditor"),
 							knownvalue.Bool(false),
 						),
@@ -143,40 +148,40 @@ func TestAccUserResource(t *testing.T) {
 				},
 				// Test superuser
 				{
-					Config: testAccUserResource3Config(resource3),
+					Config: testAccUserResource3Config(resource3, rName3),
 					ConfigStateChecks: []statecheck.StateCheck{
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("username"),
 							knownvalue.StringExact(resource3.Username),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("first_name"),
 							knownvalue.StringExact(resource3.FirstName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("last_name"),
 							knownvalue.StringExact(resource3.LastName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("email"),
 							knownvalue.StringExact(resource3.Email),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("password"),
 							knownvalue.StringExact(resource3.Password),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("is_superuser"),
 							knownvalue.Bool(resource3.IsSuperuser),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("is_system_auditor"),
 							knownvalue.Bool(resource3.IsSystemAuditor),
 						),
@@ -184,40 +189,40 @@ func TestAccUserResource(t *testing.T) {
 				},
 				// Test system auditor
 				{
-					Config: testAccUserResource4Config(resource4),
+					Config: testAccUserResource4Config(resource4, rName4),
 					ConfigStateChecks: []statecheck.StateCheck{
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("username"),
 							knownvalue.StringExact(resource4.Username),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("first_name"),
 							knownvalue.StringExact(resource4.FirstName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("last_name"),
 							knownvalue.StringExact(resource4.LastName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("email"),
 							knownvalue.StringExact(resource4.Email),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("password"),
 							knownvalue.StringExact(resource4.Password),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("is_superuser"),
 							knownvalue.Bool(resource4.IsSuperuser),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("is_system_auditor"),
 							knownvalue.Bool(resource4.IsSystemAuditor),
 						),
@@ -264,35 +269,35 @@ func TestAccUserResource(t *testing.T) {
 			ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccUserResource1Config(resource1),
+					Config: testAccUserResource1Config(resource1, rName),
 					ConfigStateChecks: []statecheck.StateCheck{
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("username"),
 							knownvalue.StringExact(resource1.Username),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("first_name"),
 							knownvalue.StringExact(resource1.FirstName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("last_name"),
 							knownvalue.StringExact(resource1.LastName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("email"),
 							knownvalue.StringExact(resource1.Email),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("password"),
 							knownvalue.StringExact(resource1.Password),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 							tfjsonpath.New("is_superuser"),
 							knownvalue.Bool(false),
 						),
@@ -300,42 +305,42 @@ func TestAccUserResource(t *testing.T) {
 				},
 				// ImportState testing
 				{
-					ResourceName:            fmt.Sprintf("%s_user.test", configprefix.Prefix),
+					ResourceName:            fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName),
 					ImportState:             true,
 					ImportStateVerify:       true,
 					ImportStateVerifyIgnore: []string{"password"},
 				},
 				// Update and Read testing
 				{
-					Config: testAccUserResource2Config(resource2),
+					Config: testAccUserResource2Config(resource2, rName2),
 					ConfigStateChecks: []statecheck.StateCheck{
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("username"),
 							knownvalue.StringExact(resource2.Username),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("first_name"),
 							knownvalue.StringExact(resource2.FirstName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("last_name"),
 							knownvalue.StringExact(resource2.LastName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("email"),
 							knownvalue.StringExact(resource2.Email),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("password"),
 							knownvalue.StringExact(resource2.Password),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName2),
 							tfjsonpath.New("is_superuser"),
 							knownvalue.Bool(resource2.IsSuperuser),
 						),
@@ -343,35 +348,35 @@ func TestAccUserResource(t *testing.T) {
 				},
 				// Test superuser
 				{
-					Config: testAccUserResource3Config(resource3),
+					Config: testAccUserResource3Config(resource3, rName3),
 					ConfigStateChecks: []statecheck.StateCheck{
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("username"),
 							knownvalue.StringExact(resource3.Username),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("first_name"),
 							knownvalue.StringExact(resource3.FirstName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("last_name"),
 							knownvalue.StringExact(resource3.LastName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("email"),
 							knownvalue.StringExact(resource3.Email),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("password"),
 							knownvalue.StringExact(resource3.Password),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-3", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName3),
 							tfjsonpath.New("is_superuser"),
 							knownvalue.Bool(resource3.IsSuperuser),
 						),
@@ -379,35 +384,35 @@ func TestAccUserResource(t *testing.T) {
 				},
 				// Test system auditor
 				{
-					Config: testAccUserResource4Config(resource4),
+					Config: testAccUserResource4Config(resource4, rName4),
 					ConfigStateChecks: []statecheck.StateCheck{
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("username"),
 							knownvalue.StringExact(resource4.Username),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("first_name"),
 							knownvalue.StringExact(resource4.FirstName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("last_name"),
 							knownvalue.StringExact(resource4.LastName),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("email"),
 							knownvalue.StringExact(resource4.Email),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("password"),
 							knownvalue.StringExact(resource4.Password),
 						),
 						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test-4", configprefix.Prefix),
+							fmt.Sprintf("%s_user.%s", configprefix.Prefix, rName4),
 							tfjsonpath.New("is_superuser"),
 							knownvalue.Bool(resource4.IsSuperuser),
 						),
@@ -418,34 +423,21 @@ func TestAccUserResource(t *testing.T) {
 	}
 }
 
-func testAccUserResource1Config(resource UserAPIModel) string {
+func testAccUserResource1Config(resource UserAPIModel, rName string) string {
 	return fmt.Sprintf(`
-resource "%[1]s_user" "test" {
+resource "%[1]s_user" "%[7]s" {
   username      = "%[2]s"
   first_name 	= "%[3]s"
   last_name 	= "%[4]s"
   email			= "%[5]s"
   password 		= "%[6]s"
 }
-  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password)
+  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, rName)
 }
 
-func testAccUserResource2Config(resource UserAPIModel) string {
+func testAccUserResource2Config(resource UserAPIModel, rName string) string {
 	return fmt.Sprintf(`
-resource "%[1]s_user" "test" {
-  username      = "%[2]s"
-  first_name 	= "%[3]s"
-  last_name 	= "%[4]s"
-  email			= "%[5]s"
-  password 		= "%[6]s"
-  is_superuser  = %[7]v
-}
-  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser)
-}
-
-func testAccUserResource3Config(resource UserAPIModel) string {
-	return fmt.Sprintf(`
-resource "%[1]s_user" "test-3" {
+resource "%[1]s_user" "%[8]s" {
   username      = "%[2]s"
   first_name 	= "%[3]s"
   last_name 	= "%[4]s"
@@ -453,12 +445,25 @@ resource "%[1]s_user" "test-3" {
   password 		= "%[6]s"
   is_superuser  = %[7]v
 }
-  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser)
+  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser, rName)
 }
 
-func testAccUserResource4Config(resource UserAPIModel) string {
+func testAccUserResource3Config(resource UserAPIModel, rName string) string {
 	return fmt.Sprintf(`
-resource "%[1]s_user" "test-4" {
+resource "%[1]s_user" "%[8]s" {
+  username      = "%[2]s"
+  first_name 	= "%[3]s"
+  last_name 	= "%[4]s"
+  email			= "%[5]s"
+  password 		= "%[6]s"
+  is_superuser  = %[7]v
+}
+  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser, rName)
+}
+
+func testAccUserResource4Config(resource UserAPIModel, rName string) string {
+	return fmt.Sprintf(`
+resource "%[1]s_user" "%[8]s" {
   username      	= "%[2]s"
   first_name 		= "%[3]s"
   last_name 		= "%[4]s"
@@ -466,5 +471,5 @@ resource "%[1]s_user" "test-4" {
   password 			= "%[6]s"
   is_system_auditor = %[7]v
 }
-  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSystemAuditor)
+  `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSystemAuditor, rName)
 }

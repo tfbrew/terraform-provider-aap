@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccCredentialTypeResource(t *testing.T) {
+	rName := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
 	resource1 := CredentialTypeAPIModel{
 		Name:        "test-credential-type-" + acctest.RandString(5),
 		Description: "test description 1",
@@ -32,45 +33,45 @@ func TestAccCredentialTypeResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCredentialTypeConfig(resource1),
+				Config: testAccCredentialTypeConfig(resource1, rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_credential_type.test", configprefix.Prefix),
+						fmt.Sprintf("%s_credential_type.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("name"),
 						knownvalue.StringExact(resource1.Name),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_credential_type.test", configprefix.Prefix),
+						fmt.Sprintf("%s_credential_type.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(resource1.Description),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_credential_type.test", configprefix.Prefix),
+						fmt.Sprintf("%s_credential_type.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("kind"),
 						knownvalue.StringExact(resource1.Kind),
 					),
 				},
 			},
 			{
-				ResourceName:      fmt.Sprintf("%s_credential_type.test", configprefix.Prefix),
+				ResourceName:      fmt.Sprintf("%s_credential_type.%s", configprefix.Prefix, rName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCredentialTypeConfig(resource2),
+				Config: testAccCredentialTypeConfig(resource2, rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_credential_type.test", configprefix.Prefix),
+						fmt.Sprintf("%s_credential_type.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("name"),
 						knownvalue.StringExact(resource2.Name),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_credential_type.test", configprefix.Prefix),
+						fmt.Sprintf("%s_credential_type.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(resource2.Description),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_credential_type.test", configprefix.Prefix),
+						fmt.Sprintf("%s_credential_type.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("kind"),
 						knownvalue.StringExact(resource1.Kind),
 					),
@@ -80,11 +81,11 @@ func TestAccCredentialTypeResource(t *testing.T) {
 	})
 }
 
-func testAccCredentialTypeConfig(resource CredentialTypeAPIModel) string {
+func testAccCredentialTypeConfig(resource CredentialTypeAPIModel, rName string) string {
 	return fmt.Sprintf(`
-resource "%[1]s_credential_type" "test" {
+resource "%[1]s_credential_type" "%[4]s" {
   name         = "%[2]s"
   description  = "%[3]s"
 }
-  `, configprefix.Prefix, resource.Name, resource.Description)
+  `, configprefix.Prefix, resource.Name, resource.Description, rName)
 }

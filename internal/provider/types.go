@@ -76,6 +76,20 @@ type CredentialDataModel struct {
 	InputsAsObject types.Dynamic `tfsdk:"inputs_as_object"`
 }
 
+type CredentialDissasocBody struct {
+	Id           int  `json:"id"`
+	Disassociate bool `json:"disassociate"`
+}
+
+type CredentialAPIRead struct {
+	Count   int                `json:"count"`
+	Results []CredentialResult `json:"results"`
+}
+
+type CredentialResult struct {
+	Id int `json:"id"`
+}
+
 type CredentialAPIModel struct {
 	Id             int            `json:"id"`
 	Name           string         `json:"name"`
@@ -664,6 +678,36 @@ type ScheduleAPIModel struct {
 	ExecutionEnvironment int            `json:"execution_environment,omitempty"`
 	Timeout              int            `json:"timeout,omitempty"`
 	ExtraData            map[string]any `json:"extra_data,omitempty"`
+}
+
+type Survey struct {
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Spec        []SurveySpec `json:"spec"`
+}
+
+type SurveySpec struct {
+	Max                 int    `json:"max"`
+	Min                 int    `json:"min"`
+	Type                string `json:"type"`
+	Choices             any    `json:"choices,omitempty"`
+	Default             any    `json:"default"`
+	Required            bool   `json:"required"`
+	Variable            string `json:"variable"`
+	QuestionName        string `json:"question_name"`
+	QuestionDescription string `json:"question_description"`
+}
+
+type SurveySpecModel struct {
+	Max                 types.Int32  `tfsdk:"max"`
+	Min                 types.Int32  `tfsdk:"min"`
+	Type                types.String `tfsdk:"type"`
+	Choices             types.List   `tfsdk:"choices"`
+	Default             types.String `tfsdk:"default"`
+	Required            types.Bool   `tfsdk:"required"`
+	Variable            types.String `tfsdk:"variable"`
+	QuestionName        types.String `tfsdk:"question_name"`
+	QuestionDescription types.String `tfsdk:"question_description"`
 }
 
 type TeamModel struct {

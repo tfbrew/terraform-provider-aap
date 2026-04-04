@@ -32,6 +32,10 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
+      - name: Print build tag value
+        run: echo "REPO_BUILD_TAG_VALUE=${REPO_BUILD_TAG_VALUE}"
+        env:
+          REPO_BUILD_TAG_VALUE: ${{ vars.BUILD_TAG }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7.0.0
         with:

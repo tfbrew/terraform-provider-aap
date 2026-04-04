@@ -30,7 +30,6 @@ func main() {
 		Address: "registry.terraform.io/tfbrew/" + configprefix.Prefix,
 		Debug:   debug,
 	}
-
 	err := providerserver.Serve(context.Background(), provider.New(version), opts)
 
 	if err != nil {

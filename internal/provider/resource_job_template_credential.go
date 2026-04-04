@@ -30,20 +30,6 @@ type JobTemplateCredentialResourceModel struct {
 	CredentialIds types.Set    `tfsdk:"credential_ids"`
 }
 
-type JTCredentialAPIRead struct {
-	Count   int      `json:"count"`
-	Results []Result `json:"results"`
-}
-
-type Result struct {
-	Id int `json:"id"`
-}
-
-type DissasocBody struct {
-	Id           int  `json:"id"`
-	Disassociate bool `json:"disassociate"`
-}
-
 func (r *JobTemplateCredentialResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_job_template_credential"
 }
@@ -111,7 +97,7 @@ func (r *JobTemplateCredentialResource) Create(ctx context.Context, req resource
 
 	for _, val := range credIds {
 
-		var bodyData Result
+		var bodyData CredentialResult
 		bodyData.Id = val
 
 		_, _, err = r.client.GenericAPIRequest(ctx, http.MethodPost, url, bodyData, []int{204}, "")
@@ -154,7 +140,7 @@ func (r *JobTemplateCredentialResource) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	var responseData JTCredentialAPIRead
+	var responseData CredentialAPIRead
 
 	err = json.Unmarshal(body, &responseData)
 	if err != nil {
@@ -203,7 +189,7 @@ func (r *JobTemplateCredentialResource) Update(ctx context.Context, req resource
 		return
 	}
 
-	var responseData JTCredentialAPIRead
+	var responseData CredentialAPIRead
 
 	err = json.Unmarshal(body, &responseData)
 	if err != nil {
@@ -229,7 +215,7 @@ func (r *JobTemplateCredentialResource) Update(ctx context.Context, req resource
 	//  are no longer in the plan
 	for _, v := range ApiTfCredIds {
 		if !slices.Contains(PlanCredIds, v) {
-			var bodyData DissasocBody
+			var bodyData CredentialDissasocBody
 			bodyData.Id = v
 
 			_, _, err = r.client.GenericAPIRequest(ctx, http.MethodPost, url, bodyData, []int{204}, "")
@@ -242,7 +228,7 @@ func (r *JobTemplateCredentialResource) Update(ctx context.Context, req resource
 	// associate any credentials found in plan that weren't shown in API response
 	for _, v := range PlanCredIds {
 		if !slices.Contains(ApiTfCredIds, v) {
-			var bodyData Result
+			var bodyData CredentialResult
 			bodyData.Id = v
 
 			_, _, err = r.client.GenericAPIRequest(ctx, http.MethodPost, url, bodyData, []int{204}, "")
@@ -282,7 +268,7 @@ func (r *JobTemplateCredentialResource) Delete(ctx context.Context, req resource
 
 	for _, val := range credIds {
 
-		var bodyData DissasocBody
+		var bodyData CredentialDissasocBody
 
 		bodyData.Id = val
 		bodyData.Disassociate = true

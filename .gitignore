@@ -33,6 +33,13 @@ website/vendor
 
 # Keep windows files with windows line endings
 *.winfile eol=crlf
+.ansible/.lock
+
+# Environment variable files
+.env
+githubaction-test-awx.vars
+gitactions-testing-awx.secrets
+
 gitlog.txt
 .ansible/.lock
 
