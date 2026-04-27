@@ -386,8 +386,8 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	// Handle inputs attribute.
-	// If inputs_wo is null, then we should try to set inputs from the API response. Otherwise, if they are using the wo attribute we do not store it back to state.
-	if data.InputsWO.IsUnderlyingValueNull() && data.InputsWO.IsNull() {
+	// If inputs_wo_version is null, then we should try to set inputs from the API response. Otherwise, if they are using the wo attribute we do not store it back to state.
+	if data.InputsWOVersion.IsNull() {
 
 		// This is dymanic and we document that they should provide a String or an Object for this attribute.
 		// Inputs themselves will only be string or boolean, fyi: https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.5/html/using_automation_decisions/eda-credential-types
