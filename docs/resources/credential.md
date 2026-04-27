@@ -22,7 +22,7 @@ resource "aap_organization" "example" {
   description = "example"
 }
 
-// Example machine credential
+// Example machine credential with inputs_wo & inputs_wo_version to set inputs without storing them in the state file. This is useful for sensitive data like passwords or ssh keys.
 
 // Inputs options for machine credentials:
 // username, password, ssh_key_data, ssh_public_key_data, become_method, become_password, ssh_key_unlock
@@ -37,15 +37,16 @@ resource "aap_credential" "example-machine" {
   name            = "example_machine"
   organization    = aap_organization.example.id
   credential_type = data.aap_credential_type.machine.id
-  inputs = jsonencode({
-    "become_method" : "sudo",
-    "become_password" : "ASK", // ASK = Prompt at Launch checkbox
-    "password" : "test1234",   // code should not contain secrets, example only
-    "username" : "aap"
-  })
+  inputs_wo = {
+    become_method : "sudo",
+    become_password : "ASK", // ASK = Prompt at Launch checkbox
+    password : "test1234",   // code should not contain secrets, example only
+    username : "aap"
+  }
+  inputs_wo_version = 1
 }
 
-// Example source control credential
+// Example source control credential with inputs
 
 // Inputs options for source control credentials:
 // username, password, ssh_key_data, ssh_key_unlock
@@ -57,17 +58,17 @@ data "aap_credential_type" "source-control" {
 }
 
 resource "aap_credential" "example-source-control" {
-  name            = "example_machine"
+  name            = "example_source_control"
   organization    = aap_organization.example.id
   credential_type = data.aap_credential_type.source-control.id
-  inputs = jsonencode({
-    "ssh_key_data" : file("${path.module}/id_rsa"), // code should not contain secrets, example only
-    "ssh_key_unlock" : "test1234",                  // code should not contain secrets, example only
-    "username" : "aap"
-  })
+  inputs = {
+    ssh_key_data : file("${path.module}/id_rsa"), // code should not contain secrets, example only
+    ssh_key_unlock : "test1234",                  // code should not contain secrets, example only
+    username : "aap"
+  }
 }
 
-// Example container registry credential
+// Example container registry credential with inputs jsonencoded.
 
 // Inputs options for source control credentials:
 // host, username, password, verify_ssl
@@ -101,8 +102,12 @@ resource "aap_credential" "example-container-registry" {
 
 ### Optional
 
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
+
 - `description` (String) Credential description.
 - `inputs` (Dynamic, Sensitive) This field can take inputs in two forms: an object or a JSON-encoded string. When importing this resource type, you must specify the inputs as an object. See above for examples of both types. The older, second method is to specify a string by using using `jsonencode()` to encode similar data as as string in state. Specify alphabetically when using the second method.
+- `inputs_wo` (Dynamic, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) This is a write only version of `inputs`. Also requires `inputs_wo_version` to be set. For more info see [updating write-only attributes](https://developer.hashicorp.com/terraform/language/manage-sensitive-data/write-only).
+- `inputs_wo_version` (Number) The version number of the last update to `inputs_wo`. This is used to force updates to `inputs_wo` when there are changes to the inputs that need to be sent to the API.
 - `organization` (Number) ID of organization which owns this credential. One and only one of `organization`, `team`, or `user` must be set.
 - `team` (Number) ID of team which owns this credential. One and only one of `organization`, `team`, or `user` must be set.
 - `user` (Number) ID of user which owns this credential. One and only one of `organization`, `team`, or `user` must be set.
