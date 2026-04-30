@@ -40,15 +40,17 @@ type LabelDissasocBody struct {
 }
 
 type CredentialModel struct {
-	Id             types.String  `tfsdk:"id"`
-	Name           types.String  `tfsdk:"name"`
-	Description    types.String  `tfsdk:"description"`
-	Organization   types.Int32   `tfsdk:"organization"`
-	Team           types.Int32   `tfsdk:"team"`
-	User           types.Int32   `tfsdk:"user"`
-	CredentialType types.Int32   `tfsdk:"credential_type"`
-	Kind           types.String  `tfsdk:"kind"`
-	Inputs         types.Dynamic `tfsdk:"inputs"`
+	Id              types.String  `tfsdk:"id"`
+	Name            types.String  `tfsdk:"name"`
+	Description     types.String  `tfsdk:"description"`
+	Organization    types.Int32   `tfsdk:"organization"`
+	Team            types.Int32   `tfsdk:"team"`
+	User            types.Int32   `tfsdk:"user"`
+	CredentialType  types.Int32   `tfsdk:"credential_type"`
+	Kind            types.String  `tfsdk:"kind"`
+	Inputs          types.Dynamic `tfsdk:"inputs"`
+	InputsWO        types.Dynamic `tfsdk:"inputs_wo"`
+	InputsWOVersion types.Int32   `tfsdk:"inputs_wo_version"`
 }
 
 type CredentialModelv0 struct {
@@ -77,15 +79,17 @@ type CredentialDataModel struct {
 }
 
 type CredentialAPIModel struct {
-	Id             int            `json:"id"`
-	Name           string         `json:"name"`
-	Description    string         `json:"description,omitempty"`
-	Organization   int            `json:"organization,omitempty"`
-	Team           int            `json:"team,omitempty"`
-	User           int            `json:"user,omitempty"`
-	CredentialType int            `json:"credential_type"`
-	Kind           string         `json:"kind,omitempty"`
-	Inputs         map[string]any `json:"inputs,omitempty"`
+	Id              int            `json:"id"`
+	Name            string         `json:"name"`
+	Description     string         `json:"description,omitempty"`
+	Organization    int            `json:"organization,omitempty"`
+	Team            int            `json:"team,omitempty"`
+	User            int            `json:"user,omitempty"`
+	CredentialType  int            `json:"credential_type"`
+	Kind            string         `json:"kind,omitempty"`
+	Inputs          map[string]any `json:"inputs,omitempty"`
+	InputsWO        map[string]any `json:"inputs_wo,omitempty"`
+	InputsWOVersion int            `json:"inputs_wo_version,omitempty"`
 }
 
 type CredentialTypeModel struct {

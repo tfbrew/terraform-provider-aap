@@ -36,20 +36,21 @@ func TestAccCredentialResource_noInputAttr(t *testing.T) {
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{{
-			Config: testAccCredentialNoInput(simulatedApiValues),
-			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttr(
-					fmt.Sprintf("%s_credential.test-no-input", configprefix.Prefix),
-					"name",
-					simulatedApiValues.Name,
-				),
-				resource.TestCheckResourceAttr(
-					fmt.Sprintf("%s_credential.test-no-input", configprefix.Prefix),
-					"description",
-					simulatedApiValues.Description,
-				)),
-		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCredentialNoInput(simulatedApiValues),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						fmt.Sprintf("%s_credential.test-no-input", configprefix.Prefix),
+						"name",
+						simulatedApiValues.Name,
+					),
+					resource.TestCheckResourceAttr(
+						fmt.Sprintf("%s_credential.test-no-input", configprefix.Prefix),
+						"description",
+						simulatedApiValues.Description,
+					)),
+			},
 			{
 				PreConfig: func() {
 					simulatedApiValues.Description = "updated description"
@@ -63,6 +64,68 @@ func TestAccCredentialResource_noInputAttr(t *testing.T) {
 					),
 					resource.TestCheckResourceAttr(
 						fmt.Sprintf("%s_credential.test-no-input", configprefix.Prefix),
+						"description",
+						simulatedApiValues.Description,
+					)),
+			},
+		},
+	})
+
+}
+
+func TestAccCredentialResource_InputWO(t *testing.T) {
+
+	simulatedApiValues := CredentialAPIModel{
+		Name:        "test-input-wo-" + acctest.RandString(5),
+		Description: "initial description",
+		InputsWO: map[string]any{
+			"username":  acctest.RandString(5),
+			"authorize": true,
+			"password":  "origpasss" + acctest.RandString(10),
+		},
+	}
+
+	t.Parallel()
+	resource.Test(t, resource.TestCase{
+
+		PreCheck: func() { testAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCredentialInputsWO(simulatedApiValues),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						fmt.Sprintf("%s_credential.test-input-wo", configprefix.Prefix),
+						"name",
+						simulatedApiValues.Name,
+					),
+					resource.TestCheckResourceAttr(
+						fmt.Sprintf("%s_credential.test-input-wo", configprefix.Prefix),
+						"description",
+						simulatedApiValues.Description,
+					)),
+			},
+			{
+				PreConfig: func() {
+					simulatedApiValues.InputsWO = map[string]any{
+						"username":  acctest.RandString(5),
+						"authorize": true,
+						"password":  "updatedpass" + acctest.RandString(10),
+					}
+					simulatedApiValues.InputsWOVersion = 2
+				},
+				Config: testAccCredentialInputsWO(simulatedApiValues),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						fmt.Sprintf("%s_credential.test-input-wo", configprefix.Prefix),
+						"name",
+						simulatedApiValues.Name,
+					),
+					resource.TestCheckResourceAttr(
+						fmt.Sprintf("%s_credential.test-input-wo", configprefix.Prefix),
 						"description",
 						simulatedApiValues.Description,
 					)),
@@ -529,5 +592,22 @@ resource "%[1]s_credential" "test-no-input" {
   description     = "%[4]s"
   organization    = %[1]s_organization.test-no-input.id
   credential_type = data.%[1]s_credential_type.test-no-input.id
+}`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description)
+}
+
+func testAccCredentialInputsWO(resource CredentialAPIModel) string {
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "test-input-wo" {
+  name        = "%[2]s"
+}
+data "%[1]s_credential_type" "test-input-wo" {
+  name = "Network"
+  kind = "net"
+}
+resource "%[1]s_credential" "test-input-wo" {
+  name            = "%[3]s"
+  description     = "%[4]s"
+  organization    = %[1]s_organization.test-input-wo.id
+  credential_type = data.%[1]s_credential_type.test-input-wo.id
 }`, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description)
 }

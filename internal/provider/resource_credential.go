@@ -153,6 +153,16 @@ The only changes to the inputs field that will be sent are when the terraform co
 				Optional:    true,
 				Sensitive:   true,
 			},
+			"inputs_wo": schema.DynamicAttribute{
+				Description: "This is a write only version of `inputs`. Also requires `inputs_wo_version` to be set. For more info see [updating write-only attributes](https://developer.hashicorp.com/terraform/language/manage-sensitive-data/write-only).",
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+			},
+			"inputs_wo_version": schema.Int32Attribute{
+				Description: "The version number of the last update to `inputs_wo`. This is used to force updates to `inputs_wo` when there are changes to the inputs that need to be sent to the API.",
+				Optional:    true,
+			},
 			"kind": schema.StringAttribute{
 				Description: "Credential kind.",
 				Computed:    true,
@@ -170,6 +180,18 @@ func (r CredentialResource) ConfigValidators(ctx context.Context) []resource.Con
 			path.MatchRoot("organization"),
 			path.MatchRoot("team"),
 			path.MatchRoot("user"),
+		),
+		resourcevalidator.Conflicting(
+			path.MatchRoot("inputs"),
+			path.MatchRoot("inputs_wo"),
+		),
+		resourcevalidator.PreferWriteOnlyAttribute(
+			path.MatchRoot("inputs"),
+			path.MatchRoot("inputs_wo"),
+		),
+		resourcevalidator.RequiredTogether(
+			path.MatchRoot("inputs_wo"),
+			path.MatchRoot("inputs_wo_version"),
 		),
 	}
 }
@@ -217,10 +239,21 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 		bodyData.User = int(data.User.ValueInt32())
 	}
 
-	if !data.Inputs.IsUnderlyingValueNull() && !data.Inputs.IsNull() {
-		inputsDataMap := make(map[string]any)
+	var inputsData types.Dynamic
 
-		switch val := data.Inputs.UnderlyingValue().(type) {
+	if !data.Inputs.IsUnderlyingValueNull() && !data.Inputs.IsNull() {
+		inputsData = data.Inputs
+	} else {
+		// For write-only inputs_wo, get from raw config since it's not in plan/state
+		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("inputs_wo"), &inputsData)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !inputsData.IsUnderlyingValueNull() && !inputsData.IsNull() {
+		inputsDataMap := make(map[string]any)
+		switch val := inputsData.UnderlyingValue().(type) {
 		case types.String:
 			err := json.Unmarshal([]byte(val.ValueString()), &inputsDataMap)
 			if err != nil {
@@ -353,82 +386,86 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	// Handle inputs attribute.
-	// This is dymanic and we document that they should provide a String or an Object for this attribute.
-	// Inputs themselves will only be string or boolean, fyi: https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.5/html/using_automation_decisions/eda-credential-types
+	// If inputs_wo_version is null, then we should try to set inputs from the API response. Otherwise, if they are using the wo attribute we do not store it back to state.
+	if data.InputsWOVersion.IsNull() {
 
-	// we haven't imported it & not set in state previously
-	if data.Inputs.IsUnderlyingValueNull() && responseData.Inputs != nil && len(responseData.Inputs) > 0 {
-		resp.Diagnostics.Append(setInputfromResponeData(ctx, resp, &responseData.Inputs)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
+		// This is dymanic and we document that they should provide a String or an Object for this attribute.
+		// Inputs themselves will only be string or boolean, fyi: https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.5/html/using_automation_decisions/eda-credential-types
 
-	// we have imported something or state has values prevously; so,
-	//    we need to try and get our value to match API regardless of order & $encrypted$ values
-
-	if !data.Inputs.IsUnderlyingValueNull() && !data.Inputs.IsNull() {
-
-		inputsValue := data.Inputs.UnderlyingValue()
-
-		// convert state to map[string]any
-		currInputsState := make(map[string]any)
-
-		switch val := inputsValue.(type) {
-		case types.Object:
-			for key, v := range val.Attributes() {
-				switch v := v.(type) {
-				case types.String:
-					// if the value is a string, we can use it as is
-					currInputsState[key] = v.ValueString()
-				case types.Bool:
-					// if the value is a bool, we can use it as is
-					currInputsState[key] = v.ValueBool()
-				default:
-					resp.Diagnostics.AddError(
-						"inputs value specified is invalid type",
-						fmt.Sprintf("inputs key '%s' has an unexpected type: %T", key, v),
-					)
-					return
-				}
-			}
-
-			replaceEncryptedApiValues(&currInputsState, &responseData.Inputs)
+		// we haven't imported it & not set in state previously
+		if data.Inputs.IsUnderlyingValueNull() && responseData.Inputs != nil && len(responseData.Inputs) > 0 {
 			resp.Diagnostics.Append(setInputfromResponeData(ctx, resp, &responseData.Inputs)...)
 			if resp.Diagnostics.HasError() {
 				return
 			}
-		case types.String:
-			if err := json.Unmarshal([]byte(val.ValueString()), &currInputsState); err != nil {
-				resp.Diagnostics.AddError(
-					"Unable to unmarshal inputs from string",
-					fmt.Sprintf("Error: %v", err),
-				)
-				return
-			}
+		}
 
-			replaceEncryptedApiValues(&currInputsState, &responseData.Inputs)
+		// we have imported something or state has values prevously; so,
+		//    we need to try and get our value to match API regardless of order & $encrypted$ values
 
-			if !reflect.DeepEqual(currInputsState, responseData.Inputs) {
-				// if they are not equal, we need to update state to match API - otherwise leave state as is
-				inputsBytes, err := json.Marshal(responseData.Inputs)
-				if err != nil {
+		if !data.Inputs.IsUnderlyingValueNull() && !data.Inputs.IsNull() {
+
+			inputsValue := data.Inputs.UnderlyingValue()
+
+			// convert state to map[string]any
+			currInputsState := make(map[string]any)
+
+			switch val := inputsValue.(type) {
+			case types.Object:
+				for key, v := range val.Attributes() {
+					switch v := v.(type) {
+					case types.String:
+						// if the value is a string, we can use it as is
+						currInputsState[key] = v.ValueString()
+					case types.Bool:
+						// if the value is a bool, we can use it as is
+						currInputsState[key] = v.ValueBool()
+					default:
+						resp.Diagnostics.AddError(
+							"inputs value specified is invalid type",
+							fmt.Sprintf("inputs key '%s' has an unexpected type: %T", key, v),
+						)
+						return
+					}
+				}
+
+				replaceEncryptedApiValues(&currInputsState, &responseData.Inputs)
+				resp.Diagnostics.Append(setInputfromResponeData(ctx, resp, &responseData.Inputs)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			case types.String:
+				if err := json.Unmarshal([]byte(val.ValueString()), &currInputsState); err != nil {
 					resp.Diagnostics.AddError(
-						"Unable to marshal inputs to string",
+						"Unable to unmarshal inputs from string",
 						fmt.Sprintf("Error: %v", err),
 					)
 					return
 				}
-				stateInputs := types.DynamicValue(types.StringValue(string(inputsBytes)))
-				resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("inputs"), stateInputs)...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-			}
 
-		default:
-			resp.Diagnostics.AddError("inputs value specified is invalid type", "inputs must be an object or string type.")
-			return
+				replaceEncryptedApiValues(&currInputsState, &responseData.Inputs)
+
+				if !reflect.DeepEqual(currInputsState, responseData.Inputs) {
+					// if they are not equal, we need to update state to match API - otherwise leave state as is
+					inputsBytes, err := json.Marshal(responseData.Inputs)
+					if err != nil {
+						resp.Diagnostics.AddError(
+							"Unable to marshal inputs to string",
+							fmt.Sprintf("Error: %v", err),
+						)
+						return
+					}
+					stateInputs := types.DynamicValue(types.StringValue(string(inputsBytes)))
+					resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("inputs"), stateInputs)...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+				}
+
+			default:
+				resp.Diagnostics.AddError("inputs value specified is invalid type", "inputs must be an object or string type.")
+				return
+			}
 		}
 	}
 
@@ -436,8 +473,14 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 
 func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data CredentialModel
+	var priorData CredentialModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &priorData)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -468,10 +511,22 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		bodyData.User = int(data.User.ValueInt32())
 	}
 
-	if !data.Inputs.IsUnderlyingValueNull() {
+	var inputsData types.Dynamic
+
+	if !data.InputsWOVersion.Equal(priorData.InputsWOVersion) {
+		// inputs_wo_version changed, so get inputs_wo from raw config
+		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("inputs_wo"), &inputsData)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	} else if !data.Inputs.IsUnderlyingValueNull() {
+		inputsData = data.Inputs
+	}
+
+	if !inputsData.IsUnderlyingValueNull() {
 		inputsDataMap := make(map[string]any)
 
-		switch val := data.Inputs.UnderlyingValue().(type) {
+		switch val := inputsData.UnderlyingValue().(type) {
 		case types.String:
 			err = json.Unmarshal([]byte(val.ValueString()), &inputsDataMap)
 			if err != nil {
