@@ -54,48 +54,17 @@ jobs:
           git diff --compact-summary --exit-code || \
             (echo; echo "Unexpected difference in directories after code generation. Run 'make generate' command and commit."; exit 1)
 
-  # Run acceptance tests in a matrix with Terraform CLI versions
-  # testaap25:
-  #   name: Terraform Provider Acceptance Tests AAP 2.5
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 20
-  #   strategy:
-  #     fail-fast: true # cancel all in-progress runs if one fails
-  #     matrix:
-  #       # list whatever Terraform versions here you would like to support
-  #       terraform:
-  #         - '1.12.*'
-  #   steps:
-  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-  #     - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
-  #       with:
-  #         go-version-file: 'go.mod'
-  #         cache: false
-  #     - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
-  #       with:
-  #         terraform_version: ${{ matrix.terraform }}
-  #         terraform_wrapper: false
-  #     - run: go mod download
-  #     - env:
-  #         TF_ACC: "1"
-  #         AAP_HOST: ${{ secrets.AAP_25_HOST }}
-  #         AAP_OAUTH_TOKEN: ${{ secrets.AAP_25_OAUTH_TOKEN }}
-  #       run: go test -v -failfast -cover -tags=${{ vars.BUILD_TAG }} -timeout 20m ./internal/provider/
-  #       timeout-minutes: 20
-
   testaap26:
     name: Terraform Provider Acceptance Tests AAP 2.6
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     strategy:
       fail-fast: true # cancel all in-progress runs if one fails
       matrix:
         # list whatever Terraform versions here you would like to support
         terraform:
-          - '1.12.*'
-          - '1.13.*'
+          - '1.15.*'
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
@@ -112,4 +81,34 @@ jobs:
           AAP_HOST: ${{ secrets.AAP_26_HOST }}
           AAP_OAUTH_TOKEN: ${{ secrets.AAP_26_OAUTH_TOKEN }}
         run: go test -v -failfast -cover -tags=${{ vars.BUILD_TAG }} -timeout 20m ./internal/provider/
-        timeout-minutes: 20
+        timeout-minutes: 60
+
+  testaap27:
+    name: Terraform Provider Acceptance Tests AAP 2.7
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: true # cancel all in-progress runs if one fails
+      matrix:
+        # list whatever Terraform versions here you would like to support
+        terraform:
+          - '1.12.*'
+          - '1.15.*'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version-file: 'go.mod'
+          cache: false
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ matrix.terraform }}
+          terraform_wrapper: false
+      - run: go mod download
+      - env:
+          TF_ACC: "1"
+          AAP_HOST: ${{ secrets.AAP_27_HOST }}
+          AAP_OAUTH_TOKEN: ${{ secrets.AAP_27_OAUTH_TOKEN }}
+        run: go test -v -failfast -cover -tags=${{ vars.BUILD_TAG }} -timeout 60m ./internal/provider/
+        timeout-minutes: 60
