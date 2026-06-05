@@ -218,29 +218,48 @@ func (r *CredentialTypeResource) Read(ctx context.Context, req resource.ReadRequ
 
 	if !data.Inputs.IsNull() || responseData.Inputs != "" {
 		rawInputs := responseData.Inputs
-		rawInputsType := reflect.TypeOf(rawInputs)
 
-		if rawInputsType.Kind() == reflect.Map {
-			rawInputs, ok := rawInputs.(map[string]any)
-			if !ok {
-				resp.Diagnostics.AddError("Unable to cast", "Unable to cast Inputs as map[string]any")
-				return
-			}
-
-			if len(rawInputs) != 0 {
-				tmpInputsMap := make(map[string]any, len(rawInputs))
-				for k, v := range rawInputs {
-					tmpInputsMap[k] = v
+		if rawInputsMap, ok := rawInputs.(map[string]any); ok {
+			if len(rawInputsMap) == 1 {
+				if fields, ok := rawInputsMap["fields"].([]any); ok && len(fields) == 0 {
+					resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("inputs"), types.StringNull())...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+				} else {
+					if len(rawInputsMap) != 0 {
+						tmpInputsMap := make(map[string]any, len(rawInputsMap))
+						for k, v := range rawInputsMap {
+							tmpInputsMap[k] = v
+						}
+						tmpInputsJson, err := json.Marshal(tmpInputsMap)
+						if err != nil {
+							resp.Diagnostics.AddError("marshall issue", "Unable to marshall Inputs into json for storage.")
+							return
+						}
+						resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("inputs"), string(tmpInputsJson))...)
+						if resp.Diagnostics.HasError() {
+							resp.Diagnostics.AddError("String issue.", "Unable to convert Inputs json to string and storage.")
+							return
+						}
+					}
 				}
-				tmpInputsJson, err := json.Marshal(tmpInputsMap)
-				if err != nil {
-					resp.Diagnostics.AddError("marshall issue", "Unable to marshall Inputs into json for storage.")
-					return
-				}
-				resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("inputs"), string(tmpInputsJson))...)
-				if resp.Diagnostics.HasError() {
-					resp.Diagnostics.AddError("String issue.", "Unable to convert Inputs json to string and storage.")
-					return
+			} else {
+				if len(rawInputsMap) != 0 {
+					tmpInputsMap := make(map[string]any, len(rawInputsMap))
+					for k, v := range rawInputsMap {
+						tmpInputsMap[k] = v
+					}
+					tmpInputsJson, err := json.Marshal(tmpInputsMap)
+					if err != nil {
+						resp.Diagnostics.AddError("marshall issue", "Unable to marshall Inputs into json for storage.")
+						return
+					}
+					resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("inputs"), string(tmpInputsJson))...)
+					if resp.Diagnostics.HasError() {
+						resp.Diagnostics.AddError("String issue.", "Unable to convert Inputs json to string and storage.")
+						return
+					}
 				}
 			}
 		}

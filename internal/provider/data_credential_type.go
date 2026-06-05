@@ -183,27 +183,39 @@ func (d *CredentialTypeDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	rawInputs := responseData.Inputs
-	rawInputsType := reflect.TypeOf(rawInputs)
 
 	if responseData.Inputs != "" {
-		if rawInputsType.Kind() == reflect.Map {
-			rawInputs, ok := rawInputs.(map[string]any)
-			if !ok {
-				resp.Diagnostics.AddError("Unable to cast", "Unable to cast Inputs as map[string]any")
-				return
-			}
-
-			if len(rawInputs) != 0 {
-				tmpInputsMap := make(map[string]any, len(rawInputs))
-				for k, v := range rawInputs {
-					tmpInputsMap[k] = v
+		if rawInputsMap, ok := rawInputs.(map[string]any); ok {
+			if len(rawInputsMap) == 1 {
+				if fields, ok := rawInputsMap["fields"].([]any); ok && len(fields) == 0 {
+					data.Inputs = types.StringNull()
+				} else {
+					if len(rawInputsMap) != 0 {
+						tmpInputsMap := make(map[string]any, len(rawInputsMap))
+						for k, v := range rawInputsMap {
+							tmpInputsMap[k] = v
+						}
+						tmpInputsJson, err := json.Marshal(tmpInputsMap)
+						if err != nil {
+							resp.Diagnostics.AddError("Marshal issue", "Unable to marshal Inputs into json for storage.")
+							return
+						}
+						data.Inputs = types.StringValue(string(tmpInputsJson))
+					}
 				}
-				tmpInputsJson, err := json.Marshal(tmpInputsMap)
-				if err != nil {
-					resp.Diagnostics.AddError("Marshal issue", "Unable to marshal Inputs into json for storage.")
-					return
+			} else {
+				if len(rawInputsMap) != 0 {
+					tmpInputsMap := make(map[string]any, len(rawInputsMap))
+					for k, v := range rawInputsMap {
+						tmpInputsMap[k] = v
+					}
+					tmpInputsJson, err := json.Marshal(tmpInputsMap)
+					if err != nil {
+						resp.Diagnostics.AddError("Marshal issue", "Unable to marshal Inputs into json for storage.")
+						return
+					}
+					data.Inputs = types.StringValue(string(tmpInputsJson))
 				}
-				data.Inputs = types.StringValue(string(tmpInputsJson))
 			}
 		}
 	}
