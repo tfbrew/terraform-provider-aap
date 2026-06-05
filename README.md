@@ -1,9 +1,9 @@
 <!-- SPECIAL: This readme should be altered to match each repo to which it is included.  -->
-# Terraform Provider for Ansible Automation Platform (AAP) version 2.5 and greater
+# Terraform Provider for Ansible Automation Platform (AAP) version 2.6 & 2.7 and greater
 
 Please see our other provider for [AWX/Tower and AAP verison 2.4.](https://github.com/tfbrew/terraform-provider-aap)
 
-This is a terraform provider for AAP >= 2.5 built with the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) and based on the [Terraform Provider Scafolding Framework](https://github.com/hashicorp/terraform-provider-scaffolding-framework).
+This is a terraform provider for AAP >= 2.6 built with the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) and based on the [Terraform Provider Scafolding Framework](https://github.com/hashicorp/terraform-provider-scaffolding-framework). While this provider will also 99% work with AAP2.5, now that both AAP2.6 & AAP2.7 have been released, priority will be given to new features and supporting API changes instead of testing functionality with 2.5.
 
 If you find any bugs or have a feature request, please open a GitHub issue.
 
@@ -15,7 +15,7 @@ This repo has modified the GNUmake file inherited from the Terraform scaffold re
 
 This code is used for two different providers:
 
-- tfbrew/aap: Supports aap2.5 and greater.
+- tfbrew/aap: Supports aap2.6 and greater (along with limited support for 2.5).
 - tfbrew/awx: Supports awx and aap2.4.
 
 **This requires manual intervention & using Go build tags to make the code as simliar as possible accross all three repositories.**
