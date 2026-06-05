@@ -1,5 +1,5 @@
 <!-- SPECIAL: This readme should be altered to match each repo to which it is included.  -->
-# Terraform Provider for Ansible Automation Platform (AAP) version 2.6 & 2.7 and greater
+# Terraform Provider for Ansible Automation Platform (AAP) version 2.6 & 2.7
 
 Please see our other provider for [AWX/Tower and AAP verison 2.4.](https://github.com/tfbrew/terraform-provider-aap)
 
