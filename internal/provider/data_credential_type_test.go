@@ -24,6 +24,10 @@ func TestAccCredentialTypeDataSource(t *testing.T) {
 		Kind:        "cloud",
 		Inputs:      `{"fields":[{"id":"username","label":"Access Key","type":"string"}]}`,
 	}
+	resource2Inputs, ok := resource2.Inputs.(string)
+	if !ok {
+		t.Fatalf("resource2.Inputs should be a string, got %T", resource2.Inputs)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -74,7 +78,7 @@ func TestAccCredentialTypeDataSource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						fmt.Sprintf("data.%s_credential_type.test-name", configprefix.Prefix),
 						tfjsonpath.New("inputs"),
-						knownvalue.StringExact(resource2.Inputs.(string)),
+						knownvalue.StringExact(resource2Inputs),
 					),
 				},
 			},
