@@ -186,8 +186,8 @@ func (d *CredentialTypeDataSource) Read(ctx context.Context, req datasource.Read
 
 	if responseData.Inputs != "" {
 		if rawInputsMap, ok := rawInputs.(map[string]any); ok {
-			if len(rawInputsMap) == 1 {
-				if fields, ok := rawInputsMap["fields"].([]any); ok && len(fields) == 0 {
+			if len(rawInputsMap) > 0 {
+				if fields, ok := rawInputsMap["fields"].([]any); ok && len(rawInputsMap) == 1 && len(fields) == 0 {
 					data.Inputs = types.StringNull()
 				} else {
 					if len(rawInputsMap) != 0 {
@@ -202,19 +202,6 @@ func (d *CredentialTypeDataSource) Read(ctx context.Context, req datasource.Read
 						}
 						data.Inputs = types.StringValue(string(tmpInputsJson))
 					}
-				}
-			} else {
-				if len(rawInputsMap) != 0 {
-					tmpInputsMap := make(map[string]any, len(rawInputsMap))
-					for k, v := range rawInputsMap {
-						tmpInputsMap[k] = v
-					}
-					tmpInputsJson, err := json.Marshal(tmpInputsMap)
-					if err != nil {
-						resp.Diagnostics.AddError("Marshal issue", "Unable to marshal Inputs into json for storage.")
-						return
-					}
-					data.Inputs = types.StringValue(string(tmpInputsJson))
 				}
 			}
 		}

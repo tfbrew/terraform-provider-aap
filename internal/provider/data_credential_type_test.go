@@ -17,12 +17,12 @@ func TestAccCredentialTypeDataSource(t *testing.T) {
 	resource1 := CredentialTypeAPIModel{
 		Name:        "test-credential-type-" + acctest.RandString(5),
 		Description: "test description",
-		Kind:        "cloud",
 	}
 	resource2 := CredentialTypeAPIModel{
 		Name:        "test-credential-type-" + acctest.RandString(5),
 		Description: "test description",
 		Kind:        "cloud",
+		Inputs:      `{"fields":[{"id":"username","label":"Access Key","type":"string"}]}`,
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
@@ -48,7 +48,7 @@ func TestAccCredentialTypeDataSource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						fmt.Sprintf("data.%s_credential_type.test-id", configprefix.Prefix),
 						tfjsonpath.New("kind"),
-						knownvalue.StringExact(resource1.Kind),
+						knownvalue.StringExact("cloud"), // default value is `cloud`
 					),
 				},
 			},
@@ -70,6 +70,11 @@ func TestAccCredentialTypeDataSource(t *testing.T) {
 						fmt.Sprintf("data.%s_credential_type.test-name", configprefix.Prefix),
 						tfjsonpath.New("kind"),
 						knownvalue.StringExact(resource2.Kind),
+					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("data.%s_credential_type.test-name", configprefix.Prefix),
+						tfjsonpath.New("inputs"),
+						knownvalue.StringExact(resource2.Inputs.(string)),
 					),
 				},
 			},
@@ -94,10 +99,11 @@ func testAccCredentialTypeDataSourceNameConfig(resource CredentialTypeAPIModel) 
 resource "%[1]s_credential_type" "test-name" {
   name         = "%[2]s"
   description  = "%[3]s"
+  inputs       = jsonencode(%[4]s)
 }
 data "%[1]s_credential_type" "test-name" {
   name = %[1]s_credential_type.test-name.name
   kind = %[1]s_credential_type.test-name.kind
 }
-  `, configprefix.Prefix, resource.Name, resource.Description)
+  `, configprefix.Prefix, resource.Name, resource.Description, resource.Inputs)
 }
