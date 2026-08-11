@@ -62,9 +62,9 @@ resource "aap_credential" "example-source-control" {
   organization    = aap_organization.example.id
   credential_type = data.aap_credential_type.source-control.id
   inputs = {
-    ssh_key_data : file("${path.module}/id_rsa"), // code should not contain secrets, example only
-    ssh_key_unlock : "test1234",                  // code should not contain secrets, example only
-    username : "aap"
+    ssh_key_data   = file("${path.module}/id_rsa"), // code should not contain secrets, example only
+    ssh_key_unlock = "test1234",                    // code should not contain secrets, example only
+    username       = "aap"
   }
 }
 
