@@ -191,7 +191,7 @@ func (r *WorkflowJobTemplateApprovalNode) Create(ctx context.Context, req resour
 	}
 
 	tempId = fmt.Sprintf("%v", returnedData["id"])
-	tempIdInt, err = strconv.Atoi(tempId)
+	tempIdInt64, err := strconv.ParseInt(tempId, 10, 32)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting returned ID to an integer",
@@ -200,7 +200,7 @@ func (r *WorkflowJobTemplateApprovalNode) Create(ctx context.Context, req resour
 		return
 	}
 
-	data.ApprovalTemplateId = types.Int32Value(int32(tempIdInt))
+	data.ApprovalTemplateId = types.Int32Value(int32(tempIdInt64))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
