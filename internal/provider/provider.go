@@ -256,7 +256,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Provider Configuration Error",
-					fmt.Sprintf("AAP_API_RETRY_COUNT must be an integer, got: %s", envAPIRetryCount),
+					fmt.Sprintf("AAP_API_RETRY_COUNT must be a 32-bit integer, got: %s", envAPIRetryCount),
 				)
 				return
 			}
@@ -264,7 +264,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Provider Configuration Error",
-					fmt.Sprintf("AAP_API_RETRY_DELAY_SECONDS must be an integer, got: %s", envAPIRetryDelaySeconds),
+					fmt.Sprintf("AAP_API_RETRY_DELAY_SECONDS must be a 32-bit integer, got: %s", envAPIRetryDelaySeconds),
 				)
 				return
 			}
