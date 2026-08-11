@@ -19,10 +19,10 @@ resource "aap_credential" "example-machine" {
   organization    = aap_organization.example.id
   credential_type = data.aap_credential_type.machine.id
   inputs_wo = {
-    become_method : "sudo",
-    become_password : "ASK", // ASK = Prompt at Launch checkbox
-    password : "test1234",   // code should not contain secrets, example only
-    username : "aap"
+    become_method   = "sudo",
+    become_password = "ASK",      // ASK = Prompt at Launch checkbox
+    password        = "test1234", // code should not contain secrets, example only
+    username        = "aap"
   }
   inputs_wo_version = 1
 }
