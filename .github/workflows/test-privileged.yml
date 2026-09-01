@@ -1,16 +1,16 @@
 # Terraform Provider testing workflow.
-name: Tests
+name: Tests (Privileged)
 
+# Can be run via Workflow Dispatch for testing a specific PR number (forked PR's) after code has been reviewed.
 # This GitHub action runs your tests for each pull request and push.
 # Optionally, you can turn it on using a schedule for regular testing.
 on:
   workflow_dispatch:
-  pull_request:
-    paths-ignore:
-      - 'README.md'
-  # push:
-  #   paths-ignore:
-  #     - 'README.md'
+    inputs:
+      pr:
+        description: "PR number to test"
+        required: true
+        type: number
 
 # Testing only needs permissions to read the repository contents.
 permissions:
@@ -24,17 +24,19 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/pull/${{ inputs.pr }}/head
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: 'go.mod'
           cache: false
       - run: go mod download
-      - run: go build -tags=${{ vars.BUILD_TAG }} -v .
+      - run: go build -tags=repoAAP -v .
       - name: Run linters
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
           version: latest
-          args: --build-tags '${{ vars.BUILD_TAG }}'
+          args: --build-tags 'repoAAP'
 
   generate:
     runs-on: ubuntu-latest
@@ -67,6 +69,8 @@ jobs:
           - '1.15.*'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/pull/${{ inputs.pr }}/head
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: 'go.mod'
@@ -80,7 +84,7 @@ jobs:
           TF_ACC: "1"
           AAP_HOST: ${{ secrets.AAP_26_HOST }}
           AAP_OAUTH_TOKEN: ${{ secrets.AAP_26_OAUTH_TOKEN }}
-        run: go test -v -failfast -cover -tags=${{ vars.BUILD_TAG }} -timeout 20m ./internal/provider/
+        run: go test -v -failfast -cover -tags=repoAAP -timeout 20m ./internal/provider/
         timeout-minutes: 60
 
   testaap27:
@@ -97,6 +101,8 @@ jobs:
           - '1.15.*'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/pull/${{ inputs.pr }}/head
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: 'go.mod'
@@ -110,5 +116,5 @@ jobs:
           TF_ACC: "1"
           AAP_HOST: ${{ secrets.AAP_27_HOST }}
           AAP_OAUTH_TOKEN: ${{ secrets.AAP_27_OAUTH_TOKEN }}
-        run: go test -v -failfast -cover -tags=${{ vars.BUILD_TAG }} -timeout 60m ./internal/provider/
+        run: go test -v -failfast -cover -tags=repoAAP -timeout 60m ./internal/provider/
         timeout-minutes: 60
