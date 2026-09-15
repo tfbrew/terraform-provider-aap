@@ -14,12 +14,13 @@ Manage an Automation Controller user.
 
 ```terraform
 resource "aap_user" "example" {
-  username     = "example"
-  password     = "test1234"
-  first_name   = "test"
-  last_name    = "user"
-  email        = "test@example.com"
-  is_superuser = true
+  username            = "example"
+  password_wo         = "test1234"
+  password_wo_version = 1
+  first_name          = "test"
+  last_name           = "user"
+  email               = "test@example.com"
+  is_superuser        = true
 }
 ```
 
@@ -28,16 +29,20 @@ resource "aap_user" "example" {
 
 ### Required
 
-- `password` (String) User's password. If the password is updated in automation controller, due to the api, terraform will not know that it has been changed.
 - `username` (String) The username of the user.
 
 ### Optional
+
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
 
 - `email` (String) User's email.
 - `first_name` (String) User's first name.
 - `is_superuser` (Boolean) Designates that this user has all permissions without explicitly assigning them. Only one of `is_superuser` or `is_system_auditor` is allowed.
 - `is_system_auditor` (Boolean) AWX/AAP2.4 only. User is a system wide auditor. Only one of `is_superuser` or `is_system_auditor` is allowed. AAP 2.5 changes this attribute to `is_platform_auditor`, but the API to set that to true does not work.
 - `last_name` (String) User's last name.
+- `password` (String, Sensitive) User's password. Consider using WriteOnly `password_wo` version of this attribute instead. If the password is updated in automation controller, due to the api, terraform will not know that it has been changed.
+- `password_wo` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Write only version of `password`. Use in coordination with `password_wo_version`. If the password is updated in automation controller, due to the api, terraform will not know that it has been changed.
+- `password_wo_version` (Number) Version of the password_wo. This is used to force updates to `password_wo` when there is a change of the password that needs to be sent to the API. If the password is updated in automation controller, due to the api, terraform will not know that it has been changed.
 
 ### Read-Only
 

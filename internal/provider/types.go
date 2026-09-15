@@ -685,14 +685,16 @@ type TeamAPIModel struct {
 }
 
 type UserModel struct {
-	Id              types.String `tfsdk:"id"`
-	Username        types.String `tfsdk:"username"`
-	FirstName       types.String `tfsdk:"first_name"`
-	LastName        types.String `tfsdk:"last_name"`
-	Email           types.String `tfsdk:"email"`
-	IsSuperuser     types.Bool   `tfsdk:"is_superuser"`
-	IsSystemAuditor types.Bool   `tfsdk:"is_system_auditor"`
-	Password        types.String `tfsdk:"password"`
+	Id                types.String `tfsdk:"id"`
+	Username          types.String `tfsdk:"username"`
+	FirstName         types.String `tfsdk:"first_name"`
+	LastName          types.String `tfsdk:"last_name"`
+	Email             types.String `tfsdk:"email"`
+	IsSuperuser       types.Bool   `tfsdk:"is_superuser"`
+	IsSystemAuditor   types.Bool   `tfsdk:"is_system_auditor"`
+	Password          types.String `tfsdk:"password"`
+	PasswordWo        types.String `tfsdk:"password_wo"`
+	PasswordWoVersion types.Int32  `tfsdk:"password_wo_version"`
 }
 
 type UserAPIModel struct {

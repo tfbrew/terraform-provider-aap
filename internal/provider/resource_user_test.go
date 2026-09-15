@@ -78,11 +78,6 @@ func TestAccUserResource(t *testing.T) {
 						),
 						statecheck.ExpectKnownValue(
 							fmt.Sprintf("%s_user.test", configprefix.Prefix),
-							tfjsonpath.New("password"),
-							knownvalue.StringExact(resource1.Password),
-						),
-						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
 							tfjsonpath.New("is_superuser"),
 							knownvalue.Bool(false),
 						),
@@ -123,11 +118,6 @@ func TestAccUserResource(t *testing.T) {
 							fmt.Sprintf("%s_user.test", configprefix.Prefix),
 							tfjsonpath.New("email"),
 							knownvalue.StringExact(resource2.Email),
-						),
-						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
-							tfjsonpath.New("password"),
-							knownvalue.StringExact(resource2.Password),
 						),
 						statecheck.ExpectKnownValue(
 							fmt.Sprintf("%s_user.test", configprefix.Prefix),
@@ -288,11 +278,6 @@ func TestAccUserResource(t *testing.T) {
 						),
 						statecheck.ExpectKnownValue(
 							fmt.Sprintf("%s_user.test", configprefix.Prefix),
-							tfjsonpath.New("password"),
-							knownvalue.StringExact(resource1.Password),
-						),
-						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
 							tfjsonpath.New("is_superuser"),
 							knownvalue.Bool(false),
 						),
@@ -328,11 +313,6 @@ func TestAccUserResource(t *testing.T) {
 							fmt.Sprintf("%s_user.test", configprefix.Prefix),
 							tfjsonpath.New("email"),
 							knownvalue.StringExact(resource2.Email),
-						),
-						statecheck.ExpectKnownValue(
-							fmt.Sprintf("%s_user.test", configprefix.Prefix),
-							tfjsonpath.New("password"),
-							knownvalue.StringExact(resource2.Password),
 						),
 						statecheck.ExpectKnownValue(
 							fmt.Sprintf("%s_user.test", configprefix.Prefix),
@@ -421,11 +401,12 @@ func TestAccUserResource(t *testing.T) {
 func testAccUserResource1Config(resource UserAPIModel) string {
 	return fmt.Sprintf(`
 resource "%[1]s_user" "test" {
-  username      = "%[2]s"
-  first_name 	= "%[3]s"
-  last_name 	= "%[4]s"
-  email			= "%[5]s"
-  password 		= "%[6]s"
+  username              = "%[2]s"
+  first_name    	    = "%[3]s"
+  last_name         	= "%[4]s"
+  email		        	= "%[5]s"
+  password_wo 		    = "%[6]s"
+  password_wo_version   = 1
 }
   `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password)
 }
@@ -433,12 +414,13 @@ resource "%[1]s_user" "test" {
 func testAccUserResource2Config(resource UserAPIModel) string {
 	return fmt.Sprintf(`
 resource "%[1]s_user" "test" {
-  username      = "%[2]s"
-  first_name 	= "%[3]s"
-  last_name 	= "%[4]s"
-  email			= "%[5]s"
-  password 		= "%[6]s"
-  is_superuser  = %[7]v
+  username              = "%[2]s"
+  first_name        	= "%[3]s"
+  last_name         	= "%[4]s"
+  email		         	= "%[5]s"
+  password_wo 		    = "%[6]s"
+  password_wo_version   = 1
+  is_superuser          = %[7]v
 }
   `, configprefix.Prefix, resource.Username, resource.FirstName, resource.LastName, resource.Email, resource.Password, resource.IsSuperuser)
 }

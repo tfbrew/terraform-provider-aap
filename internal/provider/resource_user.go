@@ -62,8 +62,19 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Description: "User's email.",
 			},
 			"password": schema.StringAttribute{
-				Required:    true,
-				Description: "User's password. If the password is updated in automation controller, due to the api, terraform will not know that it has been changed.",
+				Optional:    true,
+				Sensitive:   true,
+				Description: "User's password. Consider using WriteOnly `password_wo` version of this attribute instead. If the password is updated in automation controller, due to the api, terraform will not know that it has been changed.",
+			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Write only version of `password`. Use in coordination with `password_wo_version`. If the password is updated in automation controller, due to the api, terraform will not know that it has been changed.",
+			},
+			"password_wo_version": schema.Int32Attribute{
+				Optional:    true,
+				Description: "Version of the password_wo. This is used to force updates to `password_wo` when there is a change of the password that needs to be sent to the API. If the password is updated in automation controller, due to the api, terraform will not know that it has been changed.",
 			},
 			"is_superuser": schema.BoolAttribute{
 				Optional:    true,
@@ -86,6 +97,18 @@ func (r *UserResource) ConfigValidators(ctx context.Context) []resource.ConfigVa
 		resourcevalidator.Conflicting(
 			path.MatchRoot("is_superuser"),
 			path.MatchRoot("is_system_auditor"),
+		),
+		resourcevalidator.Conflicting(
+			path.MatchRoot("password"),
+			path.MatchRoot("password_wo"),
+		),
+		resourcevalidator.PreferWriteOnlyAttribute(
+			path.MatchRoot("password"),
+			path.MatchRoot("password_wo"),
+		),
+		resourcevalidator.RequiredTogether(
+			path.MatchRoot("password_wo"),
+			path.MatchRoot("password_wo_version"),
 		),
 	}
 }
@@ -136,7 +159,12 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	var bodyData UserAPIModel
 
 	bodyData.Username = data.Username.ValueString()
-	bodyData.Password = data.Password.ValueString()
+	if !(data.Password.IsNull()) {
+		bodyData.Password = data.Password.ValueString()
+	} else if !(data.PasswordWo.IsNull()) {
+		bodyData.Password = data.PasswordWo.ValueString()
+	}
+
 	bodyData.IsSuperuser = data.IsSuperuser.ValueBool()
 	bodyData.IsSystemAuditor = data.IsSystemAuditor.ValueBool()
 
@@ -229,19 +257,27 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		}
 	}
 
-	// Always use current state of password to set resp.State as responseData.Password will not be valid
 	var statePassword types.String
 	diags := req.State.GetAttribute(ctx, path.Root("password"), &statePassword)
 	if diags.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("password"), statePassword)...)
+	if !statePassword.IsNull() {
+		// if password is set in state, then use that instead of the API response, which will be $encrypted$
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("password"), statePassword)...)
+	}
 }
 
 func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data UserModel
+	var priorData UserModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &priorData)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -257,9 +293,22 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	var bodyData UserAPIModel
 
 	bodyData.Username = data.Username.ValueString()
-	bodyData.Password = data.Password.ValueString()
 	bodyData.IsSuperuser = data.IsSuperuser.ValueBool()
 	bodyData.IsSystemAuditor = data.IsSystemAuditor.ValueBool()
+
+	if !data.PasswordWoVersion.Equal(priorData.PasswordWoVersion) && !data.PasswordWo.IsNull() {
+		// password_wo_version changed, so get password_wo from raw config and set password that way
+		diags := req.Config.GetAttribute(ctx, path.Root("password_wo"), bodyData.Password)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	} else if !data.Password.IsNull() || !data.Password.Equal(types.StringValue("$encrypted$")) {
+		bodyData.Password = data.Password.ValueString()
+	} else {
+		// no password change, send `$encrypted$` to avoid clearing the password
+		bodyData.Password = "$encrypted$"
+	}
 
 	if !(data.FirstName.IsNull()) {
 		bodyData.FirstName = data.FirstName.ValueString()

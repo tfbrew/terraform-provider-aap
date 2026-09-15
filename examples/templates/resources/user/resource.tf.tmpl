@@ -1,8 +1,9 @@
 resource "{{.Prefix}}_user" "example" {
-  username     = "example"
-  password     = "test1234"
-  first_name   = "test"
-  last_name    = "user"
-  email        = "test@example.com"
-  is_superuser = true
+  username            = "example"
+  password_wo         = "test1234"
+  password_wo_version = 1
+  first_name          = "test"
+  last_name           = "user"
+  email               = "test@example.com"
+  is_superuser        = true
 }
