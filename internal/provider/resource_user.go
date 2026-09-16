@@ -150,8 +150,15 @@ func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequ
 
 func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data UserModel
+	var configPasswordWo types.String
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// write-only attributes are not available from plan/state; read from config.
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("password_wo"), &configPasswordWo)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -161,8 +168,8 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	bodyData.Username = data.Username.ValueString()
 	if !(data.Password.IsNull()) {
 		bodyData.Password = data.Password.ValueString()
-	} else if !(data.PasswordWo.IsNull()) {
-		bodyData.Password = data.PasswordWo.ValueString()
+	} else if !(configPasswordWo.IsNull()) {
+		bodyData.Password = configPasswordWo.ValueString()
 	}
 
 	bodyData.IsSuperuser = data.IsSuperuser.ValueBool()
@@ -271,6 +278,13 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data UserModel
 	var priorData UserModel
+	var configPasswordWo types.String
+
+	// write-only attributes are not available from plan/state; read from config.
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("password_wo"), &configPasswordWo)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -296,13 +310,9 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	bodyData.IsSuperuser = data.IsSuperuser.ValueBool()
 	bodyData.IsSystemAuditor = data.IsSystemAuditor.ValueBool()
 
-	if !data.PasswordWoVersion.Equal(priorData.PasswordWoVersion) && !data.PasswordWo.IsNull() {
+	if !data.PasswordWoVersion.Equal(priorData.PasswordWoVersion) && !configPasswordWo.IsNull() {
 		// password_wo_version changed, so get password_wo from raw config and set password that way
-		diags := req.Config.GetAttribute(ctx, path.Root("password_wo"), bodyData.Password)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		bodyData.Password = configPasswordWo.ValueString()
 	} else if !data.Password.IsNull() || !data.Password.Equal(types.StringValue("$encrypted$")) {
 		bodyData.Password = data.Password.ValueString()
 	} else {
