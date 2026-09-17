@@ -1,0 +1,23 @@
+resource "{{.Prefix}}_organization" "example" {
+  name = "example-organization"
+}	
+
+resource "{{.Prefix}}_workflow_job_template" "example" {
+  name         = "example-workflow-job-template"
+  organization = {{.Prefix}}_organization.example.id
+}
+
+resource "{{.Prefix}}_label" "example-1" {
+  name         = "example-label-1"
+  organization = {{.Prefix}}_organization.example.id
+}
+
+resource "{{.Prefix}}_label" "example-2" {
+  name         = "example-label-2"
+  organization = {{.Prefix}}_organization.example.id
+}
+
+resource "{{.Prefix}}_workflow_job_template_label" "example" {
+  label_ids                = [{{.Prefix}}_label.example-1.id, {{.Prefix}}_label.example-2.id]
+  workflow_job_template_id = {{.Prefix}}_workflow_job_template.example.id
+}
