@@ -97,7 +97,7 @@ func (d *UserDataSource) Configure(ctx context.Context, req datasource.Configure
 }
 
 func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data UserModel
+	var data UserDataModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
