@@ -74,7 +74,7 @@ func TestAccInventoryDataSource(t *testing.T) {
 					),
 				},
 			},
-			// Read smart inventory by ID
+			// Read smart inventory by ID and by name
 			{
 				Config: testAccInventoryDataSource2Config(resource2),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -109,6 +109,18 @@ func TestAccInventoryDataSource(t *testing.T) {
 						fmt.Sprintf("data.%s_inventory.test2", configprefix.Prefix),
 						tfjsonpath.New("organization"),
 						IdCompare,
+					),
+					statecheck.CompareValuePairs(
+						fmt.Sprintf("%s_inventory.test2", configprefix.Prefix),
+						tfjsonpath.New("id"),
+						fmt.Sprintf("data.%s_inventory.test2-name", configprefix.Prefix),
+						tfjsonpath.New("id"),
+						IdCompare,
+					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("data.%s_inventory.test2-name", configprefix.Prefix),
+						tfjsonpath.New("kind"),
+						knownvalue.StringExact(resource2.Kind),
 					),
 				},
 			},
@@ -148,6 +160,10 @@ resource "%[1]s_inventory" "test2" {
 }
 data "%[1]s_inventory" "test2" {
   id = %[1]s_inventory.test2.id
+}
+data "%[1]s_inventory" "test2-name" {
+  name         = %[1]s_inventory.test2.name
+  organization = %[1]s_organization.test2.id
 }
 `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables, resource.Kind, resource.HostFilter)
 }
