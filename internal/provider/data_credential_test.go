@@ -53,6 +53,13 @@ func TestAccCredentialDataSource(t *testing.T) {
 						tfjsonpath.New("kind"),
 						compare.ValuesSame(),
 					),
+					statecheck.CompareValuePairs(
+						fmt.Sprintf("%s_credential.test", configprefix.Prefix),
+						tfjsonpath.New("id"),
+						fmt.Sprintf("data.%s_credential.test-name", configprefix.Prefix),
+						tfjsonpath.New("id"),
+						compare.ValuesSame(),
+					),
 				},
 			},
 		},
@@ -77,6 +84,11 @@ resource "%[1]s_credential" "test" {
 }
 data "%[1]s_credential" "test" {
   id = %[1]s_credential.test.id
+}
+data "%[1]s_credential" "test-name" {
+  name            = %[1]s_credential.test.name
+  credential_type = data.%[1]s_credential_type.test.id
+  organization    = %[1]s_organization.test.id
 }
   `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, mustMarshal(resource.Inputs))
 }

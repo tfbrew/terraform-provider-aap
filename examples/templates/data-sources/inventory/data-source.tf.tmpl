@@ -1,3 +1,8 @@
 data "{{.Prefix}}_inventory" "example" {
   id = "1"
 }
+
+data "{{.Prefix}}_inventory" "example-name" {
+  name         = "Demo Inventory"
+  organization = 1
+}
