@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	urlParser "net/url"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -33,12 +35,12 @@ func (d *CredentialDataSource) Schema(ctx context.Context, req datasource.Schema
 		Description: "Get credential datasource",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "Credential ID.",
-				Required:    true,
+				Description: "Credential ID. You must specify either the `id` or `name` field, but not both.",
+				Optional:    true,
 			},
 			"name": schema.StringAttribute{
-				Description: "Credential name.",
-				Computed:    true,
+				Description: "Credential name. You must specify either the `id` or `name` field, but not both. To lookup by name you must also include `credential_type` and `organization`. Credentials without an organization, such as personal credentials owned by a user, cannot be looked up by name; use `id` instead.",
+				Optional:    true,
 			},
 			"description": schema.StringAttribute{
 				Description: "Credential description.",
@@ -49,7 +51,8 @@ func (d *CredentialDataSource) Schema(ctx context.Context, req datasource.Schema
 				Computed:    true,
 			},
 			"organization": schema.Int32Attribute{
-				Description: "ID of organization which owns this credential. One and only one of `organization`, `team`, or `user` must be set.",
+				Description: "ID of organization which owns this credential. Required when looking up by `name`.",
+				Optional:    true,
 				Computed:    true,
 			},
 			"team": schema.Int32Attribute{
@@ -61,7 +64,8 @@ func (d *CredentialDataSource) Schema(ctx context.Context, req datasource.Schema
 				Computed:    true,
 			},
 			"credential_type": schema.Int32Attribute{
-				Description: "ID of the credential type.",
+				Description: "ID of the credential type. Required when looking up by `name`.",
+				Optional:    true,
 				Computed:    true,
 			},
 			"inputs": schema.StringAttribute{
@@ -73,6 +77,20 @@ func (d *CredentialDataSource) Schema(ctx context.Context, req datasource.Schema
 				Computed:    true,
 			},
 		},
+	}
+}
+
+func (d *CredentialDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.ExactlyOneOf(
+			path.MatchRoot("id"),
+			path.MatchRoot("name"),
+		),
+		datasourcevalidator.RequiredTogether(
+			path.MatchRoot("name"),
+			path.MatchRoot("credential_type"),
+			path.MatchRoot("organization"),
+		),
 	}
 }
 
@@ -104,17 +122,29 @@ func (d *CredentialDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	var url string
+	query := urlParser.Values{}
 
-	id, err := strconv.Atoi(data.Id.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable convert id from string to int.",
-			fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
-		return
+	if !data.Id.IsNull() {
+		id, err := strconv.Atoi(data.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable convert id from string to int.",
+				fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
+			return
+		}
+		query.Set("id", strconv.Itoa(id))
+	}
+	if !data.Name.IsNull() {
+		query.Set("name", data.Name.ValueString())
+	}
+	if !data.CredentialType.IsNull() {
+		query.Set("credential_type", strconv.Itoa(int(data.CredentialType.ValueInt32())))
+	}
+	if !data.Organization.IsNull() {
+		query.Set("organization", strconv.Itoa(int(data.Organization.ValueInt32())))
 	}
 
-	url = fmt.Sprintf("credentials/%d/", id)
+	url := "credentials/?" + query.Encode()
 	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -125,13 +155,25 @@ func (d *CredentialDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	var responseData CredentialAPIModel
 
-	err = json.Unmarshal(body, &responseData)
+	countResult := struct {
+		Count   int                  `json:"count"`
+		Results []CredentialAPIModel `json:"results"`
+	}{}
+
+	err = json.Unmarshal(body, &countResult)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to unmarshal response body into object",
 			fmt.Sprintf("Error =  %v.", err.Error()))
 		return
 	}
+	if countResult.Count != 1 {
+		resp.Diagnostics.AddError(
+			"Incorrect number of credentials returned",
+			fmt.Sprintf("Unable to read credential as API returned %v credentials for query %q.", countResult.Count, query.Encode()))
+		return
+	}
+	responseData = countResult.Results[0]
 
 	idAsString := strconv.Itoa(responseData.Id)
 	data.Id = types.StringValue(idAsString)

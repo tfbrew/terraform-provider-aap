@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	urlParser "net/url"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -31,19 +34,20 @@ func (d *InventoryDataSource) Schema(ctx context.Context, req datasource.SchemaR
 		Description: "Get inventory datasource",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "Inventory ID.",
-				Required:    true,
+				Description: "Inventory ID. You must specify either the `id` or `name` field, but not both.",
+				Optional:    true,
 			},
 			"name": schema.StringAttribute{
-				Description: "Inventory name.",
-				Computed:    true,
+				Description: "Inventory name. You must specify either the `id` or `name` field, but not both. To lookup by name you must also include `organization`.",
+				Optional:    true,
 			},
 			"description": schema.StringAttribute{
 				Description: "Inventory description.",
 				Computed:    true,
 			},
 			"organization": schema.Int32Attribute{
-				Description: "Organization ID for the inventory to live in.",
+				Description: "Organization ID for the inventory to live in. Required when looking up by `name`.",
+				Optional:    true,
 				Computed:    true,
 			},
 			"variables": schema.StringAttribute{
@@ -59,6 +63,19 @@ func (d *InventoryDataSource) Schema(ctx context.Context, req datasource.SchemaR
 				Computed:    true,
 			},
 		},
+	}
+}
+
+func (d *InventoryDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.ExactlyOneOf(
+			path.MatchRoot("id"),
+			path.MatchRoot("name"),
+		),
+		datasourcevalidator.RequiredTogether(
+			path.MatchRoot("name"),
+			path.MatchRoot("organization"),
+		),
 	}
 }
 
@@ -89,18 +106,28 @@ func (d *InventoryDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	var url string
+	query := urlParser.Values{}
 
-	id, err := strconv.Atoi(data.Id.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable convert id from string to int.",
-			fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
-		return
+	if !data.Id.IsNull() {
+		id, err := strconv.Atoi(data.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable convert id from string to int.",
+				fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
+			return
+		}
+		query.Set("id", strconv.Itoa(id))
+	}
+	if !data.Name.IsNull() {
+		query.Set("name", data.Name.ValueString())
+	}
+	if !data.Organization.IsNull() {
+		query.Set("organization", strconv.Itoa(int(data.Organization.ValueInt32())))
 	}
 
-	url = fmt.Sprintf("inventories/%d/", id)
-	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
+	url := "inventories/?" + query.Encode()
+
+	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving datasource. The resource may not exist.",
@@ -110,13 +137,25 @@ func (d *InventoryDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	var responseData InventoryAPIModel
 
-	err = json.Unmarshal(body, &responseData)
+	countResult := struct {
+		Count   int                 `json:"count"`
+		Results []InventoryAPIModel `json:"results"`
+	}{}
+
+	err = json.Unmarshal(body, &countResult)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to unmarshal response body into object",
 			fmt.Sprintf("Error =  %v.", err.Error()))
 		return
 	}
+	if countResult.Count != 1 {
+		resp.Diagnostics.AddError(
+			"Incorrect number of inventories returned",
+			fmt.Sprintf("Unable to read inventory as API returned %v inventories for query %q.", countResult.Count, query.Encode()))
+		return
+	}
+	responseData = countResult.Results[0]
 
 	idAsString := strconv.Itoa(responseData.Id)
 	data.Id = types.StringValue(idAsString)
