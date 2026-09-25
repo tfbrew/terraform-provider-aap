@@ -125,16 +125,11 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	var contextKey contextKey = "dataSource"
 
 	ctx = context.WithValue(ctx, contextKey, true)
-	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "")
+	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error making API http request",
+			"Error retrieving datasource. The resource may not exist.",
 			fmt.Sprintf("Error was: %s.", err.Error()))
-		return
-	}
-
-	if statusCode == 404 {
-		resp.State.RemoveResource(ctx)
 		return
 	}
 
