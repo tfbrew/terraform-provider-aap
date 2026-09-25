@@ -127,7 +127,7 @@ func (d *InventoryDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	url := "inventories/?" + query.Encode()
 
-	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
+	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving datasource. The resource may not exist.",
