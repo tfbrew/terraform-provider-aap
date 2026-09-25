@@ -120,16 +120,11 @@ func (d *HostDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		url = fmt.Sprintf("hosts/?name=%s&inventory=%d", name, data.Inventory.ValueInt32())
 	}
 
-	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "")
+	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error making API http request",
-			fmt.Sprintf("Error was: %s.", err.Error()))
-		return
-	}
-
-	if statusCode == 404 {
-		resp.State.RemoveResource(ctx)
+			"Error retrieving datasource. The resource may not exist.",
+			fmt.Sprintf("Error = %s.", err.Error()))
 		return
 	}
 
@@ -145,7 +140,7 @@ func (d *HostDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		}
 	}
 	// If looking up by name, check that there is only one response and extract it.
-	if data.Id.IsNull() && !data.Name.IsNull() && data.Inventory.IsNull() {
+	if data.Id.IsNull() && !data.Name.IsNull() && !data.Inventory.IsNull() {
 		nameResult := struct {
 			Count   int            `json:"count"`
 			Results []HostAPIModel `json:"results"`
