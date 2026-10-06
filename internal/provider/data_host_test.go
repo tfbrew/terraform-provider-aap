@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -51,6 +52,28 @@ func TestAccHostDataSource(t *testing.T) {
 						tfjsonpath.New("enabled"),
 						knownvalue.Bool(host.Enabled),
 					),
+					statecheck.CompareValuePairs(
+						fmt.Sprintf("%s_host.test", configprefix.Prefix),
+						tfjsonpath.New("id"),
+						fmt.Sprintf("data.%s_host.test-name", configprefix.Prefix),
+						tfjsonpath.New("id"),
+						compare.ValuesSame(),
+					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("data.%s_host.test-name", configprefix.Prefix),
+						tfjsonpath.New("description"),
+						knownvalue.StringExact(host.Description),
+					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("data.%s_host.test-name", configprefix.Prefix),
+						tfjsonpath.New("variables"),
+						knownvalue.StringExact(host.Variables),
+					),
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("data.%s_host.test-name", configprefix.Prefix),
+						tfjsonpath.New("enabled"),
+						knownvalue.Bool(host.Enabled),
+					),
 				},
 			},
 		},
@@ -77,6 +100,10 @@ resource "%[1]s_host" "test" {
 }
 data "%[1]s_host" "test" {
   id = %[1]s_host.test.id
+}
+data "%[1]s_host" "test-name" {
+  name      = %[1]s_host.test.name
+  inventory = %[1]s_inventory.example.id
 }
 `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Variables, resource.Enabled)
 }
