@@ -152,14 +152,14 @@ func (r InventorySourceResource) ValidateConfig(ctx context.Context, req resourc
 
 	// Required attribute for scm.
 	if data.Source.ValueString() == "scm" {
-		if data.SourcePath.IsNull() {
+		if data.SourcePath.IsNull() && !data.SourcePath.IsUnknown() {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("source_path"),
 				"Missing Attribute Configuration",
 				"Source Control Type requires source_path to be set",
 			)
 		}
-		if data.SourceProject.IsNull() {
+		if data.SourceProject.IsNull() && !data.SourceProject.IsUnknown() {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("source_project"),
 				"Missing Attribute Configuration",
