@@ -119,7 +119,7 @@ func (r UserResource) ValidateConfig(ctx context.Context, req resource.ValidateC
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	// Disallow is_system_auditor for >AAP2.5
-	if configprefix.Prefix == "awx" || data.IsSystemAuditor == basetypes.NewBoolValue(false) || data.IsSystemAuditor.IsNull() {
+	if configprefix.Prefix == "awx" || data.IsSystemAuditor == basetypes.NewBoolValue(false) || data.IsSystemAuditor.IsNull() || data.IsSystemAuditor.IsUnknown() {
 		return
 	} else {
 		resp.Diagnostics.AddAttributeError(

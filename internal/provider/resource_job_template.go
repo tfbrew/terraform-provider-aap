@@ -320,21 +320,16 @@ func (r JobTemplateResource) ValidateConfig(ctx context.Context, req resource.Va
 		return
 	}
 
-	// If inventory is set, return without warning.
-	if !data.Inventory.IsNull() {
+	// Check that either inventory is set/unknown or ask_inventory_on_launch is true/unknown
+	if !data.Inventory.IsNull() || data.Inventory.IsUnknown() || data.AskInventoryOnLaunch.ValueBool() || data.AskInventoryOnLaunch.IsUnknown() {
 		return
+	} else {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("inventory"),
+			"Missing Attribute Configuration",
+			"Expected inventory to be specified or ask_inventory_on_launch = true.",
+		)
 	}
-
-	// If ask_inventory_on_launch is true, return without warning.
-	if data.AskInventoryOnLaunch.ValueBool() {
-		return
-	}
-
-	resp.Diagnostics.AddAttributeError(
-		path.Root("inventory"),
-		"Missing Attribute Configuration",
-		"Expected inventory to be specified or ask_inventory_on_launch = true.",
-	)
 }
 
 func (r *JobTemplateResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

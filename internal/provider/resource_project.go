@@ -156,7 +156,7 @@ func (r ProjectResource) ValidateConfig(ctx context.Context, req resource.Valida
 
 	// credential
 	if data.ScmType.ValueString() == "insights" {
-		if data.Credential.IsNull() {
+		if data.Credential.IsNull() && !data.Credential.IsUnknown() {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("credential"),
 				"Missing Attribute Configuration",
@@ -167,7 +167,7 @@ func (r ProjectResource) ValidateConfig(ctx context.Context, req resource.Valida
 
 	// local_path
 	if data.ScmType.ValueString() == "manual" {
-		if data.LocalPath.ValueString() == "" || data.LocalPath.IsNull() {
+		if !data.LocalPath.IsUnknown() && (data.LocalPath.IsNull() || data.LocalPath.ValueString() == "") {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("local_path"),
 				"Missing Attribute Configuration",
@@ -178,7 +178,7 @@ func (r ProjectResource) ValidateConfig(ctx context.Context, req resource.Valida
 
 	// scm_url
 	if data.ScmType.ValueString() == "git" || data.ScmType.ValueString() == "svn" || data.ScmType.ValueString() == "archive" {
-		if data.ScmUrl.ValueString() == "" || data.ScmUrl.IsNull() {
+		if !data.ScmUrl.IsUnknown() && (data.ScmUrl.IsNull() || data.ScmUrl.ValueString() == "") {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("scm_url"),
 				"Missing Attribute Configuration",
