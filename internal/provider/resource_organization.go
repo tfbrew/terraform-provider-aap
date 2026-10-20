@@ -9,12 +9,14 @@ import (
 	urlParser "net/url"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
@@ -77,6 +79,12 @@ func (r *OrganizationResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "AWX/AAP2.4 only Maximum number of hosts allowed to be managed by this organization.",
 				Default:     int32default.StaticInt32(0),
 				Computed:    true,
+			},
+			"opa_query_path": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
+				Description: "The query path of the OPA policy evaluated before jobs in this organization run, formatted as `package/rule`. Requires an automation controller with policy enforcement support.",
 			},
 		},
 	}
@@ -211,6 +219,13 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.OpaQueryPath.ValueString() != "" {
+		resp.Diagnostics.Append(r.updateOpaQueryPath(ctx, data.Id.ValueString(), data.OpaQueryPath.ValueString())...)
+	}
 }
 
 func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -275,6 +290,7 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("max_hosts"), responseData.MaxHosts)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("opa_query_path"), responseData.OpaQueryPath)...)
 
 	// if aap2.5+ get the /gateway/ id and set the related field
 	if configprefix.Prefix == "aap" {
@@ -360,7 +376,10 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 func (r *OrganizationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data OrganizationModel
 
+	var state OrganizationModel
+
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -405,7 +424,36 @@ func (r *OrganizationResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	if !data.OpaQueryPath.Equal(state.OpaQueryPath) {
+		resp.Diagnostics.Append(r.updateOpaQueryPath(ctx, data.Id.ValueString(), data.OpaQueryPath.ValueString())...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *OrganizationResource) updateOpaQueryPath(ctx context.Context, id, opaQueryPath string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	url := fmt.Sprintf("organizations/%s/", id)
+	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPatch, url, map[string]string{"opa_query_path": opaQueryPath}, []int{200}, "controller")
+	if err != nil {
+		diags.AddError(
+			"Error making API update request",
+			fmt.Sprintf("Error was: %s.", err.Error()))
+		return diags
+	}
+
+	if _, ok := returnedData["opa_query_path"]; !ok && opaQueryPath != "" {
+		diags.AddAttributeError(
+			path.Root("opa_query_path"),
+			"Unsupported attribute",
+			"The automation controller did not return opa_query_path; it does not support policy enforcement.")
+	}
+
+	return diags
 }
 
 func (r *OrganizationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

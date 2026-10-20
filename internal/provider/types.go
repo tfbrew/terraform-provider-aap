@@ -519,23 +519,25 @@ type Messages struct {
 }
 
 type OrganizationModel struct {
-	Id          types.String `tfsdk:"id"`
-	GatewayId   types.Int32  `tfsdk:"gateway_id"`
-	EdaId       types.Int32  `tfsdk:"eda_id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	DefaultEnv  types.Int32  `tfsdk:"default_environment"`
-	MaxHosts    types.Int32  `tfsdk:"max_hosts"`
+	Id           types.String `tfsdk:"id"`
+	GatewayId    types.Int32  `tfsdk:"gateway_id"`
+	EdaId        types.Int32  `tfsdk:"eda_id"`
+	Name         types.String `tfsdk:"name"`
+	Description  types.String `tfsdk:"description"`
+	DefaultEnv   types.Int32  `tfsdk:"default_environment"`
+	MaxHosts     types.Int32  `tfsdk:"max_hosts"`
+	OpaQueryPath types.String `tfsdk:"opa_query_path"`
 }
 
 type contextKey string
 
 type OrganizationAPIModel struct {
-	Id          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	DefaultEnv  int    `json:"default_environment,omitempty"`
-	MaxHosts    int    `json:"max_hosts,omitempty"`
+	Id           int    `json:"id"`
+	Name         string `json:"name"`
+	Description  string `json:"description,omitempty"`
+	DefaultEnv   int    `json:"default_environment,omitempty"`
+	MaxHosts     int    `json:"max_hosts,omitempty"`
+	OpaQueryPath string `json:"opa_query_path,omitempty"`
 }
 
 type PingAPIModel struct {

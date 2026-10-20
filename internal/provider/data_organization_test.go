@@ -90,8 +90,9 @@ func TestAccOrganizationDataSource(t *testing.T) {
 		})
 	} else {
 		resource1 := OrganizationAPIModel{
-			Name:        "test-organization-" + acctest.RandString(5),
-			Description: "test description 1",
+			Name:         "test-organization-" + acctest.RandString(5),
+			Description:  "test description 1",
+			OpaQueryPath: "aap_policy_examples/allowed_false",
 		}
 		resource2 := OrganizationAPIModel{
 			Name:        "test-organization-" + acctest.RandString(5),
@@ -122,6 +123,11 @@ func TestAccOrganizationDataSource(t *testing.T) {
 							fmt.Sprintf("data.%s_organization.test-id", configprefix.Prefix),
 							tfjsonpath.New("eda_id"),
 							knownvalue.NotNull(),
+						),
+						statecheck.ExpectKnownValue(
+							fmt.Sprintf("data.%s_organization.test-id", configprefix.Prefix),
+							tfjsonpath.New("opa_query_path"),
+							knownvalue.StringExact(resource1.OpaQueryPath),
 						),
 					},
 				},
@@ -170,11 +176,12 @@ func testAccOrganizationDataSourceIdConfig2(resource OrganizationAPIModel) strin
 resource "%[1]s_organization" "test-id" {
   name        			= "%[2]s"
   description 			= "%[3]s"
+  opa_query_path		= "%[4]s"
 }
 data "%[1]s_organization" "test-id" {
   id = %[1]s_organization.test-id.id
 }
-`, configprefix.Prefix, resource.Name, resource.Description)
+`, configprefix.Prefix, resource.Name, resource.Description, resource.OpaQueryPath)
 }
 
 func testAccOrganizationDataSourceNameConfig1(resource OrganizationAPIModel) string {

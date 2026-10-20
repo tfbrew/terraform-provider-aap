@@ -62,6 +62,10 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: "Maximum number of hosts allowed to be managed by this organization.",
 				Computed:    true,
 			},
+			"opa_query_path": schema.StringAttribute{
+				Description: "The query path of the OPA policy evaluated before jobs in this organization run.",
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -181,6 +185,7 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	data.MaxHosts = types.Int32Value(int32(responseData.MaxHosts))
+	data.OpaQueryPath = types.StringValue(responseData.OpaQueryPath)
 
 	// now get the EDA ID by querying the eda endpoint
 
