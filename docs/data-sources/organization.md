@@ -37,3 +37,4 @@ data "aap_organization" "example-name" {
 - `eda_id` (Number) Organization ID in the EDA API
 - `gateway_id` (Number) Organization ID in the gateway API
 - `max_hosts` (Number) Maximum number of hosts allowed to be managed by this organization.
+- `opa_query_path` (String) The query path of the OPA policy evaluated before jobs in this organization run.

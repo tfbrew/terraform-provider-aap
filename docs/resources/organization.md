@@ -31,6 +31,7 @@ resource "aap_organization" "example" {
 - `default_environment` (Number) AWX/AAP2.4 only. The fallback execution environment that will be used for jobs inside of this organization if not explicitly assigned at the project, job template or workflow level.
 - `description` (String) Organization description.
 - `max_hosts` (Number) AWX/AAP2.4 only Maximum number of hosts allowed to be managed by this organization.
+- `opa_query_path` (String) The query path of the OPA policy evaluated before jobs in this organization run, formatted as `package/rule`. Requires an automation controller with policy enforcement support.
 
 ### Read-Only
 
