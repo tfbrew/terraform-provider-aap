@@ -121,8 +121,9 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 	if !data.Name.IsNull() {
 		// set url for read by name HTTP request
-		name := urlParser.QueryEscape(data.Name.ValueString())
-		url = fmt.Sprintf("organizations/?name=%s", name)
+		query := urlParser.Values{}
+		query.Set("name", data.Name.ValueString())
+		url = "organizations/?" + query.Encode()
 	}
 
 	// let function know we're a data source instead of a resource
@@ -189,7 +190,9 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	// now get the EDA ID by querying the eda endpoint
 
-	edaUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
+	edaQuery := urlParser.Values{}
+	edaQuery.Set("name", data.Name.ValueString())
+	edaUrl := "organizations/?" + edaQuery.Encode()
 	edaBody, edaStatusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200, 404}, "eda")
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -219,7 +222,9 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	// now get the Gateway ID by querying the eda endpoint
 
-	gatewayUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
+	gatewayQuery := urlParser.Values{}
+	gatewayQuery.Set("name", data.Name.ValueString())
+	gatewayUrl := "organizations/?" + gatewayQuery.Encode()
 	gatewayBody, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, gatewayUrl, nil, []int{200}, "gateway")
 	if err != nil {
 		resp.Diagnostics.AddError(

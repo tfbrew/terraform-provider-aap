@@ -268,8 +268,9 @@ func (d *JobTemplateDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 	if !data.Name.IsNull() {
 		// set url for read by name HTTP request
-		name := urlParser.QueryEscape(data.Name.ValueString())
-		url = fmt.Sprintf("job_templates/?name=%s", name)
+		query := urlParser.Values{}
+		query.Set("name", data.Name.ValueString())
+		url = "job_templates/?" + query.Encode()
 	}
 
 	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")

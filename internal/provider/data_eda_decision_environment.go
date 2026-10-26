@@ -117,8 +117,9 @@ func (d *EdaDecisionEnvironmentDataSource) Read(ctx context.Context, req datasou
 	}
 	if !data.Name.IsNull() {
 		// set url for read by name HTTP request
-		name := urlParser.QueryEscape(data.Name.ValueString())
-		url = fmt.Sprintf("decision-environments/?name=%s", name)
+		query := urlParser.Values{}
+		query.Set("name", data.Name.ValueString())
+		url = "decision-environments/?" + query.Encode()
 	}
 	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "eda")
 	if err != nil {

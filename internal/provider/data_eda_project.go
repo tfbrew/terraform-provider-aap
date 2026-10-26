@@ -138,7 +138,9 @@ func (d *EdaProjectDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		url = fmt.Sprintf("projects/%d/", id)
 	}
 	if !data.Name.IsNull() {
-		url = fmt.Sprintf("projects/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
+		query := urlParser.Values{}
+		query.Set("name", data.Name.ValueString())
+		url = "projects/?" + query.Encode()
 	}
 
 	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "eda")

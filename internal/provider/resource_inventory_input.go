@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	urlParser "net/url"
 	"strconv"
 	"strings"
 
@@ -127,7 +128,9 @@ func (r *InventoryInputResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	url := fmt.Sprintf("inventories/%d/input_inventories/?id=%d", constructedInvId, inputInvId)
+	query := urlParser.Values{}
+	query.Set("id", strconv.Itoa(inputInvId))
+	url := fmt.Sprintf("inventories/%d/input_inventories/?", constructedInvId) + query.Encode()
 	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(

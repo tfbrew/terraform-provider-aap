@@ -120,8 +120,9 @@ func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 	if !data.Username.IsNull() {
 		// set url for read by username HTTP request
-		name := urlParser.QueryEscape(data.Username.ValueString())
-		url = fmt.Sprintf("users/?username=%s", name)
+		query := urlParser.Values{}
+		query.Set("username", data.Username.ValueString())
+		url = "users/?" + query.Encode()
 	}
 
 	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "gateway")

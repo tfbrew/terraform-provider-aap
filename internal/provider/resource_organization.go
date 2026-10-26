@@ -158,7 +158,9 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 
 		// overwrite returnedData with Get against org's /controller/ endpoint
 
-		url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
+		query := urlParser.Values{}
+		query.Set("name", data.Name.ValueString())
+		url := "organizations/?" + query.Encode()
 		responseBodyData, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "controller")
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -183,7 +185,9 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 		}
 		data.Id = types.StringValue(strconv.Itoa(nameResult.Results[0].Id))
 
-		eda_url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
+		edaQuery := urlParser.Values{}
+		edaQuery.Set("name", data.Name.ValueString())
+		eda_url := "organizations/?" + edaQuery.Encode()
 		body, edaStatusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, eda_url, nil, []int{200, 404}, "eda")
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -295,7 +299,9 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 	// if aap2.5+ get the /gateway/ id and set the related field
 	if configprefix.Prefix == "aap" {
 
-		gatewayUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
+		gatewayQuery := urlParser.Values{}
+		gatewayQuery.Set("name", responseData.Name)
+		gatewayUrl := "organizations/?" + gatewayQuery.Encode()
 		gatewayBody, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, gatewayUrl, nil, []int{200}, "gateway")
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -321,7 +327,9 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gateway_id"), nameResult.Results[0].Id)...)
 
-		edaUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
+		edaQuery := urlParser.Values{}
+		edaQuery.Set("name", responseData.Name)
+		edaUrl := "organizations/?" + edaQuery.Encode()
 		edaBody, edaStatusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200, 404}, "eda")
 		if err != nil {
 			resp.Diagnostics.AddError(

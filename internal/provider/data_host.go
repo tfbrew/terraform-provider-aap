@@ -116,8 +116,10 @@ func (d *HostDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 	if !data.Name.IsNull() && !data.Inventory.IsNull() {
 		// set url for read by name HTTP request
-		name := urlParser.QueryEscape(data.Name.ValueString())
-		url = fmt.Sprintf("hosts/?name=%s&inventory=%d", name, data.Inventory.ValueInt32())
+		query := urlParser.Values{}
+		query.Set("name", data.Name.ValueString())
+		query.Set("inventory", strconv.Itoa(int(data.Inventory.ValueInt32())))
+		url = "hosts/?" + query.Encode()
 	}
 
 	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
