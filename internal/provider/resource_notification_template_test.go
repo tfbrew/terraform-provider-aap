@@ -157,6 +157,15 @@ func TestAccNotificationTemplateResource(t *testing.T) {
 					),
 				},
 			},
+			// webhook with null message fields, read & import must not error
+			{
+				Config:             testAccNotifTmplWebhookNullMessagesResourceConfig(objectName, webhookConfigString),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ResourceName: fmt.Sprintf("%s_notification_template.example-webhook-null-messages", configprefix.Prefix),
+				ImportState:  true,
+			},
 		},
 	})
 }
@@ -233,6 +242,32 @@ resource "%[1]s_notification_template" "example-slack-and-message" {
 		  body    = ""
 		  message = ""
 		}
+	  }
+	})
+  }`, configprefix.Prefix, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), objectName, notifConfig)
+}
+
+func testAccNotifTmplWebhookNullMessagesResourceConfig(objectName, notifConfig string) string {
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "example" { 
+	name = "%[2]s" 
+	description = "testing example" 
+}
+
+resource "%[1]s_notification_template" "example-webhook-null-messages" {
+	name              = "%[3]s"
+	notification_type = "webhook"
+	organization      = %[1]s_organization.example.id
+  notification_configuration = jsonencode(%[4]s)
+  messages = jsonencode({
+	  error   = { body = null, message = null }
+	  started = { body = null, message = null }
+	  success = { body = null, message = null }
+	  workflow_approval = {
+		approved  = { body = null, message = null }
+		denied    = { body = null, message = null }
+		running   = { body = null, message = null }
+		timed_out = { body = null, message = null }
 	  }
 	})
   }`, configprefix.Prefix, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), objectName, notifConfig)
