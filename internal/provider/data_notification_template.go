@@ -273,8 +273,8 @@ func (d *NotificationTemplateDataSource) Read(ctx context.Context, req datasourc
 			if k == "error" {
 
 				if errorMsg, ok := v.(map[string]any); ok {
-					if msg_body, ok := errorMsg["body"].(string); ok {
-						if msg_message, ok := errorMsg["message"].(string); ok {
+					if msg_body, ok := errorMsg["body"].(string); ok || errorMsg["body"] == nil {
+						if msg_message, ok := errorMsg["message"].(string); ok || errorMsg["message"] == nil {
 							messages.Error = MessageValue{Body: msg_body, Message: msg_message}
 						} else {
 							resp.Diagnostics.AddError("Unexpected error in datasource_notification_templates",
@@ -296,8 +296,8 @@ func (d *NotificationTemplateDataSource) Read(ctx context.Context, req datasourc
 			}
 			if k == "started" {
 				if startMsg, ok := v.(map[string]any); ok {
-					if msg_body, ok := startMsg["body"].(string); ok {
-						if msg_message, ok := startMsg["message"].(string); ok {
+					if msg_body, ok := startMsg["body"].(string); ok || startMsg["body"] == nil {
+						if msg_message, ok := startMsg["message"].(string); ok || startMsg["message"] == nil {
 							messages.Started = MessageValue{Body: msg_body, Message: msg_message}
 						} else {
 							resp.Diagnostics.AddError("Unexpected error in datasource_notification_templates",
@@ -318,8 +318,8 @@ func (d *NotificationTemplateDataSource) Read(ctx context.Context, req datasourc
 			}
 			if k == "success" {
 				if successMsg, ok := v.(map[string]any); ok {
-					if msg_body, ok := successMsg["body"].(string); ok {
-						if msg_message, ok := successMsg["message"].(string); ok {
+					if msg_body, ok := successMsg["body"].(string); ok || successMsg["body"] == nil {
+						if msg_message, ok := successMsg["message"].(string); ok || successMsg["message"] == nil {
 							messages.Success = MessageValue{Body: msg_body, Message: msg_message}
 						} else {
 							resp.Diagnostics.AddError("Unexpected error in datasource_notification_templates",
@@ -345,8 +345,8 @@ func (d *NotificationTemplateDataSource) Read(ctx context.Context, req datasourc
 					for key, val := range wkaParent {
 
 						if valMsg, ok := val.(map[string]any); ok {
-							if msg_body, ok := valMsg["body"].(string); ok {
-								if msg_message, ok := valMsg["message"].(string); ok {
+							if msg_body, ok := valMsg["body"].(string); ok || valMsg["body"] == nil {
+								if msg_message, ok := valMsg["message"].(string); ok || valMsg["message"] == nil {
 									wka[key] = MessageValue{Body: msg_body, Message: msg_message}
 								} else {
 									resp.Diagnostics.AddError("Unexpected error in datasource_notification_templates",
