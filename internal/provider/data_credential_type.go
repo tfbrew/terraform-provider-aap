@@ -121,9 +121,10 @@ func (d *CredentialTypeDataSource) Read(ctx context.Context, req datasource.Read
 	}
 	if !data.Name.IsNull() && !data.Kind.IsNull() {
 		// set url for read by name HTTP request
-		name := urlParser.QueryEscape(data.Name.ValueString())
-		kind := urlParser.QueryEscape(data.Kind.ValueString())
-		url = fmt.Sprintf("credential_types/?name=%s&kind=%s", name, kind)
+		query := urlParser.Values{}
+		query.Set("name", data.Name.ValueString())
+		query.Set("kind", data.Kind.ValueString())
+		url = "credential_types/?" + query.Encode()
 	}
 	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
 	if err != nil {
