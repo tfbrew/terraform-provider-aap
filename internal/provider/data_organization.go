@@ -189,61 +189,32 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	// now get the EDA ID by querying the eda endpoint
 
-	edaUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-	edaBody, edaStatusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200, 404}, "eda")
+	// the org may have been created in gateway moments ago, so wait for it to be synced to EDA.
+	// If the eda endpoint doesn't exist (404), just continue without error and leave the EDA ID empty.
+	edaId, found, err := lookupOrgIdByName(ctx, d.client, data.Name.ValueString(), "eda", true)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error making API http request",
+			"Unable to look up organization in EDA API",
 			fmt.Sprintf("Error was: %s.", err.Error()))
 		return
 	}
-	// If the eda endpoint exists (200), parse the response and extract the EDA ID. If it doesn't exist (404), just continue without error and leave the EDA ID empty.
-	if edaStatusCode == 200 {
-		// Parse EDA response and extract ID
-		var edaResult JTChildAPIRead
-		err = json.Unmarshal(edaBody, &edaResult)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to unmarshal EDA response body into result object",
-				fmt.Sprintf("Error: %v.", err.Error()))
-			return
-		}
-		if edaResult.Count != 1 {
-			resp.Diagnostics.AddError(
-				"Org EDA result count not 1.",
-				fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
-			return
-		}
-		data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
+	if found {
+		data.EdaId = types.Int32Value(int32(edaId))
 	}
 
-	// now get the Gateway ID by querying the eda endpoint
+	// now get the Gateway ID by querying the gateway endpoint
 
-	gatewayUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-	gatewayBody, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, gatewayUrl, nil, []int{200}, "gateway")
+	gatewayId, found, err := lookupOrgIdByName(ctx, d.client, data.Name.ValueString(), "gateway", false)
+	if err == nil && !found {
+		err = fmt.Errorf("gateway endpoint returned 404")
+	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error making API http request",
+			"Unable to look up organization in gateway API",
 			fmt.Sprintf("Error was: %s.", err.Error()))
 		return
 	}
-
-	// Parse EDA response and extract ID
-	var gatewayResult JTChildAPIRead
-	err = json.Unmarshal(gatewayBody, &gatewayResult)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to unmarshal Gateway response body into result object",
-			fmt.Sprintf("Error: %v.", err.Error()))
-		return
-	}
-	if gatewayResult.Count != 1 {
-		resp.Diagnostics.AddError(
-			"Org Gateway result count not 1.",
-			fmt.Sprintf("Querying for org by name against Gateway endpoint resulted in result count of %d instead of 1.", gatewayResult.Count))
-		return
-	}
-	data.GatewayId = types.Int32Value(int32(gatewayResult.Results[0].Id))
+	data.GatewayId = types.Int32Value(int32(gatewayId))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

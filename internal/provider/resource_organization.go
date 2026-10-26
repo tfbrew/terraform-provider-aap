@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	urlParser "net/url"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -156,60 +155,29 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 
 	if configprefix.Prefix == "aap" {
 
-		// overwrite returnedData with Get against org's /controller/ endpoint
-
-		url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-		responseBodyData, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "controller")
+		// the org was just created in gateway, so wait for it to be synced to the controller and EDA
+		controllerId, found, err := lookupOrgIdByName(ctx, r.client, data.Name.ValueString(), "controller", true)
+		if err == nil && !found {
+			err = fmt.Errorf("controller endpoint returned 404")
+		}
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error making API http request",
+				"Unable to look up organization in controller API",
 				fmt.Sprintf("Error was: %s.", err.Error()))
 			return
 		}
-		// get id
-		var nameResult JTChildAPIRead
-		err = json.Unmarshal(responseBodyData, &nameResult)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to unmarshal response body into result object",
-				fmt.Sprintf("Error:  %v.", err.Error()))
-			return
-		}
-		if nameResult.Count != 1 {
-			resp.Diagnostics.AddError(
-				"Org controller result count not 1.",
-				fmt.Sprintf("Querying for org by name against controller endpoint resulted in result count of %d isntead of 1.", nameResult.Count))
-			return
-		}
-		data.Id = types.StringValue(strconv.Itoa(nameResult.Results[0].Id))
+		data.Id = types.StringValue(strconv.Itoa(controllerId))
 
-		eda_url := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-		body, edaStatusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, eda_url, nil, []int{200, 404}, "eda")
+		// If the eda endpoint doesn't exist (404), just continue without error and leave the EDA ID empty.
+		edaId, found, err := lookupOrgIdByName(ctx, r.client, data.Name.ValueString(), "eda", true)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error making API http request",
+				"Unable to look up organization in EDA API",
 				fmt.Sprintf("Error was: %s.", err.Error()))
 			return
 		}
-
-		// If the eda endpoint exists (200), parse the response and extract the EDA ID. If it doesn't exist (404), just continue without error and leave the EDA ID empty.
-		if edaStatusCode == 200 {
-			// Parse EDA response and extract ID
-			var edaResult JTChildAPIRead
-			err = json.Unmarshal(body, &edaResult)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Unable to unmarshal EDA response body into result object",
-					fmt.Sprintf("Error: %v.", err.Error()))
-				return
-			}
-			if edaResult.Count != 1 {
-				resp.Diagnostics.AddError(
-					"Org EDA result count not 1.",
-					fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
-				return
-			}
-			data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
+		if found {
+			data.EdaId = types.Int32Value(int32(edaId))
 		} else {
 			data.EdaId = types.Int32Null()
 		}
@@ -295,60 +263,30 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 	// if aap2.5+ get the /gateway/ id and set the related field
 	if configprefix.Prefix == "aap" {
 
-		gatewayUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
-		gatewayBody, _, err := r.client.GenericAPIRequest(ctx, http.MethodGet, gatewayUrl, nil, []int{200}, "gateway")
+		gatewayId, found, err := lookupOrgIdByName(ctx, r.client, responseData.Name, "gateway", false)
+		if err == nil && !found {
+			err = fmt.Errorf("gateway endpoint returned 404")
+		}
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error making API http request",
+				"Unable to look up organization in gateway API",
 				fmt.Sprintf("Error was: %s.", err.Error()))
 			return
 		}
 
-		var nameResult JTChildAPIRead
-		err = json.Unmarshal(gatewayBody, &nameResult)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gateway_id"), gatewayId)...)
+
+		// If the eda endpoint doesn't exist (404), just continue without error and leave the EDA ID empty.
+		edaId, found, err := lookupOrgIdByName(ctx, r.client, responseData.Name, "eda", false)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Unable to unmarshal response body into result object",
-				fmt.Sprintf("Error:  %v.", err.Error()))
-			return
-		}
-		if nameResult.Count != 1 {
-			resp.Diagnostics.AddError(
-				"Expected only one org result from gateway",
-				fmt.Sprintf("Got count of %d instead.", nameResult.Count))
-			return
-		}
-
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gateway_id"), nameResult.Results[0].Id)...)
-
-		edaUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(responseData.Name))
-		edaBody, edaStatusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200, 404}, "eda")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error making API http request",
+				"Unable to look up organization in EDA API",
 				fmt.Sprintf("Error was: %s.", err.Error()))
 			return
 		}
 
-		// If the eda endpoint exists (200), parse the response and extract the EDA ID. If it doesn't exist (404), just continue without error and leave the EDA ID empty.
-		if edaStatusCode == 200 {
-			// Parse EDA response and extract ID
-			var edaResult JTChildAPIRead
-			err = json.Unmarshal(edaBody, &edaResult)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Unable to unmarshal EDA response body into result object",
-					fmt.Sprintf("Error: %v.", err.Error()))
-				return
-			}
-			if edaResult.Count != 1 {
-				resp.Diagnostics.AddError(
-					"Org EDA result count not 1.",
-					fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
-				return
-			}
-
-			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("eda_id"), edaResult.Results[0].Id)...)
+		if found {
+			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("eda_id"), edaId)...)
 		} else {
 			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("eda_id"), types.Int32Null())...)
 		}
