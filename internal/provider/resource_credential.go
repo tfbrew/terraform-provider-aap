@@ -614,7 +614,7 @@ func (r *CredentialResource) ImportState(ctx context.Context, req resource.Impor
 
 	idUnescaped, _ := strconv.Unquote(`"` + req.ID + `"`)
 
-	idParts := strings.Split(idUnescaped, importIDSeparator)
+	idParts := strings.Split(idUnescaped, "/")
 	countParts := len(idParts)
 
 	switch {
@@ -650,7 +650,7 @@ func (r *CredentialResource) ImportState(ctx context.Context, req resource.Impor
 		}
 
 	default:
-		resp.Diagnostics.AddError("Invalid import id string", "The import string at the end must contain one int id value or that plus comma-separated pairs for string keys with corresponding secrets.")
+		resp.Diagnostics.AddError("Invalid import id string", "The import string at the end must contain one int id value or that plus /-separated pairs for string keys with corresponding secrets.")
 
 	}
 

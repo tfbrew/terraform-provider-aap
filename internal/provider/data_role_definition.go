@@ -31,7 +31,9 @@ func (d *RoleDefinitionDataSource) Metadata(ctx context.Context, req datasource.
 
 func (d *RoleDefinitionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		// AAP-AWX-DIFF-BEGIN: AAP 2.6 serves role definitions from the gateway API ("gateway26"); awx uses the controller API and notes AAP 2.4 support in the description.
 		Description: "Get role definition datasource",
+		// AAP-AWX-DIFF-END
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "A valid role definition ID. You must specify either the `id` or `name` field, but not both.",
@@ -111,16 +113,13 @@ func (d *RoleDefinitionDataSource) Read(ctx context.Context, req datasource.Read
 		url = fmt.Sprintf("role_definitions/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
 	}
 
-	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "gateway26")
+	// AAP-AWX-DIFF-BEGIN: AAP 2.6 serves role definitions from the gateway API ("gateway26"); awx uses the controller API and notes AAP 2.4 support in the description.
+	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "gateway26")
+	// AAP-AWX-DIFF-END
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error making API http request",
+			"Error retrieving datasource. The resource may not exist.",
 			fmt.Sprintf("Error was: %s.", err.Error()))
-		return
-	}
-
-	if statusCode == 404 {
-		resp.State.RemoveResource(ctx)
 		return
 	}
 

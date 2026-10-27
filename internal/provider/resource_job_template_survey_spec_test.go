@@ -25,7 +25,7 @@ func TestAccJobTemplateSurveySpec_basic(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: specTestCaseSetup(jtName),
+				Config: testAccJobTemplateSurveySpecConfig(jtName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						fmt.Sprintf("%s_job_template_survey_spec.example", configprefix.Prefix),
@@ -103,7 +103,7 @@ func TestAccJobTemplateSurveySpec_basic(t *testing.T) {
 	})
 }
 
-func specTestCaseSetup(template_name string) string {
+func testAccJobTemplateSurveySpecConfig(template_name string) string {
 	return fmt.Sprintf(`
 resource "%[1]s_organization" "test" {
 	name = "%[2]s"

@@ -12,8 +12,8 @@ resource "{{.Prefix}}_team" "example" {
   organization = {{.Prefix}}_organization.example.id
   description = "Example team description"
 }
-resource "{{.Prefix}}_role_user_assignment" "test" {
+resource "{{.Prefix}}_role_team_assignment" "test" {
   object_id       = {{.Prefix}}_organization.example.id
   role_definition = {{.Prefix}}_role_definition.example.id
-  user            = {{.Prefix}}_user.example.id
+  team            = {{.Prefix}}_team.example.id
 }

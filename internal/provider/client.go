@@ -14,19 +14,23 @@ import (
 )
 
 type providerClient struct {
-	client               *http.Client
-	endpoint             string
-	auth                 string
-	aapVersion           float32
+	client   *http.Client
+	endpoint string
+	auth     string
+	// AAP-AWX-DIFF-BEGIN: aap routes requests to the gateway, controller, EDA and galaxy APIs; awx always uses /api/v2/.
+	aapVersion float32
+	// AAP-AWX-DIFF-END
 	apiRetryCount        int32
 	apiRetryDelaySeconds int32
 }
 
 // A wrapper for http.NewRequestWithContext() that prepends tower endpoint to URL & sets authorization
 // headers and then makes the actual http request.
+// AAP-AWX-DIFF-BEGIN: aap routes requests to the gateway, controller, EDA and galaxy APIs; awx always uses /api/v2/.
 func (c *providerClient) GenericAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, api_endpoint string) (responseBody []byte, statusCode int, errorMessage error) {
 
 	url = c.buildAPIUrl(url, api_endpoint)
+	// AAP-AWX-DIFF-END
 
 	var body io.Reader
 
@@ -111,9 +115,36 @@ func SleepWithContext(ctx context.Context, d time.Duration) {
 	}
 }
 
+// WaitForDeletion polls url until the API returns 404. Some objects, such as inventories, are deleted
+// asynchronously (the DELETE returns 202), and deleting a parent object like the organization while the
+// background delete is still running can fail with a database deadlock.
+func (c *providerClient) WaitForDeletion(ctx context.Context, url string, aap25_api_endpoint_hint string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+
+	for {
+		_, statusCode, err := c.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, aap25_api_endpoint_hint)
+		if err != nil {
+			return err
+		}
+		if statusCode == http.StatusNotFound {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("%s still exists %s after the delete request", url, timeout)
+		}
+
+		SleepWithContext(ctx, 2*time.Second)
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+	}
+}
+
+// AAP-AWX-DIFF-BEGIN: aap routes requests to the gateway, controller, EDA and galaxy APIs; awx always uses /api/v2/.
 func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, api_endpoint string) (returnedData map[string]any, statusCode int, errorMessage error) {
 
 	url = c.buildAPIUrl(url, api_endpoint)
+	// AAP-AWX-DIFF-END
 
 	var body io.Reader
 
@@ -194,7 +225,7 @@ func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url
 	return
 }
 
-// In AAP, most api endpoint live in /controller/. But, sometimes they specifyc gateway endpoint instead.
+// AAP-AWX-DIFF-BEGIN: aap routes requests to the gateway, controller, EDA and galaxy APIs; awx always uses /api/v2/.
 func (c *providerClient) buildAPIUrl(resourceUrl, api_endpoint string) (url string) {
 
 	if api_endpoint == "gateway" && configprefix.Prefix == "aap" {
@@ -210,6 +241,7 @@ func (c *providerClient) buildAPIUrl(resourceUrl, api_endpoint string) (url stri
 	} else if configprefix.Prefix == "awx" {
 		url = c.endpoint + "/api/v2/" + resourceUrl // handle awx
 	}
+	// AAP-AWX-DIFF-END
 
 	return
 }

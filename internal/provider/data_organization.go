@@ -38,6 +38,7 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: configprefix.OrgDataSourceIdDescription,
 				Optional:    true,
 			},
+			// AAP-AWX-DIFF-BEGIN: aap also exposes the gateway and EDA organization IDs.
 			"gateway_id": schema.Int32Attribute{
 				Description: "Organization ID in the gateway API",
 				Computed:    true,
@@ -46,6 +47,7 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: "Organization ID in the EDA API",
 				Computed:    true,
 			},
+			// AAP-AWX-DIFF-END
 			"name": schema.StringAttribute{
 				Description: "Organization name",
 				Optional:    true,
@@ -54,18 +56,16 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: "Organization description.",
 				Computed:    true,
 			},
-			"default_environment": schema.Int32Attribute{
-				Description: "The fallback execution environment that will be used for jobs inside of this organization if not explicitly assigned at the project, job template or workflow level.",
-				Computed:    true,
-			},
 			"max_hosts": schema.Int32Attribute{
 				Description: "Maximum number of hosts allowed to be managed by this organization.",
 				Computed:    true,
 			},
+			// AAP-AWX-DIFF-BEGIN: aap also exposes opa_query_path; awx exposes default_environment.
 			"opa_query_path": schema.StringAttribute{
 				Description: "The query path of the OPA policy evaluated before jobs in this organization run.",
 				Computed:    true,
 			},
+			// AAP-AWX-DIFF-END
 		},
 	}
 }
@@ -180,70 +180,39 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		data.Description = types.StringValue(responseData.Description)
 	}
 
-	if responseData.DefaultEnv != 0 {
-		data.DefaultEnv = types.Int32Value(int32(responseData.DefaultEnv))
-	}
-
 	data.MaxHosts = types.Int32Value(int32(responseData.MaxHosts))
+	// AAP-AWX-DIFF-BEGIN: aap also reads opa_query_path and looks up the gateway and EDA organization IDs; awx reads default_environment.
 	data.OpaQueryPath = types.StringValue(responseData.OpaQueryPath)
 
 	// now get the EDA ID by querying the eda endpoint
 
-	edaUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-	edaBody, edaStatusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, edaUrl, nil, []int{200, 404}, "eda")
+	// the org may have been created in gateway moments ago, so wait for it to be synced to EDA.
+	// If the eda endpoint doesn't exist (404), just continue without error and leave the EDA ID empty.
+	edaId, found, err := lookupOrgIdByName(ctx, d.client, data.Name.ValueString(), "eda", true)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error making API http request",
+			"Unable to look up organization in EDA API",
 			fmt.Sprintf("Error was: %s.", err.Error()))
 		return
 	}
-	// If the eda endpoint exists (200), parse the response and extract the EDA ID. If it doesn't exist (404), just continue without error and leave the EDA ID empty.
-	if edaStatusCode == 200 {
-		// Parse EDA response and extract ID
-		var edaResult JTChildAPIRead
-		err = json.Unmarshal(edaBody, &edaResult)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to unmarshal EDA response body into result object",
-				fmt.Sprintf("Error: %v.", err.Error()))
-			return
-		}
-		if edaResult.Count != 1 {
-			resp.Diagnostics.AddError(
-				"Org EDA result count not 1.",
-				fmt.Sprintf("Querying for org by name against EDA endpoint resulted in result count of %d instead of 1.", edaResult.Count))
-			return
-		}
-		data.EdaId = types.Int32Value(int32(edaResult.Results[0].Id))
+	if found {
+		data.EdaId = types.Int32Value(int32(edaId))
 	}
 
-	// now get the Gateway ID by querying the eda endpoint
+	// now get the Gateway ID by querying the gateway endpoint
 
-	gatewayUrl := fmt.Sprintf("organizations/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
-	gatewayBody, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, gatewayUrl, nil, []int{200}, "gateway")
+	gatewayId, found, err := lookupOrgIdByName(ctx, d.client, data.Name.ValueString(), "gateway", false)
+	if err == nil && !found {
+		err = fmt.Errorf("gateway endpoint returned 404")
+	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error making API http request",
+			"Unable to look up organization in gateway API",
 			fmt.Sprintf("Error was: %s.", err.Error()))
 		return
 	}
-
-	// Parse EDA response and extract ID
-	var gatewayResult JTChildAPIRead
-	err = json.Unmarshal(gatewayBody, &gatewayResult)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to unmarshal Gateway response body into result object",
-			fmt.Sprintf("Error: %v.", err.Error()))
-		return
-	}
-	if gatewayResult.Count != 1 {
-		resp.Diagnostics.AddError(
-			"Org Gateway result count not 1.",
-			fmt.Sprintf("Querying for org by name against Gateway endpoint resulted in result count of %d instead of 1.", gatewayResult.Count))
-		return
-	}
-	data.GatewayId = types.Int32Value(int32(gatewayResult.Results[0].Id))
+	data.GatewayId = types.Int32Value(int32(gatewayId))
+	// AAP-AWX-DIFF-END
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

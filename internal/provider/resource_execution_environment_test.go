@@ -14,6 +14,8 @@ import (
 )
 
 func TestAccExecutionEnvironmentResource(t *testing.T) {
+	rName := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	r2Name := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
 	IdCompare := &compareTwoValuesAsStrings{}
 	resource1 := ExecutionEnvironmentAPIModel{
 		Name:        "test-ee-" + acctest.RandString(5),
@@ -37,62 +39,62 @@ func TestAccExecutionEnvironmentResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExecutionEnvironmentResource1Config(resource1),
+				Config: testAccExecutionEnvironmentResource1Config(resource1, rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_execution_environment.test", configprefix.Prefix),
+						fmt.Sprintf("%s_execution_environment.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("name"),
 						knownvalue.StringExact(resource1.Name),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_execution_environment.test", configprefix.Prefix),
+						fmt.Sprintf("%s_execution_environment.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(resource1.Description),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_execution_environment.test", configprefix.Prefix),
+						fmt.Sprintf("%s_execution_environment.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("image"),
 						knownvalue.StringExact(resource1.Image),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_execution_environment.test", configprefix.Prefix),
+						fmt.Sprintf("%s_execution_environment.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("pull"),
 						knownvalue.StringExact(resource1.Pull),
 					),
 				},
 			},
 			{
-				ResourceName:      fmt.Sprintf("%s_execution_environment.test", configprefix.Prefix),
+				ResourceName:      fmt.Sprintf("%s_execution_environment.%s", configprefix.Prefix, rName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExecutionEnvironmentResource2Config(resource2),
+				Config: testAccExecutionEnvironmentResource2Config(resource2, r2Name),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_execution_environment.test", configprefix.Prefix),
+						fmt.Sprintf("%s_execution_environment.%s", configprefix.Prefix, r2Name),
 						tfjsonpath.New("name"),
 						knownvalue.StringExact(resource2.Name),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_execution_environment.test", configprefix.Prefix),
+						fmt.Sprintf("%s_execution_environment.%s", configprefix.Prefix, r2Name),
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(resource2.Description),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_execution_environment.test", configprefix.Prefix),
+						fmt.Sprintf("%s_execution_environment.%s", configprefix.Prefix, r2Name),
 						tfjsonpath.New("image"),
 						knownvalue.StringExact(resource2.Image),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_execution_environment.test", configprefix.Prefix),
+						fmt.Sprintf("%s_execution_environment.%s", configprefix.Prefix, r2Name),
 						tfjsonpath.New("pull"),
 						knownvalue.StringExact(resource2.Pull),
 					),
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_credential.test", configprefix.Prefix),
+						fmt.Sprintf("%s_credential.%s", configprefix.Prefix, r2Name),
 						tfjsonpath.New("id"),
-						fmt.Sprintf("%s_execution_environment.test", configprefix.Prefix),
+						fmt.Sprintf("%s_execution_environment.%s", configprefix.Prefix, r2Name),
 						tfjsonpath.New("credential"),
 						IdCompare,
 					),
@@ -102,30 +104,30 @@ func TestAccExecutionEnvironmentResource(t *testing.T) {
 	})
 }
 
-func testAccExecutionEnvironmentResource1Config(resource ExecutionEnvironmentAPIModel) string {
+func testAccExecutionEnvironmentResource1Config(resource ExecutionEnvironmentAPIModel, rName string) string {
 	return fmt.Sprintf(`
-resource "%[1]s_execution_environment" "test" {
+resource "%[1]s_execution_environment" "%[6]s" {
   name        	= "%[2]s"
   description 	= "%[3]s"
   image   		= "%[4]s"
   pull 			= "%[5]s"
 }
-  `, configprefix.Prefix, resource.Name, resource.Description, resource.Image, resource.Pull)
+  `, configprefix.Prefix, resource.Name, resource.Description, resource.Image, resource.Pull, rName)
 }
 
-func testAccExecutionEnvironmentResource2Config(resource ExecutionEnvironmentAPIModel) string {
+func testAccExecutionEnvironmentResource2Config(resource ExecutionEnvironmentAPIModel, rName string) string {
 	return fmt.Sprintf(`
-data "%[1]s_credential_type" "test" {
+data "%[1]s_credential_type" "%[7]s" {
   name = "Container Registry"
   kind = "registry"
 }
-resource "%[1]s_organization" "test" {
+resource "%[1]s_organization" "%[7]s" {
   name        = "%[2]s"
 }
-resource "%[1]s_credential" "test" {
+resource "%[1]s_credential" "%[7]s" {
   name            = "%[2]s"
-  organization    = %[1]s_organization.test.id
-  credential_type = data.%[1]s_credential_type.test.id
+  organization    = %[1]s_organization.%[7]s.id
+  credential_type = data.%[1]s_credential_type.%[7]s.id
   inputs = jsonencode({
 	"host" : "quay.io",
 	"username" : "test",
@@ -133,12 +135,12 @@ resource "%[1]s_credential" "test" {
 	"verify_ssl" : true
   })
 }
-resource "%[1]s_execution_environment" "test" {
+resource "%[1]s_execution_environment" "%[7]s" {
   name        	= "%[3]s"
   description 	= "%[4]s"
   image   		= "%[5]s"
   pull 			= "%[6]s"
-  credential	= %[1]s_credential.test.id
+  credential	= %[1]s_credential.%[7]s.id
 }
-  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Image, resource.Pull)
+  `, configprefix.Prefix, acctest.RandString(5), resource.Name, resource.Description, resource.Image, resource.Pull, rName)
 }

@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-const importIDSeparator = "/"
-
 type JTChildAPIRead struct {
 	Count   int           `json:"count"`
 	Results []ChildResult `json:"results"`
@@ -78,6 +76,20 @@ type CredentialDataModel struct {
 	InputsAsObject types.Dynamic `tfsdk:"inputs_as_object"`
 }
 
+type CredentialDissasocBody struct {
+	Id           int  `json:"id"`
+	Disassociate bool `json:"disassociate"`
+}
+
+type CredentialAPIRead struct {
+	Count   int                `json:"count"`
+	Results []CredentialResult `json:"results"`
+}
+
+type CredentialResult struct {
+	Id int `json:"id"`
+}
+
 type CredentialAPIModel struct {
 	Id              int            `json:"id"`
 	Name            string         `json:"name"`
@@ -108,62 +120,6 @@ type CredentialTypeAPIModel struct {
 	Inputs      any    `json:"inputs,omitempty"`
 	Injectors   any    `json:"injectors,omitempty"`
 	Kind        string `json:"kind"`
-}
-
-type EdaCredentialModel struct {
-	Id               types.String  `tfsdk:"id"`
-	Name             types.String  `tfsdk:"name"`
-	Description      types.String  `tfsdk:"description"`
-	OrganizationId   types.Int32   `tfsdk:"organization_id"`
-	CredentialTypeId types.Int32   `tfsdk:"credential_type_id"`
-	Inputs           types.Dynamic `tfsdk:"inputs"`
-}
-
-type EdaCredentialAPIModel struct {
-	Id               int                        `json:"id"`
-	Name             string                     `json:"name"`
-	Description      string                     `json:"description,omitempty"`
-	OrganizationId   int                        `json:"organization_id"`
-	Organization     OrganizationNestedAPIModel `json:"organization,omitempty"`
-	CredentialTypeId int                        `json:"credential_type_id"`
-	CredentialType   CredentialNestedAPIModel   `json:"credential_type,omitempty"`
-	Inputs           map[string]any             `json:"inputs"`
-}
-
-type EdaCredentialDataModel struct {
-	Id               types.String  `tfsdk:"id"`
-	Name             types.String  `tfsdk:"name"`
-	Description      types.String  `tfsdk:"description"`
-	OrganizationId   types.Int32   `tfsdk:"organization_id"`
-	CredentialTypeId types.Int32   `tfsdk:"credential_type_id"`
-	Inputs           types.String  `tfsdk:"inputs"`
-	InputsAsObject   types.Dynamic `tfsdk:"inputs_as_object"`
-}
-
-type CredentialNestedAPIModel struct {
-	Id          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
-type EdaCredentialTypeModel struct {
-	Id          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	Inputs      types.String `tfsdk:"inputs"`
-	Injectors   types.String `tfsdk:"injectors"`
-	Kind        types.String `tfsdk:"kind"`
-	Namespace   types.String `tfsdk:"namespace"`
-}
-
-type EdaCredentialTypeAPIModel struct {
-	Id          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Inputs      any    `json:"inputs"`
-	Injectors   any    `json:"injectors"`
-	Kind        string `json:"kind"`
-	Namespace   any    `json:"namespace"`
 }
 
 type ExecutionEnvironmentModel struct {
@@ -519,30 +475,28 @@ type Messages struct {
 }
 
 type OrganizationModel struct {
-	Id           types.String `tfsdk:"id"`
+	Id          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	MaxHosts    types.Int32  `tfsdk:"max_hosts"`
+	// AAP-AWX-DIFF-BEGIN: aap also tracks the gateway and EDA organization IDs and opa_query_path; awx tracks default_environment.
 	GatewayId    types.Int32  `tfsdk:"gateway_id"`
 	EdaId        types.Int32  `tfsdk:"eda_id"`
-	Name         types.String `tfsdk:"name"`
-	Description  types.String `tfsdk:"description"`
-	DefaultEnv   types.Int32  `tfsdk:"default_environment"`
-	MaxHosts     types.Int32  `tfsdk:"max_hosts"`
 	OpaQueryPath types.String `tfsdk:"opa_query_path"`
+	// AAP-AWX-DIFF-END
+}
+
+type OrganizationAPIModel struct {
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	MaxHosts    int    `json:"max_hosts,omitempty"`
+	// AAP-AWX-DIFF-BEGIN: aap also tracks opa_query_path; awx tracks default_environment.
+	OpaQueryPath string `json:"opa_query_path,omitempty"`
+	// AAP-AWX-DIFF-END
 }
 
 type contextKey string
-
-type OrganizationAPIModel struct {
-	Id           int    `json:"id"`
-	Name         string `json:"name"`
-	Description  string `json:"description,omitempty"`
-	DefaultEnv   int    `json:"default_environment,omitempty"`
-	MaxHosts     int    `json:"max_hosts,omitempty"`
-	OpaQueryPath string `json:"opa_query_path,omitempty"`
-}
-
-type PingAPIModel struct {
-	Version string `json:"version"`
-}
 
 type ProjectModel struct {
 	Id                    types.String `tfsdk:"id"`
@@ -672,6 +626,36 @@ type ScheduleAPIModel struct {
 	ExtraData            map[string]any `json:"extra_data,omitempty"`
 }
 
+type Survey struct {
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Spec        []SurveySpec `json:"spec"`
+}
+
+type SurveySpec struct {
+	Max                 int    `json:"max"`
+	Min                 int    `json:"min"`
+	Type                string `json:"type"`
+	Choices             any    `json:"choices,omitempty"`
+	Default             any    `json:"default"`
+	Required            bool   `json:"required"`
+	Variable            string `json:"variable"`
+	QuestionName        string `json:"question_name"`
+	QuestionDescription string `json:"question_description"`
+}
+
+type SurveySpecModel struct {
+	Max                 types.Int32  `tfsdk:"max"`
+	Min                 types.Int32  `tfsdk:"min"`
+	Type                types.String `tfsdk:"type"`
+	Choices             types.List   `tfsdk:"choices"`
+	Default             types.String `tfsdk:"default"`
+	Required            types.Bool   `tfsdk:"required"`
+	Variable            types.String `tfsdk:"variable"`
+	QuestionName        types.String `tfsdk:"question_name"`
+	QuestionDescription types.String `tfsdk:"question_description"`
+}
+
 type TeamModel struct {
 	Id           types.String `tfsdk:"id"`
 	Name         types.String `tfsdk:"name"`
@@ -785,65 +769,4 @@ type CredentialInputSourcesAPIModel struct {
 	Metadata         map[string]string `json:"metadata"`
 	TargetCredential int               `json:"target_credential"`
 	SourceCredential int               `json:"source_credential"`
-}
-
-// EDA
-
-type EdaDecisionEnvironmentModel struct {
-	Id              types.String `tfsdk:"id"`
-	Name            types.String `tfsdk:"name"`
-	Description     types.String `tfsdk:"description"`
-	EdaCredentialId types.Int32  `tfsdk:"eda_credential_id"`
-	OrganizationId  types.Int32  `tfsdk:"organization_id"`
-	ImageUrl        types.String `tfsdk:"image_url"`
-	PullPolicy      types.String `tfsdk:"pull_policy"`
-}
-
-type EdaDecisionEnvironmentAPIModel struct {
-	Id              int                        `json:"id"`
-	Name            string                     `json:"name"`
-	Description     string                     `json:"description,omitempty"`
-	EdaCredential   CredentialNestedAPIModel   `json:"eda_credential,omitempty"`
-	EdaCredentialId int                        `json:"eda_credential_id,omitempty"`
-	Organization    OrganizationNestedAPIModel `json:"organization,omitempty"`
-	OrganizationId  int                        `json:"organization_id"`
-	ImageUrl        string                     `json:"image_url"`
-	PullPolicy      string                     `json:"pull_policy"`
-}
-
-type EdaProjectModel struct {
-	Id                              types.String `tfsdk:"id"`
-	Name                            types.String `tfsdk:"name"`
-	Description                     types.String `tfsdk:"description"`
-	EdaCredentialId                 types.Int32  `tfsdk:"eda_credential_id"`
-	OrganizationId                  types.Int32  `tfsdk:"organization_id"`
-	Proxy                           types.String `tfsdk:"proxy"`
-	ScmBranch                       types.String `tfsdk:"scm_branch"`
-	ScmRefSpec                      types.String `tfsdk:"scm_refspec"`
-	ScmType                         types.String `tfsdk:"scm_type"`
-	SignatureValidationCredentialId types.Int32  `tfsdk:"signature_validation_credential_id"`
-	Url                             types.String `tfsdk:"url"`
-	VerifySsl                       types.Bool   `tfsdk:"verify_ssl"`
-}
-
-type EdaProjectAPIModel struct {
-	Id                              int                        `json:"id"`
-	Name                            string                     `json:"name"`
-	Description                     string                     `json:"description,omitempty"`
-	EdaCredentialId                 int                        `json:"eda_credential_id,omitempty"`
-	Organization                    OrganizationNestedAPIModel `json:"organization"`
-	OrganizationId                  int                        `json:"organization_id"`
-	Proxy                           string                     `json:"proxy,omitempty"`
-	ScmBranch                       string                     `json:"scm_branch,omitempty"`
-	ScmRefSpec                      string                     `json:"scm_refspec,omitempty"`
-	ScmType                         string                     `json:"scm_type"`
-	SignatureValidationCredentialId int                        `json:"signature_validation_credential_id,omitempty"`
-	Url                             string                     `json:"url"`
-	VerifySsl                       bool                       `json:"verify_ssl"`
-}
-
-type OrganizationNestedAPIModel struct {
-	Id          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
 }
