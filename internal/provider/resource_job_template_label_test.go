@@ -26,65 +26,65 @@ func TestAccJobTemplateLabel_basic(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobTemplateLabel1Config(testingJobTemplateName),
+				Config: testAccJobTemplateLabel1Config(testingJobTemplateName, testingJobTemplateName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_label.test_label_1", configprefix.Prefix),
+						fmt.Sprintf("%s_label.%s", configprefix.Prefix, testingJobTemplateName+"a"),
 						tfjsonpath.New("id"),
-						fmt.Sprintf("%s_job_template_label.test", configprefix.Prefix),
+						fmt.Sprintf("%s_job_template_label.%s", configprefix.Prefix, testingJobTemplateName),
 						tfjsonpath.New("label_ids"),
 						stringListComparer,
 					),
 					statecheck.CompareValuePairs(
-						fmt.Sprintf("%s_job_template.test", configprefix.Prefix),
+						fmt.Sprintf("%s_job_template.%s", configprefix.Prefix, testingJobTemplateName),
 						tfjsonpath.New("id"),
-						fmt.Sprintf("%s_job_template_label.test", configprefix.Prefix),
+						fmt.Sprintf("%s_job_template_label.%s", configprefix.Prefix, testingJobTemplateName),
 						tfjsonpath.New("job_template_id"),
 						compare.ValuesSame(),
 					),
 				},
 			},
 			{
-				ResourceName:                         fmt.Sprintf("%s_job_template_label.test", configprefix.Prefix),
+				ResourceName:                         fmt.Sprintf("%s_job_template_label.%s", configprefix.Prefix, testingJobTemplateName),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    importStateJobTemplateID(fmt.Sprintf("%s_job_template_label.test", configprefix.Prefix)),
+				ImportStateIdFunc:                    importStateJobTemplateID(fmt.Sprintf("%s_job_template_label.%s", configprefix.Prefix, testingJobTemplateName)),
 				ImportStateVerifyIdentifierAttribute: ("job_template_id"),
 			},
 		},
 	})
 }
 
-func testAccJobTemplateLabel1Config(jobTemplateName string) string {
+func testAccJobTemplateLabel1Config(jobTemplateName string, rName string) string {
 	return fmt.Sprintf(`
-resource "%[1]s_organization" "test" {
+resource "%[1]s_organization" "%[4]s" {
   name        = "%[2]s"
 }
 
-resource "%[1]s_project" "test" {
+resource "%[1]s_project" "%[4]s" {
 	name         = "%[2]s"
-	organization = %[1]s_organization.test.id
+	organization = %[1]s_organization.%[4]s.id
 	allow_override = true
 	scm_type = "git"
 	scm_url = "https://github.com/fakerepo"
 }	
 
-resource "%[1]s_job_template" "test" {
+resource "%[1]s_job_template" "%[4]s" {
 	name = "%[3]s"
 	playbook = "hello_world.yml"
 	ask_inventory_on_launch = true
-	project = %[1]s_project.test.id
+	project = %[1]s_project.%[4]s.id
 }
 
-resource "%[1]s_label" "test_label_1" {
+resource "%[1]s_label" "%[5]s" {
 	name = "testlabel1"
-	organization = %[1]s_organization.test.id
+	organization = %[1]s_organization.%[4]s.id
 }
 
-resource "%[1]s_job_template_label" "test" {
-	job_template_id = %[1]s_job_template.test.id
-	label_ids = [%[1]s_label.test_label_1.id]
+resource "%[1]s_job_template_label" "%[4]s" {
+	job_template_id = %[1]s_job_template.%[4]s.id
+	label_ids = [%[1]s_label.%[5]s.id]
 }
 
-  `, configprefix.Prefix, acctest.RandString(5), jobTemplateName)
+  `, configprefix.Prefix, acctest.RandString(5), jobTemplateName, rName, rName+"a")
 }
