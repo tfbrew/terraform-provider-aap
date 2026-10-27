@@ -25,12 +25,12 @@ jobs:
           go-version-file: 'go.mod'
           cache: false
       - run: go mod download
-      - run: go build -tags=repoAAP -v .
+      - run: go build -tags=${{ vars.BUILD_TAG }} -v .
       - name: Run linters
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
           version: latest
-          args: --build-tags 'repoAAP'
+          args: --build-tags '${{ vars.BUILD_TAG }}'
 
   generate:
     runs-on: ubuntu-latest
@@ -50,8 +50,10 @@ jobs:
           git diff --compact-summary --exit-code || \
             (echo; echo "Unexpected difference in directories after code generation. Run 'make generate' command and commit."; exit 1)
 
+  # AAP-AWX-DIFF-BEGIN: Each repo tests its own platforms: job names, credentials and AAP 2.4-only settings.
   testaap26:
     name: Terraform Provider Acceptance Tests AAP 2.6
+  # AAP-AWX-DIFF-END
     if: github.event.pull_request.head.repo.full_name == github.repository
     needs: build
     runs-on: ubuntu-latest
@@ -75,13 +77,17 @@ jobs:
       - run: go mod download
       - env:
           TF_ACC: "1"
+          # AAP-AWX-DIFF-BEGIN: Each repo tests its own platforms: job names, credentials and AAP 2.4-only settings.
           AAP_HOST: ${{ secrets.AAP_26_HOST }}
           AAP_OAUTH_TOKEN: ${{ secrets.AAP_26_OAUTH_TOKEN }}
-        run: go test -v -failfast -cover -tags=repoAAP -timeout 20m ./internal/provider/
+          # AAP-AWX-DIFF-END
+        run: go test -v -failfast -cover -tags=${{ vars.BUILD_TAG }} -timeout 60m ./internal/provider/
         timeout-minutes: 60
 
+  # AAP-AWX-DIFF-BEGIN: Each repo tests its own platforms: job names, credentials and AAP 2.4-only settings.
   testaap27:
     name: Terraform Provider Acceptance Tests AAP 2.7
+  # AAP-AWX-DIFF-END
     if: github.event.pull_request.head.repo.full_name == github.repository
     needs: build
     runs-on: ubuntu-latest
@@ -92,7 +98,7 @@ jobs:
         # list whatever Terraform versions here you would like to support
         terraform:
           - '1.12.*'
-          - '1.15.*'
+          - '1.16.*'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -106,7 +112,9 @@ jobs:
       - run: go mod download
       - env:
           TF_ACC: "1"
+          # AAP-AWX-DIFF-BEGIN: Each repo tests its own platforms: job names, credentials and AAP 2.4-only settings.
           AAP_HOST: ${{ secrets.AAP_27_HOST }}
           AAP_OAUTH_TOKEN: ${{ secrets.AAP_27_OAUTH_TOKEN }}
-        run: go test -v -failfast -cover -tags=repoAAP -timeout 60m ./internal/provider/
+        run: go test -v -failfast -cover -tags=${{ vars.BUILD_TAG }} -timeout 60m ./internal/provider/
+          # AAP-AWX-DIFF-END
         timeout-minutes: 60
