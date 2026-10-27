@@ -69,10 +69,6 @@ func (r *OrganizationResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional:    true,
 				Description: "Organization description.",
 			},
-			"default_environment": schema.Int32Attribute{
-				Optional:    true,
-				Description: "AWX/AAP2.4 only. The fallback execution environment that will be used for jobs inside of this organization if not explicitly assigned at the project, job template or workflow level.",
-			},
 			"max_hosts": schema.Int32Attribute{
 				Optional:    true,
 				Description: "AWX/AAP2.4 only Maximum number of hosts allowed to be managed by this organization.",
@@ -122,9 +118,6 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 	}
 	if !(data.Description.IsNull()) {
 		bodyData.Description = data.Description.ValueString()
-	}
-	if !(data.DefaultEnv.IsNull()) {
-		bodyData.DefaultEnv = int(data.DefaultEnv.ValueInt32())
 	}
 	if !(data.MaxHosts.IsNull()) {
 		bodyData.MaxHosts = int(data.MaxHosts.ValueInt32())
@@ -250,13 +243,6 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 		}
 	}
 
-	if !data.DefaultEnv.IsNull() || responseData.DefaultEnv != 0 {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("default_environment"), responseData.DefaultEnv)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("max_hosts"), responseData.MaxHosts)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("opa_query_path"), responseData.OpaQueryPath)...)
 
@@ -345,9 +331,6 @@ func (r *OrganizationResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	if !(data.Description.IsNull()) {
 		bodyData.Description = data.Description.ValueString()
-	}
-	if !(data.DefaultEnv.IsNull()) {
-		bodyData.DefaultEnv = int(data.DefaultEnv.ValueInt32())
 	}
 	if !(data.MaxHosts.IsNull()) {
 		bodyData.MaxHosts = int(data.MaxHosts.ValueInt32())
