@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccScheduleResource(t *testing.T) {
+	rName := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
 	schedule1 := ScheduleAPIModel{
 		Name:               "test-schedule-" + acctest.RandString(5),
 		Description:        "Initial test schedule",
@@ -46,65 +47,65 @@ func TestAccScheduleResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleResourceConfig(schedule1),
+				Config: testAccScheduleResourceConfig(schedule1, rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("name"),
 						knownvalue.StringExact(schedule1.Name),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(schedule1.Description),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("rrule"),
 						knownvalue.StringExact(schedule1.Rrule),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("unified_job_template"),
 						knownvalue.Int32Exact(int32(schedule1.UnifiedJobTemplate)),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("enabled"),
 						knownvalue.Bool(schedule1.Enabled),
 					),
 				},
 			},
 			{
-				ResourceName:      fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+				ResourceName:      fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleResourceConfig(schedule2),
+				Config: testAccScheduleResourceConfig(schedule2, rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("name"),
 						knownvalue.StringExact(schedule2.Name),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(schedule2.Description),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("rrule"),
 						knownvalue.StringExact(schedule2.Rrule),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("unified_job_template"),
 						knownvalue.Int32Exact(int32(schedule2.UnifiedJobTemplate)),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("enabled"),
 						knownvalue.Bool(schedule2.Enabled),
 					),
@@ -112,30 +113,30 @@ func TestAccScheduleResource(t *testing.T) {
 			},
 			// The step below is to verify that it handles at least one optional field that can be used in prompting
 			{
-				Config: testAccScheduleResourceOptionalConfig(schedule3),
+				Config: testAccScheduleResourceOptionalConfig(schedule3, rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("name"),
 						knownvalue.StringExact(schedule3.Name),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(schedule3.Description),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("rrule"),
 						knownvalue.StringExact(schedule3.Rrule),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("enabled"),
 						knownvalue.Bool(schedule3.Enabled),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("verbosity"),
 						knownvalue.Int32Exact(int32(schedule3.Verbosity)),
 					),
@@ -145,19 +146,19 @@ func TestAccScheduleResource(t *testing.T) {
 	})
 }
 
-func testAccScheduleResourceConfig(resource ScheduleAPIModel) string {
+func testAccScheduleResourceConfig(resource ScheduleAPIModel, rName string) string {
 	return fmt.Sprintf(`
-resource "%[1]s_schedule" "test" {
+resource "%[1]s_schedule" "%[7]s" {
   name        			= "%[2]s"
   description 			= "%[3]s"
   rrule       			= "%[4]s"
   unified_job_template 	= %[5]d
   enabled     			= %[6]t
 }
-  `, configprefix.Prefix, resource.Name, resource.Description, resource.Rrule, resource.UnifiedJobTemplate, resource.Enabled)
+  `, configprefix.Prefix, resource.Name, resource.Description, resource.Rrule, resource.UnifiedJobTemplate, resource.Enabled, rName)
 }
 
-func testAccScheduleResourceOptionalConfig(resource ScheduleAPIModel) string {
+func testAccScheduleResourceOptionalConfig(resource ScheduleAPIModel, rName string) string {
 	return fmt.Sprintf(`
 
 data "%[1]s_organization" "default" {
@@ -187,7 +188,7 @@ resource "%[1]s_job_template" "test_launch" {
 	ask_verbosity_on_launch = true
 }
 
-resource "%[1]s_schedule" "test" {
+resource "%[1]s_schedule" "%[7]s" {
   name        			= "%[2]s"
   description 			= "%[3]s"
   rrule       			= "%[4]s"
@@ -195,10 +196,11 @@ resource "%[1]s_schedule" "test" {
   enabled     			= %[5]t
   verbosity             = %[6]d
 }
-  `, configprefix.Prefix, resource.Name, resource.Description, resource.Rrule, resource.Enabled, resource.Verbosity)
+  `, configprefix.Prefix, resource.Name, resource.Description, resource.Rrule, resource.Enabled, resource.Verbosity, rName)
 }
 
 func TestAccSchedule2Resource(t *testing.T) {
+	rName := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
 	schedule1 := ScheduleAPIModel{
 		Name:        "test-schedule-" + acctest.RandString(5),
 		Description: "Initial test schedule",
@@ -220,25 +222,25 @@ func TestAccSchedule2Resource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleResourceExtraDataConfig(schedule1),
+				Config: testAccScheduleResourceExtraDataConfig(schedule1, rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("name"),
 						knownvalue.StringExact(schedule1.Name),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("description"),
 						knownvalue.StringExact(schedule1.Description),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("rrule"),
 						knownvalue.StringExact(schedule1.Rrule),
 					),
 					statecheck.ExpectKnownValue(
-						fmt.Sprintf("%s_schedule.test", configprefix.Prefix),
+						fmt.Sprintf("%s_schedule.%s", configprefix.Prefix, rName),
 						tfjsonpath.New("enabled"),
 						knownvalue.Bool(schedule1.Enabled),
 					),
@@ -248,7 +250,7 @@ func TestAccSchedule2Resource(t *testing.T) {
 	})
 }
 
-func testAccScheduleResourceExtraDataConfig(resource ScheduleAPIModel) string {
+func testAccScheduleResourceExtraDataConfig(resource ScheduleAPIModel, rName string) string {
 	return fmt.Sprintf(`
 
 data "%[1]s_organization" "default" {
@@ -280,7 +282,7 @@ resource "%[1]s_job_template" "test_launch2" {
 	ask_variables_on_launch = true
 }
 
-resource "%[1]s_schedule" "test" {
+resource "%[1]s_schedule" "%[7]s" {
   name        			= "%[2]s"
   description 			= "%[3]s"
   rrule       			= "%[4]s"
@@ -294,5 +296,5 @@ resource "%[1]s_schedule" "test" {
 	edList = tolist(["one", "two", "three"])
   }
 }
-  `, configprefix.Prefix, resource.Name, resource.Description, resource.Rrule, resource.Enabled, resource.Verbosity)
+  `, configprefix.Prefix, resource.Name, resource.Description, resource.Rrule, resource.Enabled, resource.Verbosity, rName)
 }

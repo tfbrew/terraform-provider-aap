@@ -42,7 +42,9 @@ func TestAccTeamDataSource(t *testing.T) {
 					),
 					statecheck.CompareValuePairs(
 						fmt.Sprintf("%s_organization.test", configprefix.Prefix),
+						// AAP-AWX-DIFF-BEGIN: AAP 2.5+ teams use the gateway organization ID (gateway_id); awx uses id.
 						tfjsonpath.New("gateway_id"),
+						// AAP-AWX-DIFF-END
 						fmt.Sprintf("data.%s_team.test-id", configprefix.Prefix),
 						tfjsonpath.New("organization"),
 						IdCompare,
@@ -65,7 +67,9 @@ func TestAccTeamDataSource(t *testing.T) {
 					),
 					statecheck.CompareValuePairs(
 						fmt.Sprintf("%s_organization.test", configprefix.Prefix),
+						// AAP-AWX-DIFF-BEGIN: AAP 2.5+ teams use the gateway organization ID (gateway_id); awx uses id.
 						tfjsonpath.New("gateway_id"),
+						// AAP-AWX-DIFF-END
 						fmt.Sprintf("data.%s_team.test-name", configprefix.Prefix),
 						tfjsonpath.New("organization"),
 						IdCompare,
@@ -84,7 +88,9 @@ resource "%[1]s_organization" "test" {
 
 resource "%[1]s_team" "test" {
   name         = "%[3]s"
+  // AAP-AWX-DIFF-BEGIN: AAP 2.5+ teams use the gateway organization ID (gateway_id); awx uses id.
   organization = %[1]s_organization.test.gateway_id
+  // AAP-AWX-DIFF-END
   description  = "%[4]s"
 }
 
@@ -102,7 +108,9 @@ resource "%[1]s_organization" "test" {
 
 resource "%[1]s_team" "test" {
   name         = "%[3]s"
+  // AAP-AWX-DIFF-BEGIN: AAP 2.5+ teams use the gateway organization ID (gateway_id); awx uses id.
   organization = %[1]s_organization.test.gateway_id
+  // AAP-AWX-DIFF-END
   description  = "%[4]s"
 }
 
