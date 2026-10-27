@@ -90,7 +90,7 @@ func TestAccCredentialResource_InputWO(t *testing.T) {
 
 		PreCheck: func() { testAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_1_0),
+			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -271,7 +271,7 @@ func TestAccCredentialResource_inputObjbasic(t *testing.T) {
 					if id == "" {
 						return "", fmt.Errorf("no ID is set")
 					}
-					return fmt.Sprintf("%s%spassword%s%s", id, importIDSeparator, importIDSeparator, simulatedImportApiValues.Inputs["password"]), nil
+					return fmt.Sprintf("%s/password/%s", id, simulatedImportApiValues.Inputs["password"]), nil
 				},
 			},
 		},
