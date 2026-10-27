@@ -143,7 +143,7 @@ func (r *WorkflowJobTemplatesNodeSuccessResource) Read(ctx context.Context, req 
 		return
 	}
 
-	var responseData JTCredentialAPIRead
+	var responseData CredentialAPIRead
 
 	err = json.Unmarshal(body, &responseData)
 	if err != nil {

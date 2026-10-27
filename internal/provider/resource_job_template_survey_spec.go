@@ -37,36 +37,6 @@ type JobTemplateSurveyResourceModel struct {
 	Spec        []SurveySpecModel `tfsdk:"spec"`
 }
 
-type SurveySpecModel struct {
-	Max                 types.Int32  `tfsdk:"max"`
-	Min                 types.Int32  `tfsdk:"min"`
-	Type                types.String `tfsdk:"type"`
-	Choices             types.List   `tfsdk:"choices"`
-	Default             types.String `tfsdk:"default"`
-	Required            types.Bool   `tfsdk:"required"`
-	Variable            types.String `tfsdk:"variable"`
-	QuestionName        types.String `tfsdk:"question_name"`
-	QuestionDescription types.String `tfsdk:"question_description"`
-}
-
-type JobTemplateSurvey struct {
-	Name        string       `json:"name"`
-	Description string       `json:"description"`
-	Spec        []SurveySpec `json:"spec"`
-}
-
-type SurveySpec struct {
-	Max                 int    `json:"max"`
-	Min                 int    `json:"min"`
-	Type                string `json:"type"`
-	Choices             any    `json:"choices,omitempty"`
-	Default             any    `json:"default"`
-	Required            bool   `json:"required"`
-	Variable            string `json:"variable"`
-	QuestionName        string `json:"question_name"`
-	QuestionDescription string `json:"question_description"`
-}
-
 func (r *JobTemplateSurveyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_job_template_survey_spec"
 }
@@ -186,7 +156,7 @@ func (r *JobTemplateSurveyResource) Create(ctx context.Context, req resource.Cre
 
 	url := fmt.Sprintf("job_templates/%d/survey_spec/", id)
 
-	var bodyData JobTemplateSurvey
+	var bodyData Survey
 	bodyData.Name = data.Name.ValueString()
 	bodyData.Description = data.Description.ValueString()
 
@@ -279,7 +249,7 @@ func (r *JobTemplateSurveyResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	var responseData JobTemplateSurvey
+	var responseData Survey
 
 	err = json.Unmarshal(httpResponse, &responseData)
 	if err != nil {
@@ -396,7 +366,7 @@ func (r *JobTemplateSurveyResource) Update(ctx context.Context, req resource.Upd
 
 	url := fmt.Sprintf("job_templates/%d/survey_spec/", id)
 
-	var bodyData JobTemplateSurvey
+	var bodyData Survey
 	bodyData.Name = data.Name.ValueString()
 	bodyData.Description = data.Description.ValueString()
 
