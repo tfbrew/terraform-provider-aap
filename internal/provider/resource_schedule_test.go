@@ -161,13 +161,13 @@ resource "%[1]s_schedule" "%[7]s" {
 func testAccScheduleResourceOptionalConfig(resource ScheduleAPIModel, rName string) string {
 	return fmt.Sprintf(`
 
-data "%[1]s_organization" "default" {
-	name = "Default"
+resource "%[1]s_organization" "default" {
+  name = "%[2]s"
 }
 
 resource "%[1]s_project" "temp_project" {
   name = "Temp Project for Schedule JT %[2]s"
-  organization = data.%[1]s_organization.default.id
+  organization = %[1]s_organization.default.id
   scm_type     = "git"
   scm_url      = "git@github.com:user/repo.git"
   allow_override 	= true
@@ -175,7 +175,7 @@ resource "%[1]s_project" "temp_project" {
 
 resource "%[1]s_inventory" "test" {
   name         = "%[2]s"
-  organization = data.%[1]s_organization.default.id
+  organization = %[1]s_organization.default.id
 }
 
 resource "%[1]s_job_template" "test_launch" {
@@ -253,13 +253,13 @@ func TestAccSchedule2Resource(t *testing.T) {
 func testAccScheduleResourceExtraDataConfig(resource ScheduleAPIModel, rName string) string {
 	return fmt.Sprintf(`
 
-data "%[1]s_organization" "default" {
-	name = "Default"
+resource "%[1]s_organization" "default" {
+  name = "%[2]s"
 }
 
 resource "%[1]s_project" "temp_project2" {
   name = "Temp Project for Schedule JT %[2]s"
-  organization = data.%[1]s_organization.default.id
+  organization = %[1]s_organization.default.id
   scm_type     = "git"
   scm_url      = "git@github.com:user/repo.git"
   allow_override 	= true
@@ -267,7 +267,7 @@ resource "%[1]s_project" "temp_project2" {
 
 resource "%[1]s_inventory" "test2" {
   name         = "%[2]s"
-  organization = data.%[1]s_organization.default.id
+  organization = %[1]s_organization.default.id
 }
 
 resource "%[1]s_job_template" "test_launch2" {
