@@ -3,16 +3,31 @@
 page_title: "aap_generic_endpoint Resource - aap"
 subcategory: ""
 description: |-
-  WARNING: This resource is still in development and not tested for all AAP endpoints. It can be used as a catch-all for endpoints that do not have a dedicated resource yet. Use at your own risk.
+  WARNING: This resource is still in development and not tested for all API endpoints. It can be used as a catch-all for endpoints that do not have a dedicated resource yet. Use at your own risk.
 ---
 
 # aap_generic_endpoint (Resource)
 
-WARNING: This resource is still in development and not tested for all AAP endpoints. It can be used as a catch-all for endpoints that do not have a dedicated resource yet. Use at your own risk.
+WARNING: This resource is still in development and not tested for all API endpoints. It can be used as a catch-all for endpoints that do not have a dedicated resource yet. Use at your own risk.
 
 ## Example Usage
 
 ```terraform
+resource "aap_generic_endpoint" "test-credential-type" {
+  api_path     = "credential_types"
+  api_endpoint = "controller"
+  data_json = jsonencode(
+    {
+      "description" : "",
+      "injectors" : {},
+      "inputs" : { "fields" : [] },
+      "kind" : "cloud",
+      "name" : "test-credential-type"
+    }
+  )
+  ignore_read = ["created", "created_by", "id", "managed", "modified", "modified_by", "namespace", "related", "summary_fields", "type", "url"]
+}
+
 resource "aap_generic_endpoint" "test-authenticators" {
   api_path     = "authenticators"
   api_endpoint = "gateway"
@@ -55,7 +70,7 @@ resource "aap_generic_endpoint" "test-authenticator-maps" {
 ### Required
 
 - `api_endpoint` (String) API endpoint for the GenericEndpoint. If the URL is /api/gateway/v1/authenticators/, the api_endpoint is gateway. Must be one of `eda`, `galaxy`, `gateway`, `controller`.
-- `api_path` (String) API path for the GenericEndpoint. If the URL is /api/gateway/v1/authenticators/, the api_path is `authenticators`.
+- `api_path` (String) API path for the GenericEndpoint, relative to the API endpoint. For example, if the URL is /api/controller/v2/credential_types/ (or /api/v2/credential_types/ in AWX), the api_path is `credential_types`.
 
 ### Optional
 
