@@ -548,10 +548,10 @@ func testAccUserCannotAuthenticate(username, password string) resource.TestCheck
 }
 
 func testAccUserAuthenticationRequest(username, password string) (int, string, error) {
-	endpoint := os.Getenv("AAP_HOST")
+	endpoint := os.Getenv(configprefix.EnvPrefix + "HOST")
 
 	if endpoint == "" {
-		return 0, "", fmt.Errorf("AAP_HOST must be set for authentication checks")
+		return 0, "", fmt.Errorf(configprefix.EnvPrefix + "HOST must be set for authentication checks")
 	}
 
 	endpoint = strings.TrimRight(endpoint, "/")
@@ -561,7 +561,7 @@ func testAccUserAuthenticationRequest(username, password string) (int, string, e
 	}
 
 	client := &http.Client{Timeout: 30 * time.Second}
-	envInsecure := strings.ToLower(os.Getenv("AAP_INSECURE_SKIP_VERIFY"))
+	envInsecure := strings.ToLower(os.Getenv(configprefix.EnvPrefix + "INSECURE_SKIP_VERIFY"))
 	if envInsecure == "1" || envInsecure == "true" {
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -613,14 +613,14 @@ func testAccUserAuthenticationRequest(username, password string) (int, string, e
 
 func testAccSetUserPasswordOutOfBand(username, newPassword string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		endpoint := os.Getenv("AAP_HOST")
+		endpoint := os.Getenv(configprefix.EnvPrefix + "HOST")
 		if endpoint == "" {
-			return fmt.Errorf("AAP_HOST must be set for out-of-band password update")
+			return fmt.Errorf(configprefix.EnvPrefix + "HOST must be set for out-of-band password update")
 		}
 
-		token := os.Getenv("AAP_OAUTH_TOKEN")
+		token := os.Getenv(configprefix.EnvPrefix + "OAUTH_TOKEN")
 		if token == "" {
-			return fmt.Errorf("AAP_OAUTH_TOKEN must be set for out-of-band password update")
+			return fmt.Errorf(configprefix.EnvPrefix + "OAUTH_TOKEN must be set for out-of-band password update")
 		}
 
 		client := &providerClient{
@@ -629,7 +629,7 @@ func testAccSetUserPasswordOutOfBand(username, newPassword string) resource.Test
 			auth:     "Bearer " + token,
 		}
 
-		envInsecure := strings.ToLower(os.Getenv("AAP_INSECURE_SKIP_VERIFY"))
+		envInsecure := strings.ToLower(os.Getenv(configprefix.EnvPrefix + "INSECURE_SKIP_VERIFY"))
 		if envInsecure == "1" || envInsecure == "true" {
 			client.client.Transport = &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
