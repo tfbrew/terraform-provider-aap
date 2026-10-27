@@ -140,7 +140,7 @@ func (r *JobTemplateLabelsResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	var responseData JTCredentialAPIRead
+	var responseData CredentialAPIRead
 
 	err = json.Unmarshal(body, &responseData)
 	if err != nil {
