@@ -1,3 +1,4 @@
+// AAP-AWX-DIFF-FILE: AAP-only. Looks up an organization's ID across the gateway, controller and EDA APIs.
 package provider
 
 import (
