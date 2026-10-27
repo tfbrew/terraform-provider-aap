@@ -111,6 +111,31 @@ func SleepWithContext(ctx context.Context, d time.Duration) {
 	}
 }
 
+// WaitForDeletion polls url until the API returns 404. Some objects, such as inventories, are deleted
+// asynchronously (the DELETE returns 202), and deleting a parent object like the organization while the
+// background delete is still running can fail with a database deadlock.
+func (c *providerClient) WaitForDeletion(ctx context.Context, url string, aap25_api_endpoint_hint string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+
+	for {
+		_, statusCode, err := c.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, aap25_api_endpoint_hint)
+		if err != nil {
+			return err
+		}
+		if statusCode == http.StatusNotFound {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("%s still exists %s after the delete request", url, timeout)
+		}
+
+		SleepWithContext(ctx, 2*time.Second)
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+	}
+}
+
 func (c *providerClient) CreateUpdateAPIRequest(ctx context.Context, method, url string, requestBody any, successCodes []int, api_endpoint string) (returnedData map[string]any, statusCode int, errorMessage error) {
 
 	url = c.buildAPIUrl(url, api_endpoint)
