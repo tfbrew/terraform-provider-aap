@@ -71,7 +71,7 @@ func (r *OrganizationResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"max_hosts": schema.Int32Attribute{
 				Optional:    true,
-				Description: "AWX/AAP2.4 only Maximum number of hosts allowed to be managed by this organization.",
+				Description: "Maximum number of hosts allowed to be managed by this organization.",
 				Default:     int32default.StaticInt32(0),
 				Computed:    true,
 			},
@@ -180,12 +180,21 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// AAP-AWX-DIFF-BEGIN: aap sets the controller-only fields (max_hosts, opa_query_path) through the controller API, since the gateway API ignores them.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// the gateway API ignores the controller-only fields, so set them through the controller API.
+	controllerFields := map[string]any{}
+	if data.MaxHosts.ValueInt32() != 0 {
+		controllerFields["max_hosts"] = data.MaxHosts.ValueInt32()
+	}
 	if data.OpaQueryPath.ValueString() != "" {
-		resp.Diagnostics.Append(r.updateOpaQueryPath(ctx, data.Id.ValueString(), data.OpaQueryPath.ValueString())...)
+		controllerFields["opa_query_path"] = data.OpaQueryPath.ValueString()
+	}
+	if len(controllerFields) > 0 {
+		resp.Diagnostics.Append(r.updateControllerFields(ctx, data.Id.ValueString(), controllerFields)...)
 	}
 }
 
@@ -345,21 +354,32 @@ func (r *OrganizationResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// AAP-AWX-DIFF-BEGIN: aap sets the controller-only fields (max_hosts, opa_query_path) through the controller API, since the gateway API ignores them.
+	// the gateway API ignores the controller-only fields, so set them through the controller API.
+	controllerFields := map[string]any{}
+	if !data.MaxHosts.Equal(state.MaxHosts) {
+		controllerFields["max_hosts"] = data.MaxHosts.ValueInt32()
+	}
 	if !data.OpaQueryPath.Equal(state.OpaQueryPath) {
-		resp.Diagnostics.Append(r.updateOpaQueryPath(ctx, data.Id.ValueString(), data.OpaQueryPath.ValueString())...)
+		controllerFields["opa_query_path"] = data.OpaQueryPath.ValueString()
+	}
+	if len(controllerFields) > 0 {
+		resp.Diagnostics.Append(r.updateControllerFields(ctx, data.Id.ValueString(), controllerFields)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// AAP-AWX-DIFF-BEGIN: aap sets the controller-only fields (max_hosts, opa_query_path) through the controller API, since the gateway API ignores them.
 }
 
-func (r *OrganizationResource) updateOpaQueryPath(ctx context.Context, id, opaQueryPath string) diag.Diagnostics {
+// updateControllerFields patches fields that only the controller API manages (max_hosts, opa_query_path).
+func (r *OrganizationResource) updateControllerFields(ctx context.Context, id string, fields map[string]any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	url := fmt.Sprintf("organizations/%s/", id)
-	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPatch, url, map[string]string{"opa_query_path": opaQueryPath}, []int{200}, "controller")
+	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPatch, url, fields, []int{200}, "controller")
 	if err != nil {
 		diags.AddError(
 			"Error making API update request",
@@ -367,11 +387,13 @@ func (r *OrganizationResource) updateOpaQueryPath(ctx context.Context, id, opaQu
 		return diags
 	}
 
-	if _, ok := returnedData["opa_query_path"]; !ok && opaQueryPath != "" {
-		diags.AddAttributeError(
-			path.Root("opa_query_path"),
-			"Unsupported attribute",
-			"The automation controller did not return opa_query_path; it does not support policy enforcement.")
+	if opaQueryPath, _ := fields["opa_query_path"].(string); opaQueryPath != "" {
+		if _, ok := returnedData["opa_query_path"]; !ok {
+			diags.AddAttributeError(
+				path.Root("opa_query_path"),
+				"Unsupported attribute",
+				"The automation controller did not return opa_query_path; it does not support policy enforcement.")
+		}
 	}
 
 	return diags
