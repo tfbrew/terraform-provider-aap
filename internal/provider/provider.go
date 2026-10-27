@@ -27,6 +27,12 @@ import (
 )
 
 // Ensure Provider satisfies various provider interfaces.
+// AAP-AWX-DIFF-BEGIN: aap pings the gateway to detect the AAP version and registers the EDA resources and data sources; the endpoint example and authentication error title also differ. Environment variable names come from configprefix.EnvPrefix.
+type PingAPIModel struct {
+	Version string `json:"version"`
+}
+
+// AAP-AWX-DIFF-END
 var _ provider.Provider = &theProvider{}
 var _ provider.ProviderWithFunctions = &theProvider{}
 
