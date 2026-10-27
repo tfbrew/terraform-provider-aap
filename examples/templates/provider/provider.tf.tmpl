@@ -7,18 +7,18 @@ terraform {
 }
 
 provider "{{.Prefix}}" {
-  endpoint = "https://aap.example.com"
+  endpoint = "https://{{if eq .Prefix "aap"}}aap{{else}}tower{{end}}.example.com"
   token    = "token"
 }
 
 provider "{{.Prefix}}" {
-  endpoint = "http://aap.example.com"
+  endpoint = "http://{{if eq .Prefix "aap"}}aap{{else}}tower{{end}}.example.com"
   username = "admin"
   password = "password"
 }
 
 provider "{{.Prefix}}" {
-  endpoint = "http://aap.example.com"
+  endpoint = "http://{{if eq .Prefix "aap"}}aap{{else}}tower{{end}}.example.com"
   token    = "mysecrettoken"
   api_retry = {
     api_retry_count         = 1

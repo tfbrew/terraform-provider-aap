@@ -18,6 +18,11 @@ linters:
     - unparam
     - unused
     - usetesting
+  settings:
+    godot:
+      # AAP-AWX-DIFF block markers are not sentences.
+      exclude:
+        - "AAP-AWX-DIFF-"
   exclusions:
     generated: lax
     presets:

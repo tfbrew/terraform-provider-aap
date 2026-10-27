@@ -38,3 +38,8 @@ gitlog.txt
 
 # Environment variable files
 .env
+githubaction-test-aap.vars
+gitactions-testing-aap.secrets
+githubaction-test-awx.vars
+gitactions-testing-awx.secrets
+

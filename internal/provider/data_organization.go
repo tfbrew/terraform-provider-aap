@@ -38,6 +38,7 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: configprefix.OrgDataSourceIdDescription,
 				Optional:    true,
 			},
+			// AAP-AWX-DIFF-BEGIN: aap also exposes the gateway and EDA organization IDs.
 			"gateway_id": schema.Int32Attribute{
 				Description: "Organization ID in the gateway API",
 				Computed:    true,
@@ -46,6 +47,7 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: "Organization ID in the EDA API",
 				Computed:    true,
 			},
+			// AAP-AWX-DIFF-END
 			"name": schema.StringAttribute{
 				Description: "Organization name",
 				Optional:    true,
@@ -63,6 +65,7 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: "The query path of the OPA policy evaluated before jobs in this organization run.",
 				Computed:    true,
 			},
+			// AAP-AWX-DIFF-END
 		},
 	}
 }
@@ -209,6 +212,7 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 	data.GatewayId = types.Int32Value(int32(gatewayId))
+	// AAP-AWX-DIFF-END
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -33,7 +33,9 @@ func (r *RoleTeamAssignmentResource) Metadata(ctx context.Context, req resource.
 
 func (r *RoleTeamAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		// AAP-AWX-DIFF-BEGIN: AAP specific description.
 		Description: "Assign a team to a role definition for a specific object.",
+		// AAP-AWX-DIFF-END
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Assignment ID.",
@@ -96,7 +98,9 @@ func (r *RoleTeamAssignmentResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	url := "role_team_assignments/"
+	// AAP-AWX-DIFF-BEGIN: AAP 2.6 serves roles from the gateway API ("gateway26"); awx uses the controller API.
 	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPost, url, bodyData, []int{201}, "gateway26")
+	// AAP-AWX-DIFF-END
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -133,7 +137,9 @@ func (r *RoleTeamAssignmentResource) Read(ctx context.Context, req resource.Read
 	}
 
 	url := fmt.Sprintf("role_team_assignments/%d/", id)
+	// AAP-AWX-DIFF-BEGIN: AAP 2.6 serves roles from the gateway API ("gateway26"); awx uses the controller API.
 	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "gateway26")
+	// AAP-AWX-DIFF-END
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -179,7 +185,9 @@ func (r *RoleTeamAssignmentResource) Delete(ctx context.Context, req resource.De
 	}
 
 	url := fmt.Sprintf("role_team_assignments/%d/", id)
+	// AAP-AWX-DIFF-BEGIN: AAP 2.6 serves roles from the gateway API ("gateway26"); awx uses the controller API.
 	_, _, err = r.client.GenericAPIRequest(ctx, http.MethodDelete, url, nil, []int{202, 204}, "gateway26")
+	// AAP-AWX-DIFF-END
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API delete request",
