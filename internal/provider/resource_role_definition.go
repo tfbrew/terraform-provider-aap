@@ -32,7 +32,9 @@ func (r *RoleDefinitionResource) Metadata(ctx context.Context, req resource.Meta
 
 func (r *RoleDefinitionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		// AAP-AWX-DIFF-BEGIN: AAP 2.6 serves roles from the gateway API ("gateway26"); awx uses the controller API.
 		Description: `Manage a custom role definition.`,
+		// AAP-AWX-DIFF-END
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Role definition ID.",
@@ -98,7 +100,9 @@ func (r *RoleDefinitionResource) Create(ctx context.Context, req resource.Create
 	}
 
 	url := "role_definitions/"
+	// AAP-AWX-DIFF-BEGIN: AAP 2.6 serves roles from the gateway API ("gateway26"); awx uses the controller API.
 	returnedData, _, err := r.client.CreateUpdateAPIRequest(ctx, http.MethodPost, url, bodyData, []int{201}, "gateway26")
+	// AAP-AWX-DIFF-END
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -136,7 +140,9 @@ func (r *RoleDefinitionResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	url := fmt.Sprintf("role_definitions/%d/", id)
+	// AAP-AWX-DIFF-BEGIN: AAP 2.6 serves roles from the gateway API ("gateway26"); awx uses the controller API.
 	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "gateway26")
+	// AAP-AWX-DIFF-END
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API http request",
@@ -197,7 +203,9 @@ func (r *RoleDefinitionResource) Update(ctx context.Context, req resource.Update
 	}
 
 	url := fmt.Sprintf("role_definitions/%d/", id)
+	// AAP-AWX-DIFF-BEGIN: AAP 2.6 serves roles from the gateway API ("gateway26"); awx uses the controller API.
 	_, _, err = r.client.CreateUpdateAPIRequest(ctx, http.MethodPut, url, bodyData, []int{200}, "gateway26")
+	// AAP-AWX-DIFF-END
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API update request",
@@ -225,7 +233,9 @@ func (r *RoleDefinitionResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	url := fmt.Sprintf("role_definitions/%d/", id)
+	// AAP-AWX-DIFF-BEGIN: AAP 2.6 serves roles from the gateway API ("gateway26"); awx uses the controller API.
 	_, _, err = r.client.GenericAPIRequest(ctx, http.MethodDelete, url, nil, []int{202, 204}, "gateway26")
+	// AAP-AWX-DIFF-END
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error making API delete request",

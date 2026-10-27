@@ -81,7 +81,7 @@ func main() {
 			}
 			defer f.Close()
 
-			err = tmpl.Execute(f, map[string]string{"Prefix": prefix, "ProviderSource": "tfbrew/" + configprefix.Prefix}) // SPECIAL: update to match THIS repo's name & provider prefix
+			err = tmpl.Execute(f, map[string]string{"Prefix": prefix, "ProviderSource": "tfbrew/" + configprefix.Prefix})
 			if err != nil {
 				fmt.Println("Error executing template:", err)
 				return err

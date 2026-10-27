@@ -1,11 +1,13 @@
-// SPECIAL: Be sure to update any desriptions to match repo & run make generate
 package provider
 
 import (
 	"context"
 	"crypto/tls"
 	"encoding/base64"
+
+	// AAP-AWX-DIFF-BEGIN: aap pings the gateway to detect the AAP version and registers the EDA resources and data sources; the endpoint example and authentication error title also differ. Environment variable names come from configprefix.EnvPrefix.
 	"encoding/json"
+	// AAP-AWX-DIFF-END
 	"fmt"
 	"net/http"
 	"os"
@@ -69,8 +71,10 @@ func (p *theProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 		Description: "This is a Terraform Provider for managing resources in Automation Controller such as AWX/Tower or Ansible Automation Platform (AAP).",
 		Attributes: map[string]schema.Attribute{
 			"endpoint": schema.StringAttribute{
+				// AAP-AWX-DIFF-BEGIN: aap pings the gateway to detect the AAP version and registers the EDA resources and data sources; the endpoint example and authentication error title also differ. Environment variable names come from configprefix.EnvPrefix.
 				Description: "URL for automation controller (i.e. https://aap.example.com)",
-				Optional:    true,
+				// AAP-AWX-DIFF-END
+				Optional: true,
 			},
 			"token": schema.StringAttribute{
 				Description: "Automation controller access token (instead of username/password). You can also set this using the " + configprefix.EnvPrefix + "OAUTH_TOKEN environment variable.",
@@ -285,10 +289,11 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	_, _, err := client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"AAP authentication failure",
+			"Authentication failure",
 			fmt.Sprintf("Error was: %s.", err.Error()))
 		return
 	}
+	// AAP-AWX-DIFF-BEGIN: aap pings the gateway to detect the AAP version and registers the EDA resources and data sources; the endpoint example and authentication error title also differ. Environment variable names come from configprefix.EnvPrefix.
 
 	body, _, err := client.GenericAPIRequest(ctx, http.MethodGet, "ping/", nil, []int{200, 404}, "gateway")
 	if err != nil {
@@ -316,6 +321,7 @@ func (p *theProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	}
 
 	client.aapVersion = float32(versionFloat)
+	// AAP-AWX-DIFF-END
 
 	resp.DataSourceData = client
 	resp.ResourceData = client
@@ -328,10 +334,12 @@ func (p *theProvider) Resources(ctx context.Context) []func() resource.Resource 
 		NewCredentialResource,
 		NewCredentialInputSourcesResource,
 		NewCredentialTypeResource,
+		// AAP-AWX-DIFF-BEGIN: aap pings the gateway to detect the AAP version and registers the EDA resources and data sources; the endpoint example and authentication error title also differ. Environment variable names come from configprefix.EnvPrefix.
 		NewEdaCredentialResource,
 		NewEdaCredentialTypeResource,
 		NewEdaDecisionEnvironmentResource,
 		NewEdaProjectResource,
+		// AAP-AWX-DIFF-END
 		NewHostResource,
 		NewGenericEndpointResource,
 		NewGroupResource,
@@ -379,10 +387,12 @@ func (p *theProvider) DataSources(ctx context.Context) []func() datasource.DataS
 	return []func() datasource.DataSource{
 		NewCredentialDataSource,
 		NewCredentialTypeDataSource,
+		// AAP-AWX-DIFF-BEGIN: aap pings the gateway to detect the AAP version and registers the EDA resources and data sources; the endpoint example and authentication error title also differ. Environment variable names come from configprefix.EnvPrefix.
 		NewEdaCredentialTypeDataSource,
 		NewEdaCredentialDataSource,
 		NewEdaDecisionEnvironmentDataSource,
 		NewEdaProjectDataSource,
+		// AAP-AWX-DIFF-END
 		NewExecutionEnvironmentDataSource,
 		NewGroupDataSource,
 		NewHostDataSource,
