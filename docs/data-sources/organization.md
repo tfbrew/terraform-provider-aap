@@ -32,7 +32,6 @@ data "aap_organization" "example-name" {
 
 ### Read-Only
 
-- `default_environment` (Number) The fallback execution environment that will be used for jobs inside of this organization if not explicitly assigned at the project, job template or workflow level.
 - `description` (String) Organization description.
 - `eda_id` (Number) Organization ID in the EDA API
 - `gateway_id` (Number) Organization ID in the gateway API

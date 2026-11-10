@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/tfbrew/terraform-provider-aap/internal/configprefix"
 )
 
 var _ resource.Resource = &GenericEndpointResource{}
@@ -39,7 +40,7 @@ func (r *GenericEndpointResource) Metadata(ctx context.Context, req resource.Met
 
 func (r *GenericEndpointResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `WARNING: This resource is still in development and not tested for all AAP endpoints. It can be used as a catch-all for endpoints that do not have a dedicated resource yet. Use at your own risk.`,
+		Description: `WARNING: This resource is still in development and not tested for all API endpoints. It can be used as a catch-all for endpoints that do not have a dedicated resource yet. Use at your own risk.`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "GenericEndpoint ID.",
@@ -49,14 +50,14 @@ func (r *GenericEndpointResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"api_path": schema.StringAttribute{
-				Description: "API path for the GenericEndpoint. If the URL is /api/gateway/v1/authenticators/, the api_path is `authenticators`.",
+				Description: "API path for the GenericEndpoint, relative to the API endpoint. For example, if the URL is /api/controller/v2/credential_types/ (or /api/v2/credential_types/ in AWX), the api_path is `credential_types`.",
 				Required:    true,
 			},
 			"api_endpoint": schema.StringAttribute{
-				Description: "API endpoint for the GenericEndpoint. If the URL is /api/gateway/v1/authenticators/, the api_endpoint is gateway. Must be one of `eda`, `galaxy`, `gateway`, `controller`.",
+				Description: configprefix.GenericEndpointApiEndpointDescription,
 				Required:    true,
 				Validators: []validator.String{
-					stringvalidator.OneOf([]string{"eda", "galaxy", "gateway", "controller"}...),
+					stringvalidator.OneOf(configprefix.GenericEndpointApiEndpoints...),
 				},
 			},
 			"data_json": schema.StringAttribute{

@@ -1,4 +1,3 @@
-// SPECIAL: Environment variables
 package provider
 
 import (
@@ -15,10 +14,10 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 }
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("AAP_HOST"); v == "" {
-		t.Fatal("AAP_HOST must be set for acceptance tests")
+	if v := os.Getenv(configprefix.EnvPrefix + "HOST"); v == "" {
+		t.Fatal(configprefix.EnvPrefix + "HOST must be set for acceptance tests")
 	}
-	if v := os.Getenv("AAP_OAUTH_TOKEN"); v == "" {
-		t.Fatal("AAP_OAUTH_TOKEN must be set for acceptance tests")
+	if v := os.Getenv(configprefix.EnvPrefix + "OAUTH_TOKEN"); v == "" {
+		t.Fatal(configprefix.EnvPrefix + "OAUTH_TOKEN must be set for acceptance tests")
 	}
 }

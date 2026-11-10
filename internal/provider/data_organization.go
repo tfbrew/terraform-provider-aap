@@ -38,6 +38,7 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: configprefix.OrgDataSourceIdDescription,
 				Optional:    true,
 			},
+			// AAP-AWX-DIFF-BEGIN: aap also exposes the gateway and EDA organization IDs.
 			"gateway_id": schema.Int32Attribute{
 				Description: "Organization ID in the gateway API",
 				Computed:    true,
@@ -46,6 +47,7 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: "Organization ID in the EDA API",
 				Computed:    true,
 			},
+			// AAP-AWX-DIFF-END
 			"name": schema.StringAttribute{
 				Description: "Organization name",
 				Optional:    true,
@@ -54,18 +56,16 @@ func (d *OrganizationDataSource) Schema(ctx context.Context, req datasource.Sche
 				Description: "Organization description.",
 				Computed:    true,
 			},
-			"default_environment": schema.Int32Attribute{
-				Description: "The fallback execution environment that will be used for jobs inside of this organization if not explicitly assigned at the project, job template or workflow level.",
-				Computed:    true,
-			},
 			"max_hosts": schema.Int32Attribute{
 				Description: "Maximum number of hosts allowed to be managed by this organization.",
 				Computed:    true,
 			},
+			// AAP-AWX-DIFF-BEGIN: aap also exposes opa_query_path; awx exposes default_environment.
 			"opa_query_path": schema.StringAttribute{
 				Description: "The query path of the OPA policy evaluated before jobs in this organization run.",
 				Computed:    true,
 			},
+			// AAP-AWX-DIFF-END
 		},
 	}
 }
@@ -181,11 +181,8 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		data.Description = types.StringValue(responseData.Description)
 	}
 
-	if responseData.DefaultEnv != 0 {
-		data.DefaultEnv = types.Int32Value(int32(responseData.DefaultEnv))
-	}
-
 	data.MaxHosts = types.Int32Value(int32(responseData.MaxHosts))
+	// AAP-AWX-DIFF-BEGIN: aap also reads opa_query_path and looks up the gateway and EDA organization IDs; awx reads default_environment.
 	data.OpaQueryPath = types.StringValue(responseData.OpaQueryPath)
 
 	// now get the EDA ID by querying the eda endpoint
@@ -216,6 +213,7 @@ func (d *OrganizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 	data.GatewayId = types.Int32Value(int32(gatewayId))
+	// AAP-AWX-DIFF-END
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

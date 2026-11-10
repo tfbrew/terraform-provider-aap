@@ -12,8 +12,8 @@ resource "aap_team" "example" {
   organization = aap_organization.example.id
   description  = "Example team description"
 }
-resource "aap_role_user_assignment" "test" {
+resource "aap_role_team_assignment" "test" {
   object_id       = aap_organization.example.id
   role_definition = aap_role_definition.example.id
-  user            = aap_user.example.id
+  team            = aap_team.example.id
 }

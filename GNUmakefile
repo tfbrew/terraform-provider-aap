@@ -1,5 +1,6 @@
-# SPECIAL: Hardcoded provider prefix required in this file
+# AAP-AWX-DIFF-BEGIN: Hardcoded provider prefix required in this file
 REPO_BUILD_TAG_VAL=repoAAP
+# AAP-AWX-DIFF-END
 GOFLAGS=-tags=$(REPO_BUILD_TAG_VAL)
 export GOFLAGS
 export GOEXPERIMENT=jsonv2
@@ -26,6 +27,6 @@ test:
 	go test -v -cover -timeout=120s -parallel=10 ./internal/provider
 
 testacc:
-	TF_ACC=1 go test -v -cover -timeout=30m  ./internal/provider
+	TF_ACC=1 go test -v -cover -timeout=60m ./internal/provider
 
 .PHONY: fmt lint test testacc build install generate

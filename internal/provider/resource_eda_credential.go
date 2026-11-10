@@ -1,3 +1,4 @@
+// AAP-AWX-DIFF-FILE: AAP-only. Event-Driven Ansible (EDA) has no AWX/AAP 2.4 equivalent.
 package provider
 
 import (
@@ -416,7 +417,7 @@ func (r *EdaCredentialResource) ImportState(ctx context.Context, req resource.Im
 
 	idUnescaped, _ := strconv.Unquote(`"` + req.ID + `"`)
 
-	idParts := strings.Split(idUnescaped, importIDSeparator)
+	idParts := strings.Split(idUnescaped, "/")
 	countParts := len(idParts)
 
 	switch {

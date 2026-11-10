@@ -1,9 +1,10 @@
-<!-- SPECIAL: This readme should be altered to match each repo to which it is included.  -->
+<!-- AAP-AWX-DIFF-BEGIN: This readme should be altered to match each repo to which it is included. -->
 # Terraform Provider for Ansible Automation Platform (AAP) version 2.6 & 2.7
 
 Please see our other provider for [AWX/Tower and AAP verison 2.4.](https://github.com/tfbrew/terraform-provider-aap)
 
 This is a terraform provider for AAP >= 2.6 built with the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) and based on the [Terraform Provider Scafolding Framework](https://github.com/hashicorp/terraform-provider-scaffolding-framework). While this provider will also 99% work with AAP2.5, now that both AAP2.6 & AAP2.7 have been released, priority will be given to new features and supporting API changes instead of testing functionality with 2.5.
+<!-- AAP-AWX-DIFF-END -->
 
 If you find any bugs or have a feature request, please open a GitHub issue.
 
@@ -30,7 +31,7 @@ For **VS Code** this repo includes the workspace files `.vscode/settings.json` a
 
 ## Code Handling for Each Repo
 
-Search all files in this repository for the phrase `SPECIAL` to find files that may need to be updated to be specfiic to the containing repository & whether this is targetted for an aap named provider or an awx named provider.
+Apart from the Go module path, every file is kept identical between this repository and its sibling (terraform-provider-aap / terraform-provider-awx). Lines that must differ are wrapped in `AAP-AWX-DIFF` begin/end comments, and files that exist in only one repository carry an `AAP-AWX-DIFF` file comment. Search for the phrase `AAP-AWX-DIFF` to find them. The maintainers check for unmarked drift with the `drift-check.sh` script in the tfbrew helpers repository.
 
 ## Writing Acceptance Tests
 
