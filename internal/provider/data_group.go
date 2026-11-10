@@ -108,8 +108,10 @@ func (d *GroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		url = fmt.Sprintf("groups/%d/", id)
 	}
 	if !data.Name.IsNull() && !data.Inventory.IsNull() {
-		name := urlParser.QueryEscape(data.Name.ValueString())
-		url = fmt.Sprintf("groups/?name=%s&inventory=%d", name, data.Inventory.ValueInt32())
+		query := urlParser.Values{}
+		query.Set("name", data.Name.ValueString())
+		query.Set("inventory", strconv.Itoa(int(data.Inventory.ValueInt32())))
+		url = "groups/?" + query.Encode()
 	}
 
 	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")

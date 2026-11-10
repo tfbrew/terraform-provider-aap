@@ -117,8 +117,9 @@ func (d *NotificationTemplateDataSource) Read(ctx context.Context, req datasourc
 	}
 	if !data.Name.IsNull() {
 		// set url for read by name HTTP request
-		name := urlParser.QueryEscape(data.Name.ValueString())
-		url = fmt.Sprintf("notification_templates/?name=%s", name)
+		query := urlParser.Values{}
+		query.Set("name", data.Name.ValueString())
+		url = "notification_templates/?" + query.Encode()
 	}
 
 	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")

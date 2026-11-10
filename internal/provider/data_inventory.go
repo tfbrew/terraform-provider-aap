@@ -109,14 +109,7 @@ func (d *InventoryDataSource) Read(ctx context.Context, req datasource.ReadReque
 	query := urlParser.Values{}
 
 	if !data.Id.IsNull() {
-		id, err := strconv.Atoi(data.Id.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable convert id from string to int.",
-				fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
-			return
-		}
-		query.Set("id", strconv.Itoa(id))
+		query.Set("id", data.Id.ValueString())
 	}
 	if !data.Name.IsNull() {
 		query.Set("name", data.Name.ValueString())

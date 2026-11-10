@@ -149,21 +149,16 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	var url string
+	query := urlParser.Values{}
 
 	if !data.Id.IsNull() {
-		id, err := strconv.Atoi(data.Id.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable convert id from string to int.",
-				fmt.Sprintf("Unable to convert id: %v. ", data.Id.ValueString()))
-			return
-		}
-		url = fmt.Sprintf("projects/?id=%d", id)
+		query.Set("id", data.Id.ValueString())
 	}
 	if !data.Name.IsNull() {
-		url = fmt.Sprintf("projects/?name=%s", urlParser.QueryEscape(data.Name.ValueString()))
+		query.Set("name", data.Name.ValueString())
 	}
+
+	url := "projects/?" + query.Encode()
 
 	body, _, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200}, "")
 	if err != nil {

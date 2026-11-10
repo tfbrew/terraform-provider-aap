@@ -99,8 +99,9 @@ func (d *TeamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		url = fmt.Sprintf("teams/%d/", id)
 	}
 	if !data.Name.IsNull() {
-		name := urlParser.QueryEscape(data.Name.ValueString())
-		url = fmt.Sprintf("teams/?name=%s", name)
+		query := urlParser.Values{}
+		query.Set("name", data.Name.ValueString())
+		url = "teams/?" + query.Encode()
 	}
 
 	body, statusCode, err := d.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "gateway")

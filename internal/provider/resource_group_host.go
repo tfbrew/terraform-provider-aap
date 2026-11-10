@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	urlParser "net/url"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -125,7 +126,9 @@ func (r *GroupHostResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	url := fmt.Sprintf("groups/%d/hosts/?id=%d", groupId, hostId)
+	query := urlParser.Values{}
+	query.Set("id", strconv.Itoa(hostId))
+	url := fmt.Sprintf("groups/%d/hosts/?", groupId) + query.Encode()
 	body, statusCode, err := r.client.GenericAPIRequest(ctx, http.MethodGet, url, nil, []int{200, 404}, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
