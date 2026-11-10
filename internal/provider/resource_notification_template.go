@@ -368,7 +368,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 				var msg_message string
 
 				if errorMsg, ok := v.(map[string]any); ok {
-					if _, bodyKeyFound := errorMsg["body"]; bodyKeyFound {
+					if errorMsg["body"] != nil {
 						msg_body, ok = errorMsg["body"].(string)
 						if !ok {
 							resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
@@ -377,7 +377,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 						}
 					}
 
-					if _, messageKeyFound := errorMsg["message"]; messageKeyFound {
+					if errorMsg["message"] != nil {
 						msg_message, ok = errorMsg["message"].(string)
 						if !ok {
 							resp.Diagnostics.AddError("Unexpescted error in resource_notification_templates",
@@ -399,7 +399,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 				var msg_body string
 				var msg_message string
 				if startMsg, ok := v.(map[string]any); ok {
-					if _, bodyKeyFound := startMsg["body"]; bodyKeyFound {
+					if startMsg["body"] != nil {
 						msg_body, ok = startMsg["body"].(string)
 						if !ok {
 							resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
@@ -408,7 +408,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 						}
 					}
 
-					if _, messageKeyFound := startMsg["message"]; messageKeyFound {
+					if startMsg["message"] != nil {
 						msg_message, ok = startMsg["message"].(string)
 						if !ok {
 							resp.Diagnostics.AddError("Unexpescted error in resource_notification_templates",
@@ -428,7 +428,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 				var msg_body string
 				var msg_message string
 				if successMsg, ok := v.(map[string]any); ok {
-					if _, bodyKeyFound := successMsg["body"]; bodyKeyFound {
+					if successMsg["body"] != nil {
 						msg_body, ok = successMsg["body"].(string)
 						if !ok {
 							resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
@@ -437,7 +437,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 						}
 					}
 
-					if _, messageKeyFound := successMsg["message"]; messageKeyFound {
+					if successMsg["message"] != nil {
 						msg_message, ok = successMsg["message"].(string)
 						if !ok {
 							resp.Diagnostics.AddError("Unexpescted error in resource_notification_templates",
@@ -464,7 +464,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 							var msg_body string
 							var msg_message string
 
-							if _, ok = valMsg["body"]; ok {
+							if valMsg["body"] != nil {
 								msg_body, ok = valMsg["body"].(string)
 								if !ok {
 									resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",
@@ -473,7 +473,7 @@ func (r *NotificationTemplatesResource) Read(ctx context.Context, req resource.R
 								}
 
 							}
-							if _, ok = valMsg["message"]; ok {
+							if valMsg["message"] != nil {
 								msg_message, ok = valMsg["message"].(string)
 								if !ok {
 									resp.Diagnostics.AddError("Unexpected error in resource_notification_templates",

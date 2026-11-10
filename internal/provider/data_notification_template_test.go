@@ -149,6 +149,18 @@ func TestAccNotificationTemplateDataSource(t *testing.T) {
 					),
 				},
 			},
+			// webhook with null message fields
+			{
+				Config:             testAccNotifTmplWebhookNullMessagesDataSourceConfig(objectName, webhookConfigString),
+				ExpectNonEmptyPlan: true,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						fmt.Sprintf("data.%s_notification_template.example-webhook-null-messages", configprefix.Prefix),
+						tfjsonpath.New("messages"),
+						knownvalue.StringExact(`{"error":{"body":"","message":""},"started":{"body":"","message":""},"success":{"body":"","message":""},"workflow_approval":{"approved":{"body":"","message":""},"denied":{"body":"","message":""},"running":{"body":"","message":""},"timed_out":{"body":"","message":""}}}`),
+					),
+				},
+			},
 		},
 	})
 }
@@ -237,5 +249,34 @@ resource "%[1]s_notification_template" "example-slack-and-message" {
 }
 data "%[1]s_notification_template" "example-slack-and-message" {
 	id = %[1]s_notification_template.example-slack-and-message.id
+}`, configprefix.Prefix, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), objectName, notifConfig)
+}
+
+func testAccNotifTmplWebhookNullMessagesDataSourceConfig(objectName, notifConfig string) string {
+	return fmt.Sprintf(`
+resource "%[1]s_organization" "example" { 
+	name = "%[2]s" 
+	description = "testing example4" 
+}
+
+resource "%[1]s_notification_template" "example-webhook-null-messages" {
+	name              = "%[3]s"
+	notification_type = "webhook"
+	organization      = %[1]s_organization.example.id
+  notification_configuration = jsonencode(%[4]s)
+  messages = jsonencode({
+	  error   = { body = null, message = null }
+	  started = { body = null, message = null }
+	  success = { body = null, message = null }
+	  workflow_approval = {
+		approved  = { body = null, message = null }
+		denied    = { body = null, message = null }
+		running   = { body = null, message = null }
+		timed_out = { body = null, message = null }
+	  }
+	})
+}
+data "%[1]s_notification_template" "example-webhook-null-messages" {
+	id = %[1]s_notification_template.example-webhook-null-messages.id
 }`, configprefix.Prefix, acctest.RandStringFromCharSet(5, acctest.CharSetAlpha), objectName, notifConfig)
 }
